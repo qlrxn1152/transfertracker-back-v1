@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.controller;
 
+import com.dhoon.transfertracker.internal.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.service.TransferService;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +19,15 @@ public class TransferController {
 
     @GetMapping("/api/player/transfer/{playerId}")
     public ResponseEntity<PlayerTransfersResponseDto> getPlayerTransfers(@PathVariable Long playerId) {
-        PlayerTransfersResponseDto response = transferService.getPlayerTransfer(playerId);
+        PlayerTransfersResponseDto response = transferService.getPlayerTransfers(playerId);
 
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/api/transfers")
+    public ResponseEntity<AllTransfersResponseDto> getTransfers() {
+        AllTransfersResponseDto response = transferService.getTransfers();
+
+        return ResponseEntity.ok(response);
+    }
 }
