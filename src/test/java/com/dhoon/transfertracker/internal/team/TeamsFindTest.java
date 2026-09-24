@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.team;
 
+import com.dhoon.transfertracker.integrate.TeamCreateFixture;
 import com.dhoon.transfertracker.internal.domain.Team;
 import com.dhoon.transfertracker.internal.dto.team.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.dto.team.TeamsResponseDto;
@@ -22,29 +23,16 @@ import static org.assertj.core.api.Assertions.*;
 @ActiveProfiles("test")
 public class TeamsFindTest {
 
-    @Autowired TeamRepository teamRepository;
     @Autowired TeamService teamService;
 
-    private List<Team> saveTeams(int count) {
-        List<Team> teams = new ArrayList<>();
+    @Autowired TeamCreateFixture teamCreateFixture;
 
-        for (int i = 0; i < count; i++) {
-            Team team = teamRepository.save(Team.of(
-                    "team" + i,
-                    (long) i
-            ));
-
-            teams.add(team);
-        }
-
-        return teams;
-    }
 
     @Test
     @DisplayName(value = "등록되어져 있는 팀이 존재하지 않으면, 빈 리스트를 반환한다.")
     void getTeams_size_zero() throws Exception {
         // given
-        saveTeams(0);
+        teamCreateFixture.saveTeams(0);
 
         // when
         TeamsResponseDto response = teamService.getTeams();
@@ -57,7 +45,7 @@ public class TeamsFindTest {
     @DisplayName(value = "등록되어져 있는 팀들을 조회할 수 있다.")
     void getTeams() throws Exception {
         // given
-        saveTeams(20);
+        teamCreateFixture.saveTeams(20);
 
         // when
         TeamsResponseDto response = teamService.getTeams();
@@ -72,7 +60,7 @@ public class TeamsFindTest {
     @DisplayName(value = "등록되어져 있는 특정 팀을 조회할 수 있다.")
     void getTeam() throws Exception {
         // given
-        List<Team> teams = saveTeams(20);
+        List<Team> teams = teamCreateFixture.saveTeams(20);
 
         // when
         TeamItemResponseDto team = teamService.getTeam(teams.get(0).getId());

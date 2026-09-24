@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.controller;
 
 import com.dhoon.transfertracker.internal.dto.response.PlayerItemResponseDto;
+import com.dhoon.transfertracker.internal.dto.response.PlayersResponseDto;
 import com.dhoon.transfertracker.internal.service.PlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,4 +23,13 @@ public class PlayerController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/api/players")
+    public ResponseEntity<PlayersResponseDto> getPlayers() {
+        PlayersResponseDto response = playerService.getPlayers();
+
+        return ResponseEntity.ok(response);
+    }
+
+
 }
