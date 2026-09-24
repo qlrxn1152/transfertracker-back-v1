@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.external.football.client;
 
+import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.player.PlayerItemResponseDto;
 import com.dhoon.transfertracker.external.football.dto.player.PlayersResponseDto;
 import com.dhoon.transfertracker.external.football.dto.playertransfer.PlayerTransferInfoResponseDto;
@@ -13,6 +14,7 @@ import com.dhoon.transfertracker.internal.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -38,7 +40,7 @@ public class ApiFootballClient {
      * @param playerId -> 외부 API ID
      * @return
      */
-    public PlayerItemResponseDto savePlayer(Long playerId) {
+    public PlayerSaveResponseDto savePlayer(Long playerId) {
         JsonNode response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/players")
@@ -49,22 +51,27 @@ public class ApiFootballClient {
                 .retrieve()
                 .body(JsonNode.class);
 
-
-
         JsonNode playerData = response.get("response").get(0).get("player");
 
-        String playerName = playerData.get("name").asString();
-        long playerApiId = playerData.get("id").asLong();
-        int age = playerData.get("age").asInt();
-        int number = playerData.get("number").asInt();
-        String position = playerData.get("position").asString();
-
-        Player player = Player.of(playerName, playerApiId);
-
+        Player player = Player.of(playerData.get("name").asString(), playerData.get("id").asLong());
         playerRepository.save(player);
 
-        return new PlayerItemResponseDto(playerApiId, playerName, age, number, position);
+        return PlayerSaveResponseDto.of(player);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
