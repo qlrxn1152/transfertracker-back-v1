@@ -8,4 +8,6 @@ import java.util.List;
 public interface TransferRepository extends JpaRepository<Transfer, Long> {
 
     List<Transfer> findAllByPlayerId(Long playerId);
+
+    boolean existsByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);
 }
