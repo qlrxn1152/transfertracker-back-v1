@@ -211,17 +211,20 @@ public class ApiFootballClient {
     // ---------------------------- SavePlayer -----------------------
     private Player callExternalAndPlayerSaveToDb(Long playerApiId) {
         JsonNode node = callExternalPlayerApi(playerApiId);
-        return getPlayerAndSave(node);
+        return getOrCreatePlayer(node, playerApiId);
     }
 
-    private @NonNull Player getPlayerAndSave(JsonNode node) {
+    private @NonNull Player getOrCreatePlayer(JsonNode node, Long playerApiId) {
         JsonNode playerData = node.get("response").get(0).get("player");
-        return playerRepository.save(
-                Player.of(
-                        playerData.get("name").asString(),
-                        playerData.get("id").asLong()
-                )
-        );
+
+        // 선수가 이미 저장되어져 있으면 새로 저장이 되는거는 아니지만, 선수를 새로넣나 넣지못하나 같은 응답 데이터를 전송해서 헷갈릴 수 있음.
+        return playerRepository.findByApiFootballId(playerApiId)
+                .orElseGet(() -> playerRepository.save(
+                        Player.of(
+                                playerData.get("name").asString(),
+                                playerData.get("id").asLong()
+                        ))
+                );
     }
 
     private @Nullable JsonNode callExternalPlayerApi(Long playerApiId) {
