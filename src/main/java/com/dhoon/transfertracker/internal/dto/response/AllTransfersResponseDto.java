@@ -18,4 +18,5 @@ public class AllTransfersResponseDto {
     public static AllTransfersResponseDto of(List<TransferResponseDto> transfers) {
         return new AllTransfersResponseDto(transfers);
     }
+
 }

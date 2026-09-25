@@ -17,6 +17,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             """)
     List<Transfer> findAllByPlayerId(Long playerId);
 
+
     @Query("""
             select t from Transfer t 
                         join fetch t.player 
@@ -25,5 +26,8 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             """)
     List<Transfer> findAllTransferWithLazyEntities();
 
+
+
+    // 전부 내부 API 아이디 ( 외부 전용 API 아이디 아님 )
     boolean existsByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);
 }

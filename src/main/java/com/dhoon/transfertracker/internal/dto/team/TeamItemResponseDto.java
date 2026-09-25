@@ -13,8 +13,13 @@ public class TeamItemResponseDto {
 
     private Long teamId;
     private String teamName;
+    private String logoUrl;
 
     public static TeamItemResponseDto of(Team team) {
-        return new TeamItemResponseDto(team.getId(), team.getTeamName());
+        return new TeamItemResponseDto(
+                team.getId(),
+                team.getTeamName(),
+                "https://media.api-sports.io/football/teams/" + team.getApiFootballId() + ".png"
+                );
     }
 }

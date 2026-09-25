@@ -13,8 +13,13 @@ public class PlayerItemResponseDto {
 
     private Long playerId;
     private String playerName;
+    private String photoUrl;
 
     public static PlayerItemResponseDto of(Player player) {
-        return new PlayerItemResponseDto(player.getId(), player.getPlayerName());
+        return new PlayerItemResponseDto(
+                player.getId(),
+                player.getPlayerName(),
+                "https://media.api-sports.io/football/players/" + player.getApiFootballId() + ".png"
+                );
     }
 }

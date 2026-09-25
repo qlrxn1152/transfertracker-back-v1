@@ -9,4 +9,8 @@ public interface TransferService {
 
     AllTransfersResponseDto getTransfers();
 
+    AllTransfersResponseDto getTeamTransfers(Long teamId);
+
+
+
 }

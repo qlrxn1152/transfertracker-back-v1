@@ -47,6 +47,12 @@ public class TransferServiceImpl implements TransferService {
         return AllTransfersResponseDto.of(transfers);
     }
 
+    @Override
+    public AllTransfersResponseDto getTeamTransfers(Long teamId) {
+        return null;
+    }
+
+
 
 
 }

@@ -30,4 +30,12 @@ public class TransferController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/api/transfers/team/{teamId}")
+    public ResponseEntity<AllTransfersResponseDto> getTeamTransfers(@PathVariable Long teamId) {
+        AllTransfersResponseDto response = transferService.getTeamTransfers(teamId);
+
+        return ResponseEntity.ok(response);
+    }
+
 }
