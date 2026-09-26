@@ -78,9 +78,6 @@ public class ApiFootballClient {
         Team team = getOrCreateTeam(Team.of(teamName, teamApiId));
         saveMissingTeamPlayers(node, team);
 
-
-
-
         return "OK";
     }
 
@@ -107,21 +104,17 @@ public class ApiFootballClient {
                 .retrieve()
                 .body(JsonNode.class);
 
-        JsonNode teams = node.get("response");
+        node.get("response")
+                .forEach(
+                team -> {
+                    long teamApiId = team.get("team").get("id").asLong();
+                    String teamName = team.get("team").get("name").asString();
 
-        for (JsonNode team : teams) {
-            long teamApiId = team.get("team").get("id").asLong();
-            String teamName = team.get("team").get("name").asString();
+                    Team t = Team.of(teamName, teamApiId, leagueCode);
 
-            Team t = Team.of(teamName, teamApiId, leagueCode);
-
-            // team -> DB 에 존재하지않으면, 팀 코드와 같이 해당 팀 저장
-            // team -> DB 에 존재하면, 팀 코드를 추가한 업데이트 ..
-
-            getOrCreateTeam(t).assignTeamLeague(leagueCode);// 찾아오면 영속성 컨텍스트에 들어옴 -> 변경감지로 자동 업데이트
-
-        }
-
+                    getOrCreateTeam(t).assignTeamLeague(leagueCode);
+                }
+        );
 
         return "OK";
     }
@@ -358,11 +351,6 @@ public class ApiFootballClient {
                         .orElseGet(() -> transferRepository.save(Transfer.of(player, inTeam, outTeam, transferType, transferDate)));
             }
         });
-
-
-
-
-
     }
     // ---------------------------- SaveTeamTransfers -----------------------
 
