@@ -9,4 +9,6 @@ public interface TeamService {
     TeamItemResponseDto getTeam(Long teamId);
 
     TeamsResponseDto getTeams();
+
+    TeamsResponseDto getLeagueTeams(String leagueCode);
 }

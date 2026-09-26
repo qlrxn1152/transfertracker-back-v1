@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.service.impl;
 
 import com.dhoon.transfertracker.external.football.dto.team.TeamInfoResponseDto;
+import com.dhoon.transfertracker.internal.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.domain.Team;
 import com.dhoon.transfertracker.internal.dto.team.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.dto.team.TeamsResponseDto;
@@ -38,6 +39,19 @@ public class TeamServiceImpl implements TeamService {
                 .toList();
 
         return TeamsResponseDto.of(teamItems);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TeamsResponseDto getLeagueTeams(String leagueCode) {
+        List<TeamItemResponseDto> leagueTeams = teamRepository.findAllByLeagueCode(LeagueCode.valueOf(leagueCode.toUpperCase())).stream()
+                .map(TeamItemResponseDto::of)
+                .toList();
+
+
+        return TeamsResponseDto.of(leagueTeams);
+
+
     }
 
 
