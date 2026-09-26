@@ -32,5 +32,6 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
     // 전부 내부 API 아이디 ( 외부 전용 API 아이디 아님 )
     boolean existsByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);
 
+    // 전부 내부 API 아이디 ( 외부 전용 API 아이디 아님 )
     Optional<Transfer> findByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);
 }

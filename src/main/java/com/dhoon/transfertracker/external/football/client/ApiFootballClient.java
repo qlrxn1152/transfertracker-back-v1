@@ -280,7 +280,7 @@ public class ApiFootballClient {
                             Player player = playerRepository.findByApiFootballId(playerApiId)
                                     .orElseGet(() -> playerRepository.save(Player.of(response.get("player").get("name").asString(), playerApiId)));
 
-                            saveTransferIfAbsent(response, playerApiId, player);
+                            saveTransferIfAbsent(response, player);
                         }
                 );
     }
@@ -296,27 +296,31 @@ public class ApiFootballClient {
                 .body(JsonNode.class);
     }
 
-    private void saveTransferIfAbsent(JsonNode response, long playerApiId, Player player) {
-        JsonNode transfer = response.get("transfers").get(0);
+    private void saveTransferIfAbsent(JsonNode response, Player player) {
+        JsonNode transfers = response.get("transfers");
 
-        String transferType = transfer.get("type").asString();
-        LocalDate transferDate = LocalDate.parse(transfer.get("date").asString());
+        transfers.forEach(transfer -> {
+            LocalDate transferDate = LocalDate.parse(transfer.get("date").asString());
 
-        long inTeamApiId = transfer.get("teams").get("in").get("id").asLong();
-        String inTeamName = transfer.get("teams").get("in").get("name").asString();
+            if (transferDate.getYear() >= 2020) {
+                String transferType = transfer.get("type").asString();
 
-        long outTeamApiId = transfer.get("teams").get("out").get("id").asLong();
-        String outTeamName = transfer.get("teams").get("out").get("name").asString();
+                long inTeamApiId = transfer.get("teams").get("in").get("id").asLong();
+                String inTeamName = transfer.get("teams").get("in").get("name").asString();
 
-        Team inTeam = getOrCreateTeam(Team.of(inTeamName, inTeamApiId));
-        Team outTeam = getOrCreateTeam(Team.of(outTeamName, outTeamApiId));
+                long outTeamApiId = transfer.get("teams").get("out").get("id").asLong();
+                String outTeamName = transfer.get("teams").get("out").get("name").asString();
+
+                Team inTeam = getOrCreateTeam(Team.of(inTeamName, inTeamApiId));
+                Team outTeam = getOrCreateTeam(Team.of(outTeamName, outTeamApiId));
+
+                transferRepository.findByInTeamIdAndOutTeamIdAndPlayerId(inTeam.getId(), outTeam.getId(), player.getId())
+                        .orElseGet(() -> transferRepository.save(Transfer.of(player, inTeam, outTeam, transferType, transferDate)));
+            }
+        });
 
 
-        // 2020 년 이후 데이터만 저장.
-        if (transferDate.getYear() >= 2020) {
-            transferRepository.findByInTeamIdAndOutTeamIdAndPlayerId(inTeam.getId(), outTeam.getId(), playerApiId)
-                    .orElseGet(() -> transferRepository.save(Transfer.of(player, inTeam, outTeam, transferType, transferDate)));
-        }
+
     }
     // ---------------------------- SaveTeamTransfers -----------------------
 
