@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TransferRepository extends JpaRepository<Transfer, Long> {
 
@@ -30,4 +31,6 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 
     // 전부 내부 API 아이디 ( 외부 전용 API 아이디 아님 )
     boolean existsByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);
+
+    Optional<Transfer> findByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);
 }
