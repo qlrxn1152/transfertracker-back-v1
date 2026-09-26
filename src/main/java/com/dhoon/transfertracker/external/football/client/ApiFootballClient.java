@@ -36,6 +36,10 @@ public class ApiFootballClient {
     private final TeamRepository teamRepository;
     private final PlayerRepository playerRepository;
 
+    // 아래 리팩토링 완료한 부분은 멱등성 보장완료
+
+
+
     /**
      * 외부 API 를 호출해서, 해당 선수 데이터를 DB 에 저장하는 작업.
      * @param playerApiId -> 외부 API ID
@@ -80,70 +84,48 @@ public class ApiFootballClient {
         return TransferSaveResponseDto.of(player);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * 외부 API 를 호출해서, 해당 팀의 선수들을 DB 에 저장하는 작업.
      * @param teamApiId -> 외부 API ID
      */
-    public TeamPlayersSaveResponseDto saveTeamPlayers(Long teamApiId) {
-        JsonNode node = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/players")
-                        .path("/squads")
-                        .queryParam("team", teamApiId)
-                        .build()
-                )
-                .retrieve()
-                .body(JsonNode.class);
+    public String saveTeamPlayers(Long teamApiId) {
+        JsonNode node = callExternalTeamPlayersApi(teamApiId);
+        String teamName = node.get("response").get(0).get("team").get("name").asString();
 
-        // 팀이 존재하는지부터 확인.
+        // 팀이 존재하는지부터 확인. -> 없으면 새로저장
+        getOrCreateTeam(Team.of(teamName, teamApiId));
+        saveMissingTeamPlayers(node);
 
-        if ( !teamRepository.existsByApiFootballId(teamApiId) ) {
-            syncTeam(teamApiId);
-        }
-
-        // 팀에 속한 플레이어들
-        JsonNode players = node.get("response").get(0).get("players");
-
-        List<TeamPlayerSaveResponseDto> responseDto = new ArrayList<>();
-
-        // 팀에 속한 플레이어들중 DB 에 없는 선수들만 저장
-        for (JsonNode player : players) {
-            long playerApiId = player.get("id").asLong();
-            String playerName = player.get("name").asString();
-
-            if (!playerRepository.existsByApiFootballId(playerApiId)) {
-                playerRepository.save(Player.of(playerName, playerApiId));
-
-                log.info("[{}] 선수가 등록되었습니다.", playerName);
-            }
-
-            TeamPlayerSaveResponseDto playerItem = TeamPlayerSaveResponseDto.of(playerApiId, playerName);
-
-            responseDto.add(playerItem);
-        }
-
-        return TeamPlayersSaveResponseDto.of(responseDto);
+        return "OK";
     }
+
+    // ======== 1차 리팩토링 완료 ========== //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     public String saveTeamTransfers(Long teamIdApiId) {
@@ -190,6 +172,8 @@ public class ApiFootballClient {
                 teamRepository.save(Team.of(outTeamName, outTeamApiId));
             }
 
+
+
             Team inTeam = teamRepository.findByApiFootballId(inTeamApiId).orElseThrow();
             Team outTeam = teamRepository.findByApiFootballId(outTeamApiId).orElseThrow();
 
@@ -206,6 +190,14 @@ public class ApiFootballClient {
 
         return "OK";
     }
+
+
+
+
+
+
+
+
 
 
     // ---------------------------- SavePlayer -----------------------
@@ -268,15 +260,17 @@ public class ApiFootballClient {
                 .body(JsonNode.class);
     }
 
-    // ---------------------------- SaveTeam -----------------------
-
-
-    // ---------------------------- SavePlayerTransfer -----------------------
-
     private @NonNull Team getOrCreateTeam(Team team) {
         return teamRepository.findByApiFootballId(team.getApiFootballId())
                 .orElseGet(() -> teamRepository.save(team));
     }
+
+    // ---------------------------- SaveTeam -----------------------
+
+
+
+
+    // ---------------------------- SavePlayerTransfer -----------------------
 
 
     private void savePlayerTransfers(Player player, TeamTransferData data, Team inTeam, Team outTeam) {
@@ -306,7 +300,41 @@ public class ApiFootballClient {
 
 
 
+    // ---------------------------- SaveTeamPlayers -----------------------
 
+    private void saveMissingTeamPlayers(JsonNode node) {
+        // 팀에 속한 플레이어들
+        JsonNode players = node.get("response").get(0).get("players");
+
+        // 팀에 속한 플레이어들중 DB 에 없는 선수들만 저장
+        players.forEach(
+                player -> {
+                    long playerApiId = player.get("id").asLong();
+                    String playerName = player.get("name").asString();
+
+                    playerRepository.findByApiFootballId(playerApiId)
+                            .orElseGet(() -> playerRepository.save(
+                                    Player.of(
+                                            playerName,
+                                            playerApiId
+                                    ))
+                            );
+                }
+        );
+    }
+
+    private @Nullable JsonNode callExternalTeamPlayersApi(Long teamApiId) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/players")
+                        .path("/squads")
+                        .queryParam("team", teamApiId)
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class);
+    }
+    // ---------------------------- SaveTeamPlayers -----------------------
 
 
 
