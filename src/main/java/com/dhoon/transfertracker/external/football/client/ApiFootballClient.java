@@ -60,9 +60,7 @@ public class ApiFootballClient {
     public String syncPlayerTransfers(Long playerApiId) {
         JsonNode node = callExternalPlayerTransferApi(playerApiId);
 
-        String playerName = node.get("response").get(0).get("player").get("name").asString();
-
-        savePlayerTransfers(playerApiId, playerName, node);
+        savePlayerTransfers(playerApiId, node);
 
         return "OK";
     }
@@ -98,48 +96,12 @@ public class ApiFootballClient {
      * @param leagueCode -> ENUM
      */
     public String syncLeagueTeams(LeagueCode leagueCode) {
-        JsonNode node = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/teams")
-                        .queryParam("league", leagueCode.getApiFootballLeagueId())
-                        .queryParam("season", 2024) // 무료버전은 2022 ~ 2024 까지 요청이 가능하므로, 최신 데이터는 직접 ..
-                        .build()
-                )
-                .retrieve()
-                .body(JsonNode.class);
+        JsonNode node = callExternalLeagueTeamsApi(leagueCode);
 
-        node.get("response")
-                .forEach(
-                team -> {
-                    long teamApiId = team.get("team").get("id").asLong();
-                    String teamName = team.get("team").get("name").asString();
-
-                    getOrCreateTeam(Team.of(teamName, teamApiId, leagueCode))
-                            .assignTeamLeague(leagueCode);
-                }
-        );
+        saveLeagueTeamsAndAssignLeagueCode(leagueCode, node);
 
         return "OK";
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -213,7 +175,10 @@ public class ApiFootballClient {
 
     // ---------------------------- SavePlayerTransfer -----------------------
 
-    private void savePlayerTransfers(Long playerApiId, String playerName, JsonNode node) {
+    private void savePlayerTransfers(Long playerApiId, JsonNode node) {
+
+        String playerName = node.get("response").get(0).get("player").get("name").asString();
+
         Player player = playerRepository.findByApiFootballId(playerApiId)
                 .orElseGet(() -> playerRepository.save(Player.of(playerName, playerApiId)));
 
@@ -357,5 +322,31 @@ public class ApiFootballClient {
     }
     // ---------------------------- SaveTeamTransfers -----------------------
 
+    // ---------------------------- SaveLeagueTeams -----------------------
+    private void saveLeagueTeamsAndAssignLeagueCode(LeagueCode leagueCode, JsonNode node) {
+        node.get("response")
+                .forEach(
+                        team -> {
+                            long teamApiId = team.get("team").get("id").asLong();
+                            String teamName = team.get("team").get("name").asString();
+
+                            getOrCreateTeam(Team.of(teamName, teamApiId, leagueCode))
+                                    .assignTeamLeague(leagueCode);
+                        }
+                );
+    }
+
+    private @Nullable JsonNode callExternalLeagueTeamsApi(LeagueCode leagueCode) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/teams")
+                        .queryParam("league", leagueCode.getApiFootballLeagueId())
+                        .queryParam("season", 2024) // 무료버전은 2022 ~ 2024 까지 요청이 가능하므로, 최신 데이터는 직접 ..
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class);
+    }
+    // ---------------------------- SaveLeagueTeams -----------------------
 
 }
