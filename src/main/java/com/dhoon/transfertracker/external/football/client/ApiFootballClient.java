@@ -93,6 +93,11 @@ public class ApiFootballClient {
         return "OK";
     }
 
+    /**
+     * 외부 API를 호출해서, 해당 리그에 해당 시즌에 속했던 팀들을 가지고 오는 작업과 팀에 속한 회원들을 TeamPlayer 테이블에 저장하는 작업입니다.
+     * @param leagueCode -> ENUM
+     * @return
+     */
     public String syncLeagueTeams(LeagueCode leagueCode) {
         JsonNode node = restClient.get()
                 .uri(uriBuilder -> uriBuilder
