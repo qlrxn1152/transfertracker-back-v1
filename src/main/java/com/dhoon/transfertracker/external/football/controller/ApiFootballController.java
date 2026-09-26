@@ -4,6 +4,7 @@ import com.dhoon.transfertracker.external.football.client.ApiFootballClient;
 import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TransferSaveResponseDto;
+import com.dhoon.transfertracker.internal.domain.LeagueCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,8 +35,6 @@ public class ApiFootballController {
     }
 
 
-
-
     @PostMapping("/external/api/transfer/{playerApiId}")
     public ResponseEntity<String> savePlayerTransfer(@PathVariable Long playerApiId) {
         String response = apiFootballClient.syncPlayerTransfers(playerApiId);
@@ -54,7 +53,13 @@ public class ApiFootballController {
     public ResponseEntity<String> saveTeamTransfers(@PathVariable Long teamApiId) {
         String response = apiFootballClient.saveTeamTransfers(teamApiId);
 
-        return  ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/external/api/teams/league/{leagueCode}")
+    public ResponseEntity<String> syncLeagueTeams(@PathVariable LeagueCode leagueCode) {
+        String response = apiFootballClient.syncLeagueTeams(leagueCode);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 }

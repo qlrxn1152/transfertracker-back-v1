@@ -3,7 +3,7 @@ package com.dhoon.transfertracker.external.football.client;
 import com.dhoon.transfertracker.TeamTransferData;
 import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
-import com.dhoon.transfertracker.external.football.dto.TransferSaveResponseDto;
+import com.dhoon.transfertracker.internal.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.domain.Player;
 import com.dhoon.transfertracker.internal.domain.Team;
 import com.dhoon.transfertracker.internal.domain.Transfer;
@@ -91,6 +91,36 @@ public class ApiFootballClient {
     public String saveTeamTransfers(Long teamApiId) {
         JsonNode node = callExternalTeamTransfersApi(teamApiId);
         getPlayerAndSaveAbsentTransfers(node);
+
+        return "OK";
+    }
+
+    public String syncLeagueTeams(LeagueCode leagueCode) {
+        JsonNode node = restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/teams")
+                        .queryParam("league", leagueCode.getApiFootballLeagueId())
+                        .queryParam("season", 2024) // 무료버전은 2022 ~ 2024 까지 요청이 가능하므로, 최신 데이터는 직접 ..
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class);
+
+        JsonNode teams = node.get("response");
+
+        for (JsonNode team : teams) {
+            long teamApiId = team.get("team").get("id").asLong();
+            String teamName = team.get("team").get("name").asString();
+
+            Team t = Team.of(teamName, teamApiId, leagueCode);
+
+            // team -> DB 에 존재하지않으면, 팀 코드와 같이 해당 팀 저장
+            // team -> DB 에 존재하면, 팀 코드를 추가한 업데이트 ..
+
+            getOrCreateTeam(t).assignTeamLeague(leagueCode);// 찾아오면 영속성 컨텍스트에 들어옴 -> 변경감지로 자동 업데이트
+
+        }
+
 
         return "OK";
     }
@@ -318,6 +348,8 @@ public class ApiFootballClient {
                         .orElseGet(() -> transferRepository.save(Transfer.of(player, inTeam, outTeam, transferType, transferDate)));
             }
         });
+
+
 
 
 

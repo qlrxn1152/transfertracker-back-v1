@@ -30,7 +30,7 @@ public class TeamTransferData {
     public Team getTargetTeam(JsonNode transfer, String target) {
         long targetTeamApiId = transfer.get("teams").get(target).get("id").asLong();
         String targetTeamName = transfer.get("teams").get(target).get("name").asString();
-        return Team.of(targetTeamName, targetTeamApiId); //
+        return Team.of(targetTeamName, targetTeamApiId ); //
     }
 
 
