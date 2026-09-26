@@ -3,11 +3,9 @@ package com.dhoon.transfertracker.external.football.client;
 import com.dhoon.transfertracker.TeamTransferData;
 import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
-import com.dhoon.transfertracker.internal.domain.LeagueCode;
-import com.dhoon.transfertracker.internal.domain.Player;
-import com.dhoon.transfertracker.internal.domain.Team;
-import com.dhoon.transfertracker.internal.domain.Transfer;
+import com.dhoon.transfertracker.internal.domain.*;
 import com.dhoon.transfertracker.internal.repository.PlayerRepository;
+import com.dhoon.transfertracker.internal.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +28,7 @@ public class ApiFootballClient {
     private final RestClient restClient;
 
     private final TransferRepository transferRepository;
+    private final TeamPlayerRepository teamPlayerRepository;
     private final TeamRepository teamRepository;
     private final PlayerRepository playerRepository;
 
@@ -76,9 +75,11 @@ public class ApiFootballClient {
         JsonNode node = callExternalTeamPlayersApi(teamApiId);
         String teamName = node.get("response").get(0).get("team").get("name").asString();
 
-        // 팀이 존재하는지부터 확인. -> 없으면 새로저장
-        getOrCreateTeam(Team.of(teamName, teamApiId));
-        saveMissingTeamPlayers(node);
+        Team team = getOrCreateTeam(Team.of(teamName, teamApiId));
+        saveMissingTeamPlayers(node, team);
+
+
+
 
         return "OK";
     }
@@ -264,23 +265,32 @@ public class ApiFootballClient {
 
     // ---------------------------- SaveTeamPlayers -----------------------
 
-    private void saveMissingTeamPlayers(JsonNode node) {
+    private void saveMissingTeamPlayers(JsonNode node, Team team) {
         // 팀에 속한 플레이어들
         JsonNode players = node.get("response").get(0).get("players");
 
         // 팀에 속한 플레이어들중 DB 에 없는 선수들만 저장
         players.forEach(
-                player -> {
-                    long playerApiId = player.get("id").asLong();
-                    String playerName = player.get("name").asString();
+                p -> {
+                    long playerApiId = p.get("id").asLong();
+                    String playerName = p.get("name").asString();
 
-                    playerRepository.findByApiFootballId(playerApiId)
+                    Player player = playerRepository.findByApiFootballId(playerApiId)
                             .orElseGet(() -> playerRepository.save(
                                     Player.of(
                                             playerName,
                                             playerApiId
                                     ))
                             );
+
+                    teamPlayerRepository.findByPlayerIdAndTeamId(player.getId(), team.getId())
+                            .orElseGet(() -> teamPlayerRepository.save(
+                                    TeamPlayer.of(
+                                            team,
+                                            player
+                                    )
+                            ));
+
                 }
         );
     }
