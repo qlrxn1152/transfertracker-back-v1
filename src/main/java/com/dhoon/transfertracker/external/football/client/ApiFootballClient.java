@@ -8,10 +8,10 @@ import com.dhoon.transfertracker.internal.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.repository.TransferRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
@@ -19,19 +19,32 @@ import tools.jackson.databind.JsonNode;
 
 import java.time.LocalDate;
 
+
+//@RequiredArgsConstructor
+
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @Transactional
 public class ApiFootballClient {
 
-    private final RestClient restClient;
-
+    private final RestClient footballRestClient;
     private final TransferRepository transferRepository;
     private final TeamPlayerRepository teamPlayerRepository;
     private final TeamRepository teamRepository;
     private final PlayerRepository playerRepository;
 
+    public ApiFootballClient(
+            @Qualifier("footballRestClient") RestClient footballRestClient,
+            TransferRepository transferRepository,
+            TeamPlayerRepository teamPlayerRepository,
+            TeamRepository teamRepository,
+            PlayerRepository playerRepository) {
+        this.footballRestClient = footballRestClient;
+        this.transferRepository = transferRepository;
+        this.teamPlayerRepository = teamPlayerRepository;
+        this.teamRepository = teamRepository;
+        this.playerRepository = playerRepository;
+    }
 
     /**
      * 외부 API 를 호출해서, 해당 선수 데이터를 DB 에 저장하는 작업.
@@ -105,6 +118,23 @@ public class ApiFootballClient {
 
 
 
+
+
+
+
+
+    // =========================================================================================== //
+
+
+
+
+
+
+
+
+
+
+
     // ---------------------------- SavePlayer -----------------------
     private Player syncPlayerFromExternalApi(Long playerApiId) {
         JsonNode node = callExternalPlayerApi(playerApiId);
@@ -125,7 +155,7 @@ public class ApiFootballClient {
     }
 
     private @Nullable JsonNode callExternalPlayerApi(Long playerApiId) {
-        return restClient.get()
+        return footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/players")
                         .path("/profiles")
@@ -153,7 +183,7 @@ public class ApiFootballClient {
 
 
     private JsonNode callExternalTeamApi(Long teamApiID) {
-        return restClient.get()
+        return footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/teams")
                         .queryParam("id", teamApiID)
@@ -211,7 +241,7 @@ public class ApiFootballClient {
     }
 
     private @Nullable JsonNode callExternalPlayerTransferApi(Long playerApiId) {
-        return restClient.get()
+        return footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/transfers")
                         .queryParam("player", playerApiId)
@@ -257,7 +287,7 @@ public class ApiFootballClient {
     }
 
     private @Nullable JsonNode callExternalTeamPlayersApi(Long teamApiId) {
-        return restClient.get()
+        return footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/players")
                         .path("/squads")
@@ -287,7 +317,7 @@ public class ApiFootballClient {
     }
 
     private @Nullable JsonNode callExternalTeamTransfersApi(Long teamIdApiId) {
-        return restClient.get()
+        return footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/transfers")
                         .queryParam("team", teamIdApiId)
@@ -337,7 +367,7 @@ public class ApiFootballClient {
     }
 
     private @Nullable JsonNode callExternalLeagueTeamsApi(LeagueCode leagueCode) {
-        return restClient.get()
+        return footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/teams")
                         .queryParam("league", leagueCode.getApiFootballLeagueId())

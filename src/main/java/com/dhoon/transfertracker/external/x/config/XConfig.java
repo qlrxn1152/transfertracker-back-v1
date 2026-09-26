@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.external.football.config;
+package com.dhoon.transfertracker.external.x.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -6,20 +6,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-public class ApiFootballConfig {
+public class XConfig {
 
-    @Bean("footballRestClient")
-    public RestClient ApiFootballClient(
+    @Bean("xRestClient")
+    public RestClient xClient(
             RestClient.Builder builder,
-            @Value("${football.api.base-url}") String baseUrl,
-            @Value("${football.api.key}") String apiKey
+            @Value("${x.api.base-url}") String baseUrl,
+            @Value("${x.api.bearer-token}") String bearerToken
     ) {
         return builder
                 .baseUrl(baseUrl)
-                .defaultHeader("x-apisports-key", apiKey)
+                .defaultHeaders(headers -> headers.setBearerAuth(bearerToken))
                 .build();
     }
-
-
-
 }
