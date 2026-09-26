@@ -94,9 +94,8 @@ public class ApiFootballClient {
     }
 
     /**
-     * 외부 API를 호출해서, 해당 리그에 해당 시즌에 속했던 팀들을 가지고 오는 작업과 팀에 속한 회원들을 TeamPlayer 테이블에 저장하는 작업입니다.
+     * 외부 API를 호출해서, 해당 리그에 해당 시즌에 속했던 팀들을 가지고 오고, 해당 팀들을 리그에 배치합니다.
      * @param leagueCode -> ENUM
-     * @return
      */
     public String syncLeagueTeams(LeagueCode leagueCode) {
         JsonNode node = restClient.get()
@@ -115,9 +114,8 @@ public class ApiFootballClient {
                     long teamApiId = team.get("team").get("id").asLong();
                     String teamName = team.get("team").get("name").asString();
 
-                    Team t = Team.of(teamName, teamApiId, leagueCode);
-
-                    getOrCreateTeam(t).assignTeamLeague(leagueCode);
+                    getOrCreateTeam(Team.of(teamName, teamApiId, leagueCode))
+                            .assignTeamLeague(leagueCode);
                 }
         );
 
