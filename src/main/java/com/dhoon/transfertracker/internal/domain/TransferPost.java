@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
@@ -29,24 +30,23 @@ public class TransferPost {
     @Column(name = "sourcer_name")
     private TransferPostSource sourcer;
 
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, length = 500)
     private String content;
-
 
     @Column(name = "external_post_id", nullable = false, unique = true)
     private String externalPostId;
 
     @Column(name = "contentCreatedAt")
-    private LocalDateTime contentCreatedAt;
+    private Instant contentCreatedAt;
 
-    private TransferPost(TransferPostSource sourcer, String content, String externalPostId, LocalDateTime contentCreatedAt) {
+    private TransferPost(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt) {
         this.sourcer = sourcer;
         this.content = content;
         this.externalPostId = externalPostId;
         this.contentCreatedAt = contentCreatedAt;
     }
 
-    public static TransferPost of(TransferPostSource sourcer, String content, String externalPostId, LocalDateTime contentCreatedAt) {
+    public static TransferPost of(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt) {
         return new TransferPost(sourcer, content, externalPostId, contentCreatedAt);
     }
 }
