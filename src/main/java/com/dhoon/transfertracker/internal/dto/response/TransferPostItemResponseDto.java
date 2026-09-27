@@ -19,6 +19,7 @@ public class TransferPostItemResponseDto {
     private String content;
     private TransferPostSource source;
     private Instant postCreatedAt;
+    private boolean isRelateTransfer;
 
     public static TransferPostItemResponseDto of(TransferPost transferPost) {
         return new TransferPostItemResponseDto(
@@ -26,7 +27,8 @@ public class TransferPostItemResponseDto {
                 transferPost.getExternalPostId(),
                 transferPost.getContent(),
                 transferPost.getSourcer(),
-                transferPost.getContentCreatedAt()
+                transferPost.getContentCreatedAt(),
+                transferPost.isTransferRelated()
         );
     }
 }
