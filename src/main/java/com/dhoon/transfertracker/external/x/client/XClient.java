@@ -90,7 +90,7 @@ public class XClient {
         return xRestClient.get()
                 .uri(uriBuilder -> uriBuilder.
                         path("/2/users/{id}/tweets")
-                        .queryParam("max_results", size)
+                        .queryParam("max_results", size) // 1 <= size <= 100 ( size => 자연수 )
                         .queryParam("tweet.fields", "created_at")
                         .build(userId)
                 )
