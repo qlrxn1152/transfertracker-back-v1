@@ -39,14 +39,18 @@ public class TransferPost {
     @Column(name = "contentCreatedAt")
     private Instant contentCreatedAt;
 
-    private TransferPost(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt) {
+    @Column(name = "is_transfer_related")
+    private boolean transferRelated;
+
+    private TransferPost(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated) {
         this.sourcer = sourcer;
         this.content = content;
         this.externalPostId = externalPostId;
         this.contentCreatedAt = contentCreatedAt;
+        this.transferRelated = transferRelated;
     }
 
-    public static TransferPost of(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt) {
-        return new TransferPost(sourcer, content, externalPostId, contentCreatedAt);
+    public static TransferPost of(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated) {
+        return new TransferPost(sourcer, content, externalPostId, contentCreatedAt, transferRelated);
     }
 }

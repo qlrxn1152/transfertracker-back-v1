@@ -1,7 +1,6 @@
 package com.dhoon.transfertracker.external.x.client;
 
 
-import com.dhoon.transfertracker.internal.domain.Transfer;
 import com.dhoon.transfertracker.internal.domain.TransferPost;
 import com.dhoon.transfertracker.internal.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.repository.TransferPostRepository;
@@ -12,8 +11,7 @@ import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.List;
 
 //@RequiredArgsConstructor
 
@@ -30,30 +28,28 @@ public class XClient {
     }
 
 
-    // 우선 로마노만 ..?
     public String syncPosts(TransferPostSource source) {
         String username = source.getXUsername();
         String userId = source.getXUserId();
 
-        JsonNode userPosts = getUserPosts(userId).get("data");
+        JsonNode userPosts = getUserPosts(userId, 100).get("data");
 
         userPosts.forEach(post -> {
             String content = post.get("text").asString();
+            boolean isTransferRelate = isTransferRelated(content);
+
             String postId = post.get("id").asString();
 
             Instant createdAt = Instant.parse(post.get("created_at").asString());
 
             transferPostRepository.findByExternalPostId(postId)
                     .orElseGet(() -> transferPostRepository.save(TransferPost.of(
-                            source, content, postId, createdAt
+                            source, content, postId, createdAt, isTransferRelate
                     )));
         });
 
         return "OK";
     }
-
-
-
 
 
 
@@ -68,16 +64,45 @@ public class XClient {
                 .body(JsonNode.class);
     }
 
-    public JsonNode getUserPosts(String userId) {
+    public JsonNode getUserPosts(String userId, int size) {
         return xRestClient.get()
                 .uri(uriBuilder -> uriBuilder.
                         path("/2/users/{id}/tweets")
-                        .queryParam("max_results", 10)
+                        .queryParam("max_results", size)
                         .queryParam("tweet.fields", "created_at")
                         .build(userId)
                 )
                 .retrieve()
                 .body(JsonNode.class);
+    }
+
+
+
+
+    public boolean isTransferRelated(String content) {
+        List<String> keyWords = List.of(
+                "transfer",
+                "deal",
+                "agreement",
+                "agreed",
+                "bid",
+                "offer",
+                "talks",
+                "personal terms",
+                "signing",
+                "join",
+                "loan",
+                "medical",
+                "contract",
+                "extension",
+                "renew",
+                "here we go"
+        );
+
+        String targetContent = content.toLowerCase();
+
+        return keyWords.stream()
+                .anyMatch(targetContent::contains);
     }
 
 
