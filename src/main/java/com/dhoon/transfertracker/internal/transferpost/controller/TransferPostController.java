@@ -19,10 +19,15 @@ public class TransferPostController {
 
     @GetMapping("/api/transfer/posts/{sourcer}")
     public ResponseEntity<TransferPostsResponseDto> getSourcerAllPosts(@PathVariable TransferPostSource sourcer) {
-
         TransferPostsResponseDto response = transferPostService.getSourcerAllPosts(sourcer);
 
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/api/transfer/posts/team/{teamId}")
+    public ResponseEntity<TransferPostsResponseDto> getTeamTransferPosts(@PathVariable Long teamId) {
+        TransferPostsResponseDto response = transferPostService.getTeamTransferPosts(teamId);
+
+        return ResponseEntity.ok(response);
+    }
 }

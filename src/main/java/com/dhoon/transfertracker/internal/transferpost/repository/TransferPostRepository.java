@@ -12,4 +12,6 @@ public interface TransferPostRepository extends JpaRepository<TransferPost, Long
     Optional<TransferPost> findByExternalPostId(String externalPostId);
 
     List<TransferPost> findAllBySourcer(TransferPostSource sourcer);
+
+    List<TransferPost> findAllByTeamId(Long teamId);
 }

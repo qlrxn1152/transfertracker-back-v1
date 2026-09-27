@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.transferpost.domain;
 
+import com.dhoon.transfertracker.internal.team.domain.Team;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,6 +42,10 @@ public class TransferPost {
     @Column(name = "is_transfer_related")
     private boolean transferRelated;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private Team team;
+
     private TransferPost(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated) {
         this.sourcer = sourcer;
         this.content = content;
@@ -52,4 +57,10 @@ public class TransferPost {
     public static TransferPost of(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated) {
         return new TransferPost(sourcer, content, externalPostId, contentCreatedAt, transferRelated);
     }
+
+    public void assignTeam(Team team) {
+        this.team = team;
+    }
+
+
 }

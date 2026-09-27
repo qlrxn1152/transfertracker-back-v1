@@ -6,4 +6,10 @@ import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsRes
 public interface TransferPostService {
 
     TransferPostsResponseDto getSourcerAllPosts(TransferPostSource sourcer);
+
+    String test();
+
+    // 외부 API ID 가 아닌, 사용중인 DB 안에있는 team_id
+    TransferPostsResponseDto getTeamTransferPosts(Long teamId);
+
 }

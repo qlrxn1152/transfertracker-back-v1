@@ -22,13 +22,6 @@ public class XController {
         return xClient.syncPosts(source);
     }
 
-    @GetMapping("/test/{username}")
-    public JsonNode test2(@PathVariable String username) {
-        JsonNode a = xClient.getUserByUsername(username);
-
-        return a;
-    }
-
 
 
 

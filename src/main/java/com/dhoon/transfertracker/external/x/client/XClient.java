@@ -1,16 +1,20 @@
 package com.dhoon.transfertracker.external.x.client;
 
 
+import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 //@RequiredArgsConstructor
@@ -26,6 +30,7 @@ public class XClient {
         this.xRestClient = xRestClient;
         this.transferPostRepository = transferPostRepository;
     }
+
 
 
     public String syncPosts(TransferPostSource source) {
@@ -50,6 +55,23 @@ public class XClient {
 
         return "OK";
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
