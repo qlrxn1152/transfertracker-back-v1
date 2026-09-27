@@ -1,9 +1,9 @@
 package com.dhoon.transfertracker.external.x.client;
 
 
-import com.dhoon.transfertracker.internal.domain.TransferPost;
-import com.dhoon.transfertracker.internal.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.repository.TransferPostRepository;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;

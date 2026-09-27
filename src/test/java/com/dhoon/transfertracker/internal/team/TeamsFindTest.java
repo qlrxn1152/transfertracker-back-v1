@@ -1,11 +1,10 @@
 package com.dhoon.transfertracker.internal.team;
 
 import com.dhoon.transfertracker.integrate.TeamCreateFixture;
-import com.dhoon.transfertracker.internal.domain.Team;
-import com.dhoon.transfertracker.internal.dto.team.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.dto.team.TeamsResponseDto;
-import com.dhoon.transfertracker.internal.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.service.TeamService;
+import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.service.TeamService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;

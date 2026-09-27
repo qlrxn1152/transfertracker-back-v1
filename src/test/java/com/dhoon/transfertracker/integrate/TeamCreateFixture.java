@@ -1,7 +1,7 @@
 package com.dhoon.transfertracker.integrate;
 
-import com.dhoon.transfertracker.internal.domain.Team;
-import com.dhoon.transfertracker.internal.repository.TeamRepository;
+import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

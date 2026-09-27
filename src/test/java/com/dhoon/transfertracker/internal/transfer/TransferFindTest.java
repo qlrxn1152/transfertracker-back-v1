@@ -1,8 +1,7 @@
 package com.dhoon.transfertracker.internal.transfer;
 
 import com.dhoon.transfertracker.integrate.TeamCreateFixture;
-import com.dhoon.transfertracker.internal.service.TransferService;
-import com.dhoon.transfertracker.internal.team.TeamsFindTest;
+import com.dhoon.transfertracker.internal.transferpost.service.TransferService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,13 +1,16 @@
 package com.dhoon.transfertracker.external.football.client;
 
-import com.dhoon.transfertracker.TeamTransferData;
+import com.dhoon.transfertracker.internal.transfer.domain.TeamTransferData;
 import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
-import com.dhoon.transfertracker.internal.domain.*;
-import com.dhoon.transfertracker.internal.repository.PlayerRepository;
-import com.dhoon.transfertracker.internal.repository.TeamPlayerRepository;
-import com.dhoon.transfertracker.internal.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.repository.TransferRepository;
+import com.dhoon.transfertracker.internal.player.domain.Player;
+import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
+import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
+import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
+import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
+import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
+import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -108,7 +111,7 @@ public class ApiFootballClient {
      * 외부 API를 호출해서, 해당 리그에 해당 시즌에 속했던 팀들을 가지고 오고, 해당 팀들을 리그에 배치합니다.
      * @param leagueCode -> ENUM
      */
-    public String syncLeagueTeams(LeagueCode leagueCode) {
+    public String syncLeagueTeams(Team.LeagueCode leagueCode) {
         JsonNode node = callExternalLeagueTeamsApi(leagueCode);
 
         saveLeagueTeamsAndAssignLeagueCode(leagueCode, node);
@@ -352,7 +355,7 @@ public class ApiFootballClient {
     // ---------------------------- SaveTeamTransfers -----------------------
 
     // ---------------------------- SaveLeagueTeams -----------------------
-    private void saveLeagueTeamsAndAssignLeagueCode(LeagueCode leagueCode, JsonNode node) {
+    private void saveLeagueTeamsAndAssignLeagueCode(Team.LeagueCode leagueCode, JsonNode node) {
         node.get("response")
                 .forEach(
                         team -> {
@@ -365,7 +368,7 @@ public class ApiFootballClient {
                 );
     }
 
-    private @Nullable JsonNode callExternalLeagueTeamsApi(LeagueCode leagueCode) {
+    private @Nullable JsonNode callExternalLeagueTeamsApi(Team.LeagueCode leagueCode) {
         return footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/teams")
