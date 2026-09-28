@@ -61,6 +61,7 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TeamPageInfosResponseDto getTeamInfo(Long teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow();
