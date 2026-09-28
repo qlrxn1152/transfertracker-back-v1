@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.team.controller;
 
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfosResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.service.TeamService;
 import lombok.RequiredArgsConstructor;
@@ -39,4 +40,13 @@ public class TeamController {
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @GetMapping("/api/team/test/{teamId}")
+    public ResponseEntity<TeamPageInfosResponseDto> getTeamInfo(@PathVariable Long teamId) {
+        TeamPageInfosResponseDto response = teamService.getTeamInfo(teamId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
 }

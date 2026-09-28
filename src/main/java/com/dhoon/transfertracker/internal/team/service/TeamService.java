@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.team.service;
 
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfosResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
 
 public interface TeamService {
@@ -10,4 +11,6 @@ public interface TeamService {
     TeamsResponseDto getTeams();
 
     TeamsResponseDto getLeagueTeams(String leagueCode);
+
+    TeamPageInfosResponseDto getTeamInfo(Long teamId);
 }
