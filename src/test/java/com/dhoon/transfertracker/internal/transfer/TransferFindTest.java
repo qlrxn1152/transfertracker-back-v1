@@ -18,17 +18,5 @@ public class TransferFindTest {
 
     @Autowired TransferService transferService;
 
-    @Test
-    @DisplayName(value = "")
-    void getAllTransfers() throws Exception {
-        // given
-        teamCreateFixture.saveTeams(10);
-
-        // when
-        transferService.getTransfers();
-
-        // then
-
-    }
 
 }

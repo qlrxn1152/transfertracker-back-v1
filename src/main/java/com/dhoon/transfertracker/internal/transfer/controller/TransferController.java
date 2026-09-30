@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -25,8 +26,8 @@ public class TransferController {
     }
 
     @GetMapping("/api/transfers")
-    public ResponseEntity<AllTransfersResponseDto> getTransfers() {
-        AllTransfersResponseDto response = transferService.getTransfers();
+    public ResponseEntity<AllTransfersResponseDto> getTransfers(@RequestParam(defaultValue = "0") int page) {
+        AllTransfersResponseDto response = transferService.getTransfers(page);
 
         return ResponseEntity.ok(response);
     }

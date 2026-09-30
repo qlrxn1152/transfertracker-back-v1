@@ -67,4 +67,14 @@ public class TransferPostServiceImpl implements TransferPostService {
 
         return TransferPostsResponseDto.of(posts);
     }
+
+    @Override
+    public TransferPostsResponseDto getAllTransferPosts() {
+        List<TransferPostItemResponseDto> posts = transferPostRepository.findAll()
+                .stream()
+                .map(TransferPostItemResponseDto::of)
+                .toList();
+
+        return TransferPostsResponseDto.of(posts);
+    }
 }

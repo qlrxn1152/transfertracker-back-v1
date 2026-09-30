@@ -7,7 +7,7 @@ public interface TransferService {
 
     PlayerTransfersResponseDto getPlayerTransfers(Long playerId);
 
-    AllTransfersResponseDto getTransfers();
+    AllTransfersResponseDto getTransfers(int page);
 
     AllTransfersResponseDto getTeamTransfers(Long teamId);
 

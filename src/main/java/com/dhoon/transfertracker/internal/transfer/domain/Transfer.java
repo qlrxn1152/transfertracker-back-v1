@@ -12,6 +12,9 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(
+        indexes = @Index(name = "idx_transfer_transfer_date", columnList = "transferDate")
+)
 public class Transfer {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,8 @@
 package com.dhoon.transfertracker.internal.transfer.repository;
 
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -25,7 +27,9 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
                         join fetch t.inTeam
                         join fetch t.outTeam
             """)
-    List<Transfer> findAllTransferWithLazyEntities();
+    Slice<Transfer> findAllTransferWithLazyEntities(Pageable pageable);
+
+
 
 
 

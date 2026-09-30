@@ -30,4 +30,11 @@ public class TransferPostController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/api/transfer/posts")
+    public ResponseEntity<TransferPostsResponseDto> getAllTransferPosts() {
+        TransferPostsResponseDto response = transferPostService.getAllTransferPosts();
+
+        return ResponseEntity.ok(response);
+    }
 }

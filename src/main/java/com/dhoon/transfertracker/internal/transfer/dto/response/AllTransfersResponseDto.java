@@ -14,9 +14,11 @@ import java.util.List;
 public class AllTransfersResponseDto {
 
     private List<TransferResponseDto> transfers = new ArrayList<>();
+    private boolean hasNext;
+    private boolean hasPrevious;
 
-    public static AllTransfersResponseDto of(List<TransferResponseDto> transfers) {
-        return new AllTransfersResponseDto(transfers);
+    public static AllTransfersResponseDto of(List<TransferResponseDto> transfers, boolean hasNext, boolean hasPrevious) {
+        return new AllTransfersResponseDto(transfers, hasNext, hasPrevious);
     }
 
 }
