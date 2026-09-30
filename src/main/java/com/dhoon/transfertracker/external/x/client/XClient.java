@@ -48,9 +48,11 @@ public class XClient {
             Instant createdAt = Instant.parse(post.get("created_at").asString());
 
             transferPostRepository.findByExternalPostId(postId)
-                    .orElseGet(() -> transferPostRepository.save(TransferPost.of(
-                            source, content, postId, createdAt, isTransferRelate
-                    )));
+                    .orElseGet(() ->
+                            transferPostRepository.save(TransferPost.of(
+                                    source, content, postId, createdAt, isTransferRelate)
+                            ));
+
         });
 
         return "OK";

@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.external.football.client;
 
+import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.transfer.domain.TeamTransferData;
 import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
@@ -111,7 +112,7 @@ public class ApiFootballClient {
      * 외부 API를 호출해서, 해당 리그에 해당 시즌에 속했던 팀들을 가지고 오고, 해당 팀들을 리그에 배치합니다.
      * @param leagueCode -> ENUM
      */
-    public String syncLeagueTeams(Team.LeagueCode leagueCode) {
+    public String syncLeagueTeams(LeagueCode leagueCode) {
         JsonNode node = callExternalLeagueTeamsApi(leagueCode);
 
         saveLeagueTeamsAndAssignLeagueCode(leagueCode, node);
@@ -355,7 +356,7 @@ public class ApiFootballClient {
     // ---------------------------- SaveTeamTransfers -----------------------
 
     // ---------------------------- SaveLeagueTeams -----------------------
-    private void saveLeagueTeamsAndAssignLeagueCode(Team.LeagueCode leagueCode, JsonNode node) {
+    private void saveLeagueTeamsAndAssignLeagueCode(LeagueCode leagueCode, JsonNode node) {
         node.get("response")
                 .forEach(
                         team -> {
@@ -368,7 +369,7 @@ public class ApiFootballClient {
                 );
     }
 
-    private @Nullable JsonNode callExternalLeagueTeamsApi(Team.LeagueCode leagueCode) {
+    private @Nullable JsonNode callExternalLeagueTeamsApi(LeagueCode leagueCode) {
         return footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/teams")

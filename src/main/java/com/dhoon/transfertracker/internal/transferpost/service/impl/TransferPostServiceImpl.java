@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.transferpost.service.impl;
 
+import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
@@ -42,7 +43,7 @@ public class TransferPostServiceImpl implements TransferPostService {
     public String test() {
         List<TransferPost> posts = transferPostRepository.findAll();
 
-        List<Team> eplTeamNames = teamRepository.findAllByLeagueCode(Team.LeagueCode.EPL);
+        List<Team> eplTeamNames = teamRepository.findAllByLeagueCode(LeagueCode.EPL);
 
         for (TransferPost post : posts) {
             String lowerContent = post.getContent().toLowerCase();
@@ -57,6 +58,7 @@ public class TransferPostServiceImpl implements TransferPostService {
 
         return "TEST";
     }
+
 
     @Override
     public TransferPostsResponseDto getTeamTransferPosts(Long teamId) {
@@ -77,4 +79,5 @@ public class TransferPostServiceImpl implements TransferPostService {
 
         return TransferPostsResponseDto.of(posts);
     }
+
 }

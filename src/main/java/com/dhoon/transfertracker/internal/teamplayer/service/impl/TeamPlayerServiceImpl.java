@@ -22,7 +22,7 @@ public class TeamPlayerServiceImpl implements TeamPlayerService {
     @Override
     public TeamPlayersResponseDto getTeamPlayers(Long teamId) {
 
-        List<TeamPlayerItemResponseDto> teamPlayers = teamPlayerRepository.findAllByTeamId(teamId)
+        List<TeamPlayerItemResponseDto> teamPlayers = teamPlayerRepository.findAllByTeamIdWithLazyEntity(teamId)
                 .stream()
                 .map(TeamPlayerItemResponseDto::of)
                 .toList();

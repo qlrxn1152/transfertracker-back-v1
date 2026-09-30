@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.team.service.impl;
 
+import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfoForTeamResponseDto;
@@ -52,7 +53,7 @@ public class TeamServiceImpl implements TeamService {
     @Override
     @Transactional(readOnly = true)
     public TeamsResponseDto getLeagueTeams(String leagueCode) {
-        List<TeamItemResponseDto> leagueTeams = teamRepository.findAllByLeagueCode(Team.LeagueCode.valueOf(leagueCode.toUpperCase())).stream()
+        List<TeamItemResponseDto> leagueTeams = teamRepository.findAllByLeagueCode(LeagueCode.valueOf(leagueCode.toUpperCase())).stream()
                 .map(TeamItemResponseDto::of)
                 .toList();
 
@@ -67,7 +68,7 @@ public class TeamServiceImpl implements TeamService {
                 .orElseThrow();
         long teamPlayerCount = teamPlayerRepository.countByTeamId(teamId);
 
-        List<TeamPlayerItemResponseDto> playersData = teamPlayerRepository.findAllByTeamId(teamId)
+        List<TeamPlayerItemResponseDto> playersData = teamPlayerRepository.findAllByTeamIdWithLazyEntity(teamId)
                 .stream()
                 .map(TeamPlayerItemResponseDto::of)
                 .toList();

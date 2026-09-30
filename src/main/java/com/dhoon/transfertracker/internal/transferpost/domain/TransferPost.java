@@ -25,7 +25,6 @@ public class TransferPost {
     @Column(name = "transfer_post_id")
     private Long id;
 
-
     @Enumerated(EnumType.STRING)
     @Column(name = "sourcer_name")
     private TransferPostSource sourcer;

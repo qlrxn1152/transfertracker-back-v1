@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.team.repository;
 
+import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,7 +13,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     Optional<Team> findByApiFootballId(Long apiFootballId);
 
-    List<Team> findAllByLeagueCode(Team.LeagueCode leagueCode);
+    List<Team> findAllByLeagueCode(LeagueCode leagueCode);
 
     Optional<Team> findByTeamName(String teamName);
 
