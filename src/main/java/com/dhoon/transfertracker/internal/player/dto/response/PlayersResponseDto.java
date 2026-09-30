@@ -14,8 +14,10 @@ import java.util.List;
 public class PlayersResponseDto {
 
     private List<PlayerItemResponseDto> players = new ArrayList<>();
+    private boolean hasNext;
+    private boolean hasPrevious;
 
-    public static PlayersResponseDto of(List<PlayerItemResponseDto> players) {
-        return new PlayersResponseDto(players);
+    public static PlayersResponseDto of(List<PlayerItemResponseDto> players, boolean hasNext, boolean hasPrevious) {
+        return new PlayersResponseDto(players, hasNext, hasPrevious);
     }
 }

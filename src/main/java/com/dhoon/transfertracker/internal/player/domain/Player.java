@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(
+        indexes = @Index(name = "idx_player_player_name", columnList = "playerName")
+)
 public class Player {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,4 +31,8 @@ public class Player {
     public static  Player of(String playerName, Long apiFootballId) {
         return new Player(playerName, apiFootballId);
     }
+
+
+
+
 }

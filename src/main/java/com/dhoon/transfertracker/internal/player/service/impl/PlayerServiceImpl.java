@@ -7,6 +7,9 @@ import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,13 +34,23 @@ class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional(readOnly = true)
-    public PlayersResponseDto getPlayers() {
-        List<PlayerItemResponseDto> players = playerRepository.findAll()
+    public PlayersResponseDto getPlayers(int page) {
+
+        Slice<Player> playerSlice = playerRepository.findAllBy(
+                PageRequest.of(
+                    page,
+                    50,
+                    Sort.by(Sort.Order.asc("playerName"), Sort.Order.asc("id"))
+        ));
+
+        List<PlayerItemResponseDto> players = playerSlice
+                .getContent()
                 .stream()
                 .map(PlayerItemResponseDto::of)
                 .toList();
 
-        return PlayersResponseDto.of(players);
+
+        return PlayersResponseDto.of(players, playerSlice.hasNext(), playerSlice.hasPrevious());
     }
 
 }

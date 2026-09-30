@@ -40,14 +40,14 @@ public class TransferServiceImpl implements TransferService {
                 .map(PlayerTransferItemResponseDto::of)
                 .toList();
 
-
         return PlayerTransfersResponseDto.of(player.getPlayerName(), playerTransfers);
     }
 
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(int page) {
-        Slice<Transfer> transferSlice = transferRepository.findAllTransferWithLazyEntities(PageRequest.of(
+        Slice<Transfer> transferSlice = transferRepository.findAllTransferWithLazyEntities(
+                PageRequest.of(
                         page,
                         20,
                         Sort.by(Sort.Order.desc("transferDate"), Sort.Order.desc("id")))
