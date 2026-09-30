@@ -38,7 +38,7 @@ public class TransferPostController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/test")
+    @GetMapping("/external/api/test")
     public ResponseEntity<String> test() {
         String response = transferPostService.test();
         return ResponseEntity.ok(response);
