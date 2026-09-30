@@ -38,3 +38,7 @@ out/
 
 # Local application config
 src/main/resources/application-local.properties
+
+# Local DB dump
+transfer_v1_data.sql
+transfer_v1_data_complete.sql
