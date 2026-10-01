@@ -4,6 +4,7 @@ import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponse
 import com.dhoon.transfertracker.internal.player.dto.response.PlayersResponseDto;
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPageValueException;
+import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ class PlayerServiceImpl implements PlayerService {
     @Transactional(readOnly = true)
     public PlayerItemResponseDto getPlayer(Long playerId) {
         Player player = playerRepository.findById(playerId)
-                .orElseThrow();
+                .orElseThrow(NotFoundPlayerException::new);
 
         return PlayerItemResponseDto.of(player);
     }

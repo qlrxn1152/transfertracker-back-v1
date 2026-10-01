@@ -17,6 +17,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
                         join fetch t.inTeam
                         join fetch t.outTeam
             where t.player.id = :playerId
+            order by t.transferDate desc, t.id desc
             """)
     List<Transfer> findAllByPlayerId(Long playerId);
 
