@@ -36,18 +36,15 @@ class PlayerServiceImpl implements PlayerService {
     @Override
     @Transactional(readOnly = true)
     public PlayersResponseDto getPlayers(int page, String keyWord) {
-
         if (page < 0) {
             throw new InvalidPlayerSearchPageValueException();
         }
-
 
         PageRequest pageable = PageRequest.of(
                 page,
                 50,
                 Sort.by(Sort.Order.asc("playerName"), Sort.Order.asc("id"))
         );
-
 
         String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
         Slice<Player> playerSlice;

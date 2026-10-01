@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.transfer.controller;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.service.TransferService;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class TransferController {
     }
 
     @GetMapping("/api/transfers")
-    public ResponseEntity<AllTransfersResponseDto> getTransfers(@RequestParam(defaultValue = "0") int page, @RequestParam String keyWord) {
+    public ResponseEntity<AllTransfersResponseDto> getTransfers(@Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord) {
         AllTransfersResponseDto response = transferService.getTransfers(page, keyWord);
 
         return ResponseEntity.ok(response);

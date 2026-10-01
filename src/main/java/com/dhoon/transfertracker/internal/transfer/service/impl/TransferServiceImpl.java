@@ -2,11 +2,13 @@ package com.dhoon.transfertracker.internal.transfer.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
+import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransferItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferResponseDto;
+import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import com.dhoon.transfertracker.internal.transferpost.service.TransferService;
@@ -47,6 +49,11 @@ public class TransferServiceImpl implements TransferService {
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(int page, String keyWord) {
+
+        if (page < 0) {
+            throw new InvalidTransferSearchPageValueException();
+        }
+
         PageRequest pageable = PageRequest.of(
                 page,
                 20,
@@ -69,6 +76,9 @@ public class TransferServiceImpl implements TransferService {
 
         return AllTransfersResponseDto.of(transfers, transferSlice.hasNext(), transferSlice.hasPrevious());
     }
+
+
+
 
     @Override
     @Transactional(readOnly = true)
