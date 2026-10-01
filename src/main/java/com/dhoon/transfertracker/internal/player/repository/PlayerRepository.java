@@ -13,5 +13,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     Slice<Player> findAllBy(Pageable pageable);
 
+    Slice<Player> findByPlayerNameContainingIgnoreCase(String keyWord, Pageable pageable);
+
     boolean existsByApiFootballId(Long apiFootballId);
 }

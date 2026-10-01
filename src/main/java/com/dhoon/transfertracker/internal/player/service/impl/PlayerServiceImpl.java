@@ -34,14 +34,25 @@ class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional(readOnly = true)
-    public PlayersResponseDto getPlayers(int page) {
+    public PlayersResponseDto getPlayers(int page, String keyWord) {
+        PageRequest pageable = PageRequest.of(
+                page,
+                50,
+                Sort.by(Sort.Order.asc("playerName"), Sort.Order.asc("id"))
+        );
+        String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
+        Slice<Player> playerSlice;
 
-        Slice<Player> playerSlice = playerRepository.findAllBy(
-                PageRequest.of(
-                    page,
-                    50,
-                    Sort.by(Sort.Order.asc("playerName"), Sort.Order.asc("id"))
-        ));
+
+
+        if (normalizedKeyWord.isBlank()) {
+            playerSlice = playerRepository.findAllBy(pageable);
+        }
+
+        else {
+            playerSlice = playerRepository.findByPlayerNameContainingIgnoreCase(normalizedKeyWord, pageable);
+        }
+
 
         List<PlayerItemResponseDto> players = playerSlice
                 .getContent()

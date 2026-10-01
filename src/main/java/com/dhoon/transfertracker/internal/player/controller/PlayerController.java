@@ -26,8 +26,8 @@ public class PlayerController {
     }
 
     @GetMapping("/api/players")
-    public ResponseEntity<PlayersResponseDto> getPlayers(@RequestParam(defaultValue = "0") int page) {
-        PlayersResponseDto response = playerService.getPlayers(page);
+    public ResponseEntity<PlayersResponseDto> getPlayers(@RequestParam(defaultValue = "0") int page, @RequestParam String keyWord) {
+        PlayersResponseDto response = playerService.getPlayers(page, keyWord);
 
         return ResponseEntity.ok(response);
     }

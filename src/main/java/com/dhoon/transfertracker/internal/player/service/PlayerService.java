@@ -7,7 +7,7 @@ public interface PlayerService {
 
     PlayerItemResponseDto getPlayer(Long playerId);
 
-    PlayersResponseDto getPlayers(int page);
+    PlayersResponseDto getPlayers(int page, String keyWord);
 
 
 }
