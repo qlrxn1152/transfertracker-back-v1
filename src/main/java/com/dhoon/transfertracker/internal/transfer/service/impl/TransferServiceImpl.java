@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.transfer.service.impl;
 
+import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
@@ -45,13 +46,21 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     @Transactional(readOnly = true)
-    public AllTransfersResponseDto getTransfers(int page) {
-        Slice<Transfer> transferSlice = transferRepository.findAllTransferWithLazyEntities(
-                PageRequest.of(
-                        page,
-                        20,
-                        Sort.by(Sort.Order.desc("transferDate"), Sort.Order.desc("id")))
-        );
+    public AllTransfersResponseDto getTransfers(int page, String keyWord) {
+        PageRequest pageable = PageRequest.of(
+                page,
+                20,
+                Sort.by(Sort.Order.desc("transferDate"), Sort.Order.desc("id")));
+
+        String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
+        Slice<Transfer> transferSlice;
+
+        if ( normalizedKeyWord.isBlank() ) {
+            transferSlice = transferRepository.findAllTransferWithLazyEntities(pageable);
+        }
+        else {
+            transferSlice = transferRepository.findByPlayerNameContainingIgnoreCaseWithLazyEntities(normalizedKeyWord, pageable);
+        }
 
         List<TransferResponseDto> transfers = transferSlice.getContent()
                 .stream()

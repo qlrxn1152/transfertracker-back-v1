@@ -30,6 +30,16 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
     Slice<Transfer> findAllTransferWithLazyEntities(Pageable pageable);
 
 
+    @Query("""
+            select t from Transfer t 
+                        join fetch t.player p
+                        join fetch t.inTeam
+                        join fetch t.outTeam
+            where lower(p.playerName) like lower(concat('%', :keyWord, '%'))                        
+            """)
+    Slice<Transfer> findByPlayerNameContainingIgnoreCaseWithLazyEntities(String keyWord, Pageable pageable);
+
+
 
     // 전부 내부 API 아이디 ( 외부 전용 API 아이디 아님 )
     boolean existsByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);

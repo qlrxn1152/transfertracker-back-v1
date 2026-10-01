@@ -26,8 +26,8 @@ public class TransferController {
     }
 
     @GetMapping("/api/transfers")
-    public ResponseEntity<AllTransfersResponseDto> getTransfers(@RequestParam(defaultValue = "0") int page) {
-        AllTransfersResponseDto response = transferService.getTransfers(page);
+    public ResponseEntity<AllTransfersResponseDto> getTransfers(@RequestParam(defaultValue = "0") int page, @RequestParam String keyWord) {
+        AllTransfersResponseDto response = transferService.getTransfers(page, keyWord);
 
         return ResponseEntity.ok(response);
     }
