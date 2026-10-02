@@ -36,7 +36,7 @@ class PlayerServiceImpl implements PlayerService {
                 .orElseThrow(NotFoundPlayerException::new);
 
         if (!teamPlayerRepository.existsByPlayerId(playerId)) {
-            PlayerItemResponseDto.of(player);
+            return PlayerItemResponseDto.of(player);
         }
 
         TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(playerId).get();
