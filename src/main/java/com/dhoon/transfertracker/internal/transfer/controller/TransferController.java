@@ -34,8 +34,8 @@ public class TransferController {
     }
 
     @GetMapping("/api/transfers/team/{teamId}")
-    public ResponseEntity<AllTransfersResponseDto> getTeamTransfers(@PathVariable Long teamId) {
-        AllTransfersResponseDto response = transferService.getTeamTransfers(teamId);
+    public ResponseEntity<AllTransfersResponseDto> getTeamTransfers(@PathVariable Long teamId, @Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord) {
+        AllTransfersResponseDto response = transferService.getTeamTransfers(teamId, page, keyWord);
 
         return ResponseEntity.ok(response);
     }

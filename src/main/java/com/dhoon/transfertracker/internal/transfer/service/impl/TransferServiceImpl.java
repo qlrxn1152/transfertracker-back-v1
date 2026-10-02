@@ -51,9 +51,6 @@ public class TransferServiceImpl implements TransferService {
         return PlayerTransfersResponseDto.of(player.getPlayerName(), playerTransfers);
     }
 
-
-
-
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(int page, String keyWord) {
@@ -86,12 +83,37 @@ public class TransferServiceImpl implements TransferService {
     }
 
 
-
-
     @Override
     @Transactional(readOnly = true)
-    public AllTransfersResponseDto getTeamTransfers(Long teamId) {
-        return null;
+    public AllTransfersResponseDto getTeamTransfers(Long teamId, int page, String keyWord) {
+        if (page < 0) {
+            throw new InvalidTransferSearchPageValueException();
+        }
+
+        PageRequest pageable = PageRequest.of(
+                page,
+                50,
+                Sort.by(Sort.Order.desc("transferDate"), Sort.Order.desc("id"))
+        );
+
+        String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
+
+        Slice<Transfer> transferSlice;
+
+        if ( normalizedKeyWord.isBlank() ) {
+            transferSlice = transferRepository.findAllByTeamIdWithLazy(teamId, pageable);
+        }
+        else {
+            transferSlice = transferRepository.findAllByTeamIdWithLazyAndKeyWord(teamId, normalizedKeyWord, pageable);
+        }
+
+        List<TransferResponseDto> transfers = transferSlice.getContent()
+                .stream()
+                .map(TransferResponseDto::of)
+                .toList();
+
+        return AllTransfersResponseDto.of(transfers, transferSlice.hasNext(), transferSlice.hasPrevious());
+
     }
 
 

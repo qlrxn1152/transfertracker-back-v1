@@ -9,7 +9,7 @@ public interface TransferService {
 
     AllTransfersResponseDto getTransfers(int page, String keyWord);
 
-    AllTransfersResponseDto getTeamTransfers(Long teamId);
+    AllTransfersResponseDto getTeamTransfers(Long teamId, int page, String keyWord);
 
 
 

@@ -13,7 +13,10 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-        indexes = @Index(name = "idx_transfer_transfer_date", columnList = "transferDate")
+        indexes = @Index(name = "idx_transfer_transfer_date", columnList = "transferDate"),
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_transfer", columnNames = {"player_id", "in_team_id", "out_team_id", "transfer_date"})
+        }
 )
 public class Transfer {
 

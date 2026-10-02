@@ -40,6 +40,26 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             """)
     Slice<Transfer> findByPlayerNameContainingIgnoreCaseWithLazyEntities(String keyWord, Pageable pageable);
 
+    @Query("""
+            select t from Transfer t 
+                        join fetch t.player p
+                        join fetch t.inTeam it
+                        join fetch t.outTeam ot
+            where ((t.inTeam.id = :teamId) or (t.outTeam.id = :teamId))
+            """)
+    Slice<Transfer> findAllByTeamIdWithLazy(Long teamId, Pageable pageable);
+
+
+    @Query("""
+            select t from Transfer t 
+                        join fetch t.player p
+                        join fetch t.inTeam
+                        join fetch t.outTeam
+            where ( (t.inTeam.id = :teamId) or (t.outTeam.id = :teamId) ) and (lower(p.playerName) like lower(concat('%', :keyWord, '%')))                        
+            """)
+    Slice<Transfer> findAllByTeamIdWithLazyAndKeyWord(Long teamId, String keyWord, Pageable pageable);
+
+
 
 
     // 전부 내부 API 아이디 ( 외부 전용 API 아이디 아님 )
