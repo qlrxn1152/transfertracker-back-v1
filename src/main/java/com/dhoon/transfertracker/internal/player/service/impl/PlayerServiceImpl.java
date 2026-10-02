@@ -7,6 +7,8 @@ import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPa
 import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
+import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
+import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,6 +27,7 @@ import java.util.List;
 class PlayerServiceImpl implements PlayerService {
 
     private final PlayerRepository playerRepository;
+    private final TeamPlayerRepository teamPlayerRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -31,7 +35,13 @@ class PlayerServiceImpl implements PlayerService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(NotFoundPlayerException::new);
 
-        return PlayerItemResponseDto.of(player);
+        if (!teamPlayerRepository.existsByPlayerId(playerId)) {
+            PlayerItemResponseDto.of(player);
+        }
+
+        TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(playerId).get();
+
+        return PlayerItemResponseDto.of(player, teamPlayer.getTeam());
     }
 
     @Override
@@ -58,12 +68,18 @@ class PlayerServiceImpl implements PlayerService {
             playerSlice = playerRepository.findByPlayerNameContainingIgnoreCase(normalizedKeyWord, pageable);
         }
 
+        List<PlayerItemResponseDto> players = new ArrayList<>();
 
-        List<PlayerItemResponseDto> players = playerSlice
-                .getContent()
-                .stream()
-                .map(PlayerItemResponseDto::of)
-                .toList();
+        for (Player player : playerSlice.getContent()) {
+            if (teamPlayerRepository.existsByPlayerId(player.getId())) {
+                TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(player.getId()).get();
+
+                players.add(PlayerItemResponseDto.of(player, teamPlayer.getTeam()));
+            }
+            else {
+                players.add(PlayerItemResponseDto.of(player));
+            }
+        }
 
 
         return PlayersResponseDto.of(players, playerSlice.hasNext(), playerSlice.hasPrevious());

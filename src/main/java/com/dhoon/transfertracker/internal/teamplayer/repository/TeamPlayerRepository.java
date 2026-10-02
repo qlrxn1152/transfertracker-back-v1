@@ -14,5 +14,10 @@ public interface TeamPlayerRepository extends JpaRepository<TeamPlayer, Long> {
 
     Optional<TeamPlayer> findByPlayerIdAndTeamId(Long playerId, Long teamId);
 
+    @Query("select tp from TeamPlayer tp join fetch tp.team where tp.player.id = :playerId")
+    Optional<TeamPlayer> findByPlayerId(Long playerId);
+
     long countByTeamId(Long teamId);
+
+    boolean existsByPlayerId(Long playerId);
 }
