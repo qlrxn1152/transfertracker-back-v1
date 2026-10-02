@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,11 +36,19 @@ public class TransferPostTranslationTxService {
                 .map(TranslationResult::getPostId)
                 .toList();
 
-        result.getPosts().forEach(r ->
-                transferPostRepository.findAllById(postIds)
-                        .forEach(transferPost -> transferPost.translate(r.getTranslatedContent()))
-        );
+        Map<Long, String> translatedContentByPostId = result.getPosts().stream()
+                .collect(Collectors.toMap(
+                        TranslationResult::getPostId,
+                        TranslationResult::getTranslatedContent
+                ));
 
+        transferPostRepository.findAllById(postIds)
+                .forEach(transferPost -> {
+                    String translatedContent =
+                            translatedContentByPostId.get(transferPost.getId());
+
+                    transferPost.translate(translatedContent);
+                });
     }
 
 
