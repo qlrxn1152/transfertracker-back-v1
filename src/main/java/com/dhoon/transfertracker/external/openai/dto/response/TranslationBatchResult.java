@@ -13,9 +13,14 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TranslationBatchResult {
-    List<TranslationResult> posts = new ArrayList<>();
+
+    List<TranslationResult> posts;
 
     public static TranslationBatchResult of(List<TranslationResult> posts) {
         return new TranslationBatchResult(posts);
+    }
+
+    public static TranslationBatchResult empty() {
+        return new TranslationBatchResult(new ArrayList<>());
     }
 }

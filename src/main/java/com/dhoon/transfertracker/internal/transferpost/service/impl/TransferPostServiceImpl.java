@@ -17,6 +17,7 @@ import com.dhoon.transfertracker.internal.transferpost.service.TransferPostServi
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -29,10 +30,11 @@ public class TransferPostServiceImpl implements TransferPostService {
 
     private final TransferPostRepository transferPostRepository;
     private final TeamRepository teamRepository;
-    private final OpenAiClient openAiClient;
+    private final TransferPostTranslationServiceImpl translationService;
 
 
     @Override
+    @Transactional(readOnly = true)
     public TransferPostsResponseDto getSourcerAllPosts(TransferPostSource sourcer) {
         List<TransferPostItemResponseDto> posts = transferPostRepository.findAllBySourcer(sourcer)
                 .stream()
@@ -44,7 +46,6 @@ public class TransferPostServiceImpl implements TransferPostService {
 
 
     // 특정 팀에 대한 게시물 분류 -> 외부 폴더에 있는게 더 좋지않을까 ? ( external .. )
-    @Transactional
     @Override
     public String test() {
         List<TransferPost> posts = transferPostRepository.findAll();
@@ -67,6 +68,7 @@ public class TransferPostServiceImpl implements TransferPostService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public TransferPostsResponseDto getTeamTransferPosts(Long teamId) {
         List<TransferPostItemResponseDto> posts = transferPostRepository.findAllByTeamId(teamId)
                 .stream()
@@ -77,6 +79,7 @@ public class TransferPostServiceImpl implements TransferPostService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TransferPostsResponseDto getAllTransferPosts() {
         List<TransferPostItemResponseDto> posts = transferPostRepository.findAll()
                 .stream()
@@ -87,28 +90,12 @@ public class TransferPostServiceImpl implements TransferPostService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public TranslationBatchResult translate() {
-        List<TranslationTarget> target = transferPostRepository.findTop10ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus.PENDING)
-                .stream()
-                .map(transferPost -> new TranslationTarget(transferPost.getId(), transferPost.getContent()))
-                .toList();
-
-
-
-
-        TranslationBatchResult result = openAiClient.translate(target);
-        List<TranslationResult> translatedPosts = result.getPosts();
-        for (TranslationResult translatedPost : translatedPosts) {
-            Long resultPostId = translatedPost.getPostId();
-
-            target.stream()
-                    .filter(t -> t.getPostId().equals(resultPostId))
-                    .forEach(st ->
-                        transferPostRepository.findById(st.getPostId()).ifPresent(transferPost -> transferPost.translate(translatedPost.getTranslatedContent()))
-                    );
-        }
-
-        return result;
+        return translationService.translate();
     }
+
+
+
 
 }
