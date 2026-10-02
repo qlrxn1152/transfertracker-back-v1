@@ -24,7 +24,7 @@ public class TransferPostTranslationTxService {
 
     @Transactional(readOnly = true)
     public List<TranslationTarget> findPendingTargets() {
-        return transferPostRepository.findTop10ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus.PENDING)
+        return transferPostRepository.findTop400ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus.PENDING)
                 .stream()
                 .map(transferPost -> new TranslationTarget(transferPost.getId(), transferPost.getContent()))
                 .toList();
