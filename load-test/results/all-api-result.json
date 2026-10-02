@@ -1,47 +1,20 @@
 {
-  "team_detail": {
-    "name": "Team Detail",
-    "avg": 5.31053245216017,
-    "p95": 12.746399999999998,
-    "p99": 19.097559999999998,
-    "rps": 29.66637993262823,
-    "failRate": 0,
-    "requestCount": 5069
-  },
-  "transfer_posts": {
-    "name": "Transfer Posts",
-    "avg": 8.867357664233575,
-    "p95": 16.9974,
-    "p99": 23.869159999999997,
-    "rps": 29.66637993262823,
-    "failRate": 0,
-    "requestCount": 5069
-  },
-  "players_list": {
-    "name": "Player List",
-    "avg": 7.100986979680407,
-    "p95": 12.761599999999998,
-    "p99": 20.044559999999997,
-    "rps": 29.66637993262823,
-    "failRate": 0,
-    "requestCount": 5069
-  },
-  "teams_list": {
-    "name": "Team List",
-    "avg": 7.308880055237716,
-    "p95": 14.7656,
-    "p99": 21.497399999999995,
-    "rps": 29.66637993262823,
-    "failRate": 0,
-    "requestCount": 5069
-  },
   "transfers_list": {
     "name": "Transfers List",
-    "avg": 2.98900848293549,
-    "p95": 8.638,
-    "p99": 15.030959999999991,
-    "rps": 29.66637993262823,
+    "avg": 5.0825735834461305,
+    "p95": 10.647499999999997,
+    "p99": 15.946299999999985,
+    "rps": 30.39556021439245,
     "failRate": 0,
-    "requestCount": 5069
+    "requestCount": 5171
+  },
+  "team_transfers_list": {
+    "name": "Team Transfers List",
+    "avg": 5.0730835428350325,
+    "p95": 9.653999999999998,
+    "p99": 13.751399999999999,
+    "rps": 30.39556021439245,
+    "failRate": 0,
+    "requestCount": 5171
   }
 }

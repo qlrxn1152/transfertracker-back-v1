@@ -6,6 +6,7 @@ import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfoForTeamResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfosResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayerItemResponseDto;
@@ -35,7 +36,7 @@ public class TeamServiceImpl implements TeamService {
     @Transactional(readOnly = true)
     public TeamItemResponseDto getTeam(Long teamId) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow();
+                .orElseThrow(NotFoundTeamException::new);
 
         return TeamItemResponseDto.of(team);
     }

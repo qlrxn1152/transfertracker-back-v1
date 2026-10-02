@@ -4,38 +4,17 @@ import { Trend, Rate, Counter } from 'k6/metrics';
 
     const APIs = [
         {
-            key: 'team_detail',
-            name: 'Team Detail',
-            method: 'GET',
-            url: 'http://localhost:8080/api/team/test/2'
-        },
-
-        {
-            key: 'transfer_posts',
-            name: 'Transfer Posts',
-            method: 'GET',
-            url: 'http://localhost:8080/api/transfer/posts'
-        },
-
-        {
-            key: 'players_list',
-            name: 'Player List',
-            method: 'GET',
-            url: 'http://localhost:8080/api/players'
-        },
-
-        {
-            key: 'teams_list',
-            name: 'Team List',
-            method: 'GET',
-            url: 'http://localhost:8080/api/teams'
-        },
-
-        {
             key: 'transfers_list',
             name: 'Transfers List',
             method: 'GET',
             url: 'http://localhost:8080/api/transfers'
+        },
+
+        {
+            key: 'team_transfers_list',
+            name: 'Team Transfers List',
+            method: 'GET',
+            url: 'http://localhost:8080/api/transfers/team/2' // Manchester United 기준.
         },
     ]
 

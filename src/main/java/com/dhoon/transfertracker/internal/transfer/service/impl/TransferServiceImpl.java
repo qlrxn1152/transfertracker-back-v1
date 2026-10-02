@@ -4,11 +4,13 @@ import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPageValueException;
+import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransferItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferResponseDto;
+import com.dhoon.transfertracker.internal.transfer.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
@@ -32,6 +34,7 @@ public class TransferServiceImpl implements TransferService {
 
     private final TransferRepository transferRepository;
     private final PlayerService playerService;
+    private final TeamService teamService;
 
     @Override
     @Transactional(readOnly = true)
@@ -61,7 +64,7 @@ public class TransferServiceImpl implements TransferService {
 
         PageRequest pageable = PageRequest.of(
                 page,
-                20,
+                50,
                 Sort.by(Sort.Order.desc("transferDate"), Sort.Order.desc("id")));
 
         String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
@@ -90,6 +93,16 @@ public class TransferServiceImpl implements TransferService {
             throw new InvalidTransferSearchPageValueException();
         }
 
+        if ( teamId == null) {
+            throw new InvalidTeamIdException();
+        }
+
+
+
+        teamService.getTeam(teamId);
+
+
+
         PageRequest pageable = PageRequest.of(
                 page,
                 50,
@@ -113,7 +126,6 @@ public class TransferServiceImpl implements TransferService {
                 .toList();
 
         return AllTransfersResponseDto.of(transfers, transferSlice.hasNext(), transferSlice.hasPrevious());
-
     }
 
 
