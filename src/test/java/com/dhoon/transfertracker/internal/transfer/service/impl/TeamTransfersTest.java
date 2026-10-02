@@ -1,7 +1,6 @@
 package com.dhoon.transfertracker.internal.transfer.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
-import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import com.dhoon.transfertracker.internal.team.domain.Team;
@@ -14,7 +13,7 @@ import com.dhoon.transfertracker.internal.transfer.dto.response.TransferResponse
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
-import com.dhoon.transfertracker.internal.transferpost.service.TransferService;
+import com.dhoon.transfertracker.internal.transfer.service.TransferService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,7 @@
 package com.dhoon.transfertracker.internal.transfer.service.impl;
 
-import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
-import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPageValueException;
 import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
@@ -14,11 +12,10 @@ import com.dhoon.transfertracker.internal.transfer.exception.InvalidTeamIdExcept
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
-import com.dhoon.transfertracker.internal.transferpost.service.TransferService;
+import com.dhoon.transfertracker.internal.transfer.service.TransferService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;

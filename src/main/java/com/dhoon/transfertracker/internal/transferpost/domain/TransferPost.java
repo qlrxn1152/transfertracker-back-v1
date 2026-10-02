@@ -41,6 +41,16 @@ public class TransferPost {
     @Column(name = "is_transfer_related")
     private boolean transferRelated;
 
+    @Column(name = "translated_content", columnDefinition = "TEXT")
+    private String translatedContent;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "translate_status")
+    private TranslateStatus translateStatus;
+
+    @Column(name = "translated_at")
+    private Instant translatedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
@@ -51,10 +61,27 @@ public class TransferPost {
         this.externalPostId = externalPostId;
         this.contentCreatedAt = contentCreatedAt;
         this.transferRelated = transferRelated;
+
+        this.translatedContent = null;
+        this.translateStatus = TranslateStatus.PENDING;
     }
 
     public static TransferPost of(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated) {
         return new TransferPost(sourcer, content, externalPostId, contentCreatedAt, transferRelated);
+    }
+
+    public void translate(String translatedContent) {
+        this.translatedContent = translatedContent;
+        this.translateStatus = TranslateStatus.COMPLETED;
+        this.translatedAt = Instant.now();
+    }
+
+    public void failTranslate() {
+        this.translateStatus = TranslateStatus.FAILED;
+    }
+
+    public void retryTranslate() {
+        this.translateStatus = TranslateStatus.PENDING;
     }
 
     public void assignTeam(Team team) {

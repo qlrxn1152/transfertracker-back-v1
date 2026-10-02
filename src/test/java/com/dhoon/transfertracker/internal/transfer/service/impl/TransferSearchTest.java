@@ -11,7 +11,7 @@ import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResp
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferResponseDto;
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
-import com.dhoon.transfertracker.internal.transferpost.service.TransferService;
+import com.dhoon.transfertracker.internal.transfer.service.TransferService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

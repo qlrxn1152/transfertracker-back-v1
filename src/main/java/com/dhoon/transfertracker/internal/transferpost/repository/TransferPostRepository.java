@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.transferpost.repository;
 
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.transferpost.domain.TranslateStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -14,4 +15,6 @@ public interface TransferPostRepository extends JpaRepository<TransferPost, Long
     List<TransferPost> findAllBySourcer(TransferPostSource sourcer);
 
     List<TransferPost> findAllByTeamId(Long teamId);
+
+    List<TransferPost> findTop10ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus translateStatus);
 }

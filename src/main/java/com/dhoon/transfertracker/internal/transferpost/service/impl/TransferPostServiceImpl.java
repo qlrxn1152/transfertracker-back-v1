@@ -1,14 +1,19 @@
 package com.dhoon.transfertracker.internal.transferpost.service.impl;
 
+import com.dhoon.transfertracker.external.openai.client.OpenAiClient;
+import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;
+import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
+import com.dhoon.transfertracker.external.openai.dto.response.TranslationResult;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.transferpost.domain.TranslateStatus;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transfer.service.TransferPostService;
+import com.dhoon.transfertracker.internal.transferpost.service.TransferPostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +29,7 @@ public class TransferPostServiceImpl implements TransferPostService {
 
     private final TransferPostRepository transferPostRepository;
     private final TeamRepository teamRepository;
+    private final OpenAiClient openAiClient;
 
 
     @Override
@@ -78,6 +84,31 @@ public class TransferPostServiceImpl implements TransferPostService {
                 .toList();
 
         return TransferPostsResponseDto.of(posts);
+    }
+
+    @Override
+    public TranslationBatchResult translate() {
+        List<TranslationTarget> target = transferPostRepository.findTop10ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus.PENDING)
+                .stream()
+                .map(transferPost -> new TranslationTarget(transferPost.getId(), transferPost.getContent()))
+                .toList();
+
+
+
+
+        TranslationBatchResult result = openAiClient.translate(target);
+        List<TranslationResult> translatedPosts = result.getPosts();
+        for (TranslationResult translatedPost : translatedPosts) {
+            Long resultPostId = translatedPost.getPostId();
+
+            target.stream()
+                    .filter(t -> t.getPostId().equals(resultPostId))
+                    .forEach(st ->
+                        transferPostRepository.findById(st.getPostId()).ifPresent(transferPost -> transferPost.translate(translatedPost.getTranslatedContent()))
+                    );
+        }
+
+        return result;
     }
 
 }

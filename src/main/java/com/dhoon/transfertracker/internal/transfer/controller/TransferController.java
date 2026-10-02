@@ -2,7 +2,7 @@ package com.dhoon.transfertracker.internal.transfer.controller;
 
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.service.TransferService;
+import com.dhoon.transfertracker.internal.transfer.service.TransferService;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

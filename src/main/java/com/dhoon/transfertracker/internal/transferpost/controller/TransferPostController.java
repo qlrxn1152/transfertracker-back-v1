@@ -1,13 +1,15 @@
 package com.dhoon.transfertracker.internal.transferpost.controller;
 
+import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
-import com.dhoon.transfertracker.internal.transfer.service.TransferPostService;
+import com.dhoon.transfertracker.internal.transferpost.service.TransferPostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -44,6 +46,10 @@ public class TransferPostController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/external/api/translate")
+    public ResponseEntity<TranslationBatchResult> translate() {
+        TranslationBatchResult response = transferPostService.translate();
 
-
+        return ResponseEntity.ok(response);
+    }
 }
