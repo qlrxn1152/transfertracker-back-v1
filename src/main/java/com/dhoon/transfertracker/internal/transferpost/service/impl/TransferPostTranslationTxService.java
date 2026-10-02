@@ -30,16 +30,15 @@ public class TransferPostTranslationTxService {
 
     public void applyTranslations(TranslationBatchResult result) {
 
-        List<TranslationResult> a = result.getPosts();
+        List<Long> postIds = result.getPosts().stream()
+                .map(TranslationResult::getPostId)
+                .toList();
 
-        for (TranslationResult translationResult : a) {
-            Long successPostId = translationResult.getPostId();
+        result.getPosts().forEach(r ->
+                transferPostRepository.findAllById(postIds)
+                        .forEach(transferPost -> transferPost.translate(r.getTranslatedContent()))
+        );
 
-            transferPostRepository.findById(successPostId)
-                    .ifPresent(transferPost ->
-                        transferPost.translate(translationResult.getTranslatedContent())
-                    );
-        }
     }
 
 

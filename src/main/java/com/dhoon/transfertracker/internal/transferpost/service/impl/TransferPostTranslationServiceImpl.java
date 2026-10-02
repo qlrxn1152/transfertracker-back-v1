@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.transferpost.service.impl;
 import com.dhoon.transfertracker.external.openai.client.OpenAiClient;
 import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
+import com.dhoon.transfertracker.external.openai.dto.response.TranslationResult;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import com.dhoon.transfertracker.internal.transferpost.service.TransferPostTranslationService;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -28,6 +32,24 @@ public class TransferPostTranslationServiceImpl implements TransferPostTranslati
         }
 
         TranslationBatchResult result = openAiClient.translate(targets);
+
+        Set<Long> requestedIds = targets.stream()
+                .map(TranslationTarget::getPostId)
+                .collect(Collectors.toSet());
+
+        List<Long> responseIds = result.getPosts().stream()
+                .map(TranslationResult::getPostId)
+                .toList();
+
+        Set<Long> responseIdSet = new HashSet<>(responseIds);
+
+        if (responseIds.size() != responseIdSet.size()) {
+            throw new IllegalStateException("번역 결과에 중복 postId가 존재합니다.");
+        }
+
+        if (!requestedIds.equals(responseIdSet)) {
+            throw new IllegalStateException("번역 요청과 응답의 postId가 일치하지 않습니다.");
+        }
 
         txService.applyTranslations(result);
 
