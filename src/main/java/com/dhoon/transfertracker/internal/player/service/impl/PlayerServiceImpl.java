@@ -35,13 +35,9 @@ class PlayerServiceImpl implements PlayerService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(NotFoundPlayerException::new);
 
-        if (!teamPlayerRepository.existsByPlayerId(playerId)) {
-            return PlayerItemResponseDto.of(player);
-        }
-
-        TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(playerId).get();
-
-        return PlayerItemResponseDto.of(player, teamPlayer.getTeam());
+        return teamPlayerRepository.findByPlayerId(playerId)
+                .map(tp -> PlayerItemResponseDto.of(player, tp.getTeam()))
+                .orElseGet(() -> PlayerItemResponseDto.of(player));
     }
 
     @Override
@@ -70,16 +66,14 @@ class PlayerServiceImpl implements PlayerService {
 
         List<PlayerItemResponseDto> players = new ArrayList<>();
 
-        for (Player player : playerSlice.getContent()) {
-            if (teamPlayerRepository.existsByPlayerId(player.getId())) {
-                TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(player.getId()).get();
-
-                players.add(PlayerItemResponseDto.of(player, teamPlayer.getTeam()));
-            }
-            else {
-                players.add(PlayerItemResponseDto.of(player));
-            }
-        }
+        playerSlice.forEach(
+                player ->
+                        teamPlayerRepository.findByPlayerId(player.getId())
+                                .ifPresentOrElse(
+                                        tp -> players.add(PlayerItemResponseDto.of(player, tp.getTeam())),
+                                        () -> players.add(PlayerItemResponseDto.of(player))
+                                )
+        );
 
 
         return PlayersResponseDto.of(players, playerSlice.hasNext(), playerSlice.hasPrevious());
