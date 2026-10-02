@@ -22,6 +22,9 @@ public class Team {
     @Column(name = "league_api_code")
     private LeagueCode leagueCode;
 
+    @Column(name = "team_name_ko", unique = true)
+    private String teamNameKo;
+
 
 
 
@@ -38,6 +41,10 @@ public class Team {
         this.teamName = teamName;
         this.apiFootballId = apiFootballId;
         this.leagueCode = leagueCode;
+    }
+
+    public void assignKoTeamName(String teamNameKo) {
+        this.teamNameKo = teamNameKo;
     }
 
 

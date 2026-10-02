@@ -15,13 +15,15 @@ public class TeamPageInfoForTeamResponseDto {
     private String teamName;
     private long teamPlayerCount;
     private String logoUrl;
+    private String teamNameKo;
 
     public static TeamPageInfoForTeamResponseDto of(Team team, long teamPlayerCount) {
         return new TeamPageInfoForTeamResponseDto(
                 team.getId(),
                 team.getTeamName(),
                 teamPlayerCount,
-                "https://media.api-sports.io/football/teams/" + team.getApiFootballId() + ".png"
+                "https://media.api-sports.io/football/teams/" + team.getApiFootballId() + ".png",
+                team.getTeamNameKo()
         );
     }
 
