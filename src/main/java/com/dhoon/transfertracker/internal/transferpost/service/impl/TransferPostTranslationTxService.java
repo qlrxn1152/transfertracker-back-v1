@@ -24,7 +24,7 @@ public class TransferPostTranslationTxService {
 
     @Transactional(readOnly = true)
     public List<TranslationTarget> findPendingTargets() {
-        return transferPostRepository.findTop400ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus.PENDING)
+        return transferPostRepository.findTop20ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus.PENDING)
                 .stream()
                 .map(transferPost -> new TranslationTarget(transferPost.getId(), transferPost.getContent()))
                 .toList();
@@ -34,13 +34,13 @@ public class TransferPostTranslationTxService {
 
         List<Long> postIds = result.getPosts().stream()
                 .map(TranslationResult::getPostId)
-                .toList();
+                .toList(); // OpenAI 가 넘겨준 postId
 
         Map<Long, String> translatedContentByPostId = result.getPosts().stream()
                 .collect(Collectors.toMap(
                         TranslationResult::getPostId,
                         TranslationResult::getTranslatedContent
-                ));
+                )); // OpenAI 가 넘겨준 < PostId, 번역된 content >
 
         transferPostRepository.findAllById(postIds)
                 .forEach(transferPost -> {

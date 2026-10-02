@@ -16,5 +16,5 @@ public interface TransferPostRepository extends JpaRepository<TransferPost, Long
 
     List<TransferPost> findAllByTeamId(Long teamId);
 
-    List<TransferPost> findTop400ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus translateStatus);
+    List<TransferPost> findTop20ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus translateStatus);
 }

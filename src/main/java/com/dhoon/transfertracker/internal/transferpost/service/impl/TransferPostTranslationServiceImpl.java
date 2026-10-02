@@ -4,12 +4,9 @@ import com.dhoon.transfertracker.external.openai.client.OpenAiClient;
 import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationResult;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transferpost.service.TransferPostTranslationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TransferPostTranslationServiceImpl implements TransferPostTranslationService {
+public class TransferPostTranslationServiceImpl {
 
     private final TransferPostTranslationTxService txService;
     private final OpenAiClient openAiClient;
