@@ -45,7 +45,7 @@ public class TransferPostServiceImpl implements TransferPostService {
     }
 
 
-    // 특정 팀에 대한 게시물 분류 -> 외부 폴더에 있는게 더 좋지않을까 ? ( external .. )
+    // 특정 팀에 대한 게시물 분류 -> 외부 폴더에 있는게 더 좋지않을까 ? ( external .. ) -> 포스트에 팀 ..
     @Override
     public String test() {
         List<TransferPost> posts = transferPostRepository.findAll();

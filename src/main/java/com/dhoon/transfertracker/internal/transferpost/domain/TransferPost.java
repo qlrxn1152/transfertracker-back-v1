@@ -80,10 +80,6 @@ public class TransferPost {
         this.translateStatus = TranslateStatus.FAILED;
     }
 
-    public void retryTranslate() {
-        this.translateStatus = TranslateStatus.PENDING;
-    }
-
     public void assignTeam(Team team) {
         this.team = team;
     }

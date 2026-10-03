@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.transfer.repository;
 
+import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -61,10 +62,27 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 
 
 
+    @Query("""
+            select t from Transfer t 
+                        join fetch t.player p
+                        join fetch t.inTeam it
+                        join fetch t.outTeam ot
+            where (
+                   :leagueCode is null
+                               or it.leagueCode = :leagueCode
+                               or ot.leagueCode = :leagueCode
+                   )            
+            and (
+                   :keyWord = ''
+                               or lower(p.playerName) like lower(concat('%', :keyWord, '%'))
+                   )   
+            """)
+    Slice<Transfer> findTransfers(String keyWord, Pageable pageable, LeagueCode leagueCode);
 
-    // 전부 내부 API 아이디 ( 외부 전용 API 아이디 아님 )
+
+
+
     boolean existsByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);
 
-    // 전부 내부 API 아이디 ( 외부 전용 API 아이디 아님 )
     Optional<Transfer> findByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId);
 }

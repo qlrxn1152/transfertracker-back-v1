@@ -48,6 +48,13 @@ public class TransferPostTranslationServiceImpl {
             throw new IllegalStateException("번역 요청과 응답의 postId가 일치하지 않습니다.");
         }
 
+        boolean hasInvalidContent = result.getPosts().stream()
+                .anyMatch(post -> post.getTranslatedContent() == null || post.getTranslatedContent().isBlank());
+
+        if (hasInvalidContent) {
+            throw new IllegalStateException("번역 결과에 비어있는 translatedContent 가 존재합니다.");
+        }
+
         txService.applyTranslations(result);
 
         return result;

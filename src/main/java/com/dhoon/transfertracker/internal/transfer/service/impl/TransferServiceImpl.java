@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.transfer.service.impl;
 
 import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
+import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
@@ -53,7 +54,7 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     @Transactional(readOnly = true)
-    public AllTransfersResponseDto getTransfers(int page, String keyWord) {
+    public AllTransfersResponseDto getTransfers(int page, String keyWord, LeagueCode leagueCode) {
 
         if (page < 0) {
             throw new InvalidTransferSearchPageValueException();
@@ -65,14 +66,8 @@ public class TransferServiceImpl implements TransferService {
                 Sort.by(Sort.Order.desc("transferDate"), Sort.Order.desc("id")));
 
         String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
-        Slice<Transfer> transferSlice;
 
-        if ( normalizedKeyWord.isBlank() ) {
-            transferSlice = transferRepository.findAllTransferWithLazyEntities(pageable);
-        }
-        else {
-            transferSlice = transferRepository.findByPlayerNameContainingIgnoreCaseWithLazyEntities(normalizedKeyWord, pageable);
-        }
+        Slice<Transfer> transferSlice = transferRepository.findTransfers(normalizedKeyWord, pageable, leagueCode);
 
         List<TransferResponseDto> transfers = transferSlice.getContent()
                 .stream()
@@ -94,11 +89,7 @@ public class TransferServiceImpl implements TransferService {
             throw new InvalidTeamIdException();
         }
 
-
-
         teamService.getTeam(teamId);
-
-
 
         PageRequest pageable = PageRequest.of(
                 page,

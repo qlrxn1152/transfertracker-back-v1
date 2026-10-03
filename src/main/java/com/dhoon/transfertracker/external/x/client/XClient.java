@@ -52,7 +52,6 @@ public class XClient {
                             transferPostRepository.save(TransferPost.of(
                                     source, content, postId, createdAt, isTransferRelate)
                             ));
-
         });
 
         return "OK";
