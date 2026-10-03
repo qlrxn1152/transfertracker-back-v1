@@ -54,7 +54,7 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     @Transactional(readOnly = true)
-    public AllTransfersResponseDto getTransfers(int page, String keyWord, LeagueCode leagueCode) {
+    public AllTransfersResponseDto getTransfers(int page, String keyWord, LeagueCode leagueCode, Long teamId) {
 
         if (page < 0) {
             throw new InvalidTransferSearchPageValueException();
@@ -67,7 +67,7 @@ public class TransferServiceImpl implements TransferService {
 
         String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
 
-        Slice<Transfer> transferSlice = transferRepository.findTransfers(normalizedKeyWord, pageable, leagueCode);
+        Slice<Transfer> transferSlice = transferRepository.findTransfers(normalizedKeyWord, pageable, leagueCode, teamId);
 
         List<TransferResponseDto> transfers = transferSlice.getContent()
                 .stream()

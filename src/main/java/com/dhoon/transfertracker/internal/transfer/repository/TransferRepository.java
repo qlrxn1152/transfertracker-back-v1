@@ -76,8 +76,13 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
                    :keyWord = ''
                                or lower(p.playerName) like lower(concat('%', :keyWord, '%'))
                    )   
+            and (
+                   :teamId is null
+                               or it.id = :teamId
+                               or ot.id = :teamId            
+                   )                   
             """)
-    Slice<Transfer> findTransfers(String keyWord, Pageable pageable, LeagueCode leagueCode);
+    Slice<Transfer> findTransfers(String keyWord, Pageable pageable, LeagueCode leagueCode, Long teamId);
 
 
 

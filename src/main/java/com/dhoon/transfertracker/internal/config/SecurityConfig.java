@@ -48,9 +48,11 @@ public class SecurityConfig {
                         .requestMatchers("/external/**")
                         .hasRole("ADMIN")
 
+
                         // 사용자 조회 API
                         .requestMatchers(HttpMethod.GET, "/api/**")
                         .permitAll()
+
 
                         // 그 외 요청은 기본적으로 차단
                         .anyRequest()

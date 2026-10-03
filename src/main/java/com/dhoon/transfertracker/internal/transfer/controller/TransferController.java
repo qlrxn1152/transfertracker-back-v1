@@ -28,8 +28,11 @@ public class TransferController {
     }
 
     @GetMapping("/api/transfers")
-    public ResponseEntity<AllTransfersResponseDto> getTransfers(@Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord, @RequestParam(required = false)LeagueCode leagueCode) {
-        AllTransfersResponseDto response = transferService.getTransfers(page, keyWord, leagueCode);
+    public ResponseEntity<AllTransfersResponseDto> getTransfers(
+            @Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord, @RequestParam(required = false) LeagueCode leagueCode, @RequestParam(required = false) Long teamId
+    ) {
+
+        AllTransfersResponseDto response = transferService.getTransfers(page, keyWord, leagueCode, teamId);
 
         return ResponseEntity.ok(response);
     }
