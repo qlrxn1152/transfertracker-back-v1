@@ -3,7 +3,6 @@ import csv
 import json
 import statistics
 from pathlib import Path
-from collections import defaultdict
 
 
 # ============================================================
@@ -17,29 +16,34 @@ BASE_DIR = Path(
     )
 )
 
+
+RUN_COUNT = int(
+    os.getenv(
+        "RUN_COUNT",
+        "3"
+    )
+)
+
+
 RUN_NAMES = [
-    "run-1",
-    "run-2",
-    "run-3",
+    f"run-{number}"
+    for number in range(
+        1,
+        RUN_COUNT + 1
+    )
 ]
 
-REPORT_FILE = BASE_DIR / "comparison-report.html"
+
+REPORT_FILE = (
+        BASE_DIR
+        / "comparison-report.html"
+)
 
 
 # ============================================================
-# VU 유지 구간
-#
-# all-api-test.js
-#
-# 0  ~ 10 : 0 -> 10
-# 10 ~ 30 : 10 VU 유지
-#
-# 30 ~ 40 : 10 -> 25
-# 40 ~ 70 : 25 VU 유지
-#
-# 70 ~ 80 : 25 -> 30
-# 80 ~110 : 30 VU 유지
+# VU
 # ============================================================
+
 VU_1 = int(
     os.getenv(
         "VU_1",
@@ -62,63 +66,112 @@ VU_3 = int(
 )
 
 
+# ============================================================
+# VU 유지 구간
+#
+# 0   ~ 10  : Ramp
+# 10  ~ 30  : VU_1 Hold
+#
+# 30  ~ 40  : Ramp
+# 40  ~ 70  : VU_2 Hold
+#
+# 70  ~ 80  : Ramp
+# 80  ~ 110 : VU_3 Hold
+# ============================================================
+
 HOLD_WINDOWS = [
+
     {
-        "name": f"{VU_1} VU",
-        "start": 10,
-        "end": 30,
+        "name":
+            f"{VU_1} VU",
+
+        "start":
+            10,
+
+        "end":
+            30,
     },
+
     {
-        "name": f"{VU_2} VU",
-        "start": 40,
-        "end": 70,
+        "name":
+            f"{VU_2} VU",
+
+        "start":
+            40,
+
+        "end":
+            70,
     },
+
     {
-        "name": f"{VU_3} VU",
-        "start": 80,
-        "end": 110,
+        "name":
+            f"{VU_3} VU",
+
+        "start":
+            80,
+
+        "end":
+            110,
     },
+
 ]
 
 
 # ============================================================
-# Percentile
+# Utility
 # ============================================================
 
-def percentile(values, percentile_value):
+def percentile(
+        values,
+        percentile_value
+):
 
     if not values:
         return None
 
-    values = sorted(values)
+
+    values = sorted(
+        values
+    )
+
 
     index = (
                     len(values) - 1
             ) * percentile_value
 
-    lower = int(index)
+
+    lower = int(
+        index
+    )
+
 
     upper = min(
         lower + 1,
         len(values) - 1
     )
 
-    fraction = index - lower
 
-    return (
-            values[lower]
-            + (
-                    values[upper]
-                    - values[lower]
-            ) * fraction
+    fraction = (
+            index
+            - lower
     )
 
 
-# ============================================================
-# 변화율
-# ============================================================
+    return (
+            values[lower]
+            +
+            (
+                    values[upper]
+                    - values[lower]
+            )
+            * fraction
+    )
 
-def change_rate(before, after):
+
+def change_rate(
+        before,
+        after
+):
 
     if before is None:
         return None
@@ -129,39 +182,511 @@ def change_rate(before, after):
     if before == 0:
         return None
 
+
     return (
-            (after - before)
+            (
+                    after
+                    - before
+            )
             / before
     ) * 100
 
 
-def change_text(before, after):
+def change_text(
+        before,
+        after
+):
 
     rate = change_rate(
         before,
         after
     )
 
+
     if rate is None:
         return "-"
 
-    sign = "+" if rate >= 0 else ""
 
-    return f"{sign}{rate:.1f}%"
+    sign = (
+        "+"
+        if rate >= 0
+        else ""
+    )
+
+
+    return (
+        f"{sign}"
+        f"{rate:.1f}%"
+    )
+
+
+def parse_float(
+        value
+):
+
+    if value is None:
+        return None
+
+    if value == "":
+        return None
+
+
+    try:
+
+        return float(
+            value
+        )
+
+    except ValueError:
+
+        return None
+
+
+def format_number(
+        value
+):
+
+    if value is None:
+        return "-"
+
+    return f"{value:.0f}"
 
 
 # ============================================================
-# 한 번의 Run 분석
+# Hikari 상태 판단
 # ============================================================
 
-def analyze_run(run_name):
+def hikari_status(
+        value
+):
 
-    run_dir = BASE_DIR / run_name
+    if value is None:
+        return "수집 데이터 없음"
+
+
+    if value.get(
+            "saturationDetected",
+            False
+    ):
+
+        return (
+            "Pool 포화 흔적 있음"
+        )
+
+
+    max_pending = value.get(
+        "maxPending"
+    )
+
+
+    if (
+            max_pending is not None
+            and
+            max_pending > 0
+    ):
+
+        return (
+            "Connection 대기 발생"
+        )
+
+
+    return (
+        "Connection 대기 없음"
+    )
+
+
+# ============================================================
+# k6 CSV 읽기
+# ============================================================
+
+def read_k6_metrics(
+        metrics_file
+):
+
+    rows = []
+
+
+    with open(
+            metrics_file,
+            encoding="utf-8"
+    ) as f:
+
+        reader = csv.DictReader(
+            f
+        )
+
+
+        for row in reader:
+
+            if not row[
+                "extra_tags"
+            ]:
+
+                continue
+
+
+            api = None
+
+
+            for tag in row[
+                "extra_tags"
+            ].split(","):
+
+                key, _, value = (
+                    tag.partition("=")
+                )
+
+
+                if key == "api":
+
+                    api = value
+
+                    break
+
+
+            if api is None:
+                continue
+
+
+            rows.append({
+
+                "metric":
+                    row[
+                        "metric_name"
+                    ],
+
+                "timestamp":
+                    int(
+                        row[
+                            "timestamp"
+                        ]
+                    ),
+
+                "value":
+                    float(
+                        row[
+                            "metric_value"
+                        ]
+                    ),
+
+                "api":
+                    api,
+            })
+
+
+    return rows
+
+
+# ============================================================
+# Hikari CSV 분석
+# ============================================================
+
+def analyze_hikari(
+        hikari_file,
+        k6_start_time
+):
+
+    if not hikari_file.exists():
+        return {}
+
+
+    hikari_rows = []
+
+
+    with open(
+            hikari_file,
+            encoding="utf-8"
+    ) as f:
+
+        reader = csv.DictReader(
+            f
+        )
+
+
+        for row in reader:
+
+            epoch_ms = parse_float(
+                row.get(
+                    "timestamp_epoch_ms"
+                )
+            )
+
+            active = parse_float(
+                row.get(
+                    "active"
+                )
+            )
+
+            idle = parse_float(
+                row.get(
+                    "idle"
+                )
+            )
+
+            pending = parse_float(
+                row.get(
+                    "pending"
+                )
+            )
+
+            pool_max = parse_float(
+                row.get(
+                    "max"
+                )
+            )
+
+
+            if epoch_ms is None:
+                continue
+
+
+            # 모든 metric이 비어있다면
+            # 정상 수집 데이터가 아니다.
+            if (
+                    active is None
+                    and
+                    idle is None
+                    and
+                    pending is None
+                    and
+                    pool_max is None
+            ):
+
+                continue
+
+
+            elapsed = (
+                    epoch_ms / 1000
+                    - k6_start_time
+            )
+
+
+            hikari_rows.append({
+
+                "elapsed":
+                    elapsed,
+
+                "active":
+                    active,
+
+                "idle":
+                    idle,
+
+                "pending":
+                    pending,
+
+                "max":
+                    pool_max,
+            })
+
+
+    results = {}
+
+
+    for window in HOLD_WINDOWS:
+
+        stage_name = (
+            window["name"]
+        )
+
+        start = (
+            window["start"]
+        )
+
+        end = (
+            window["end"]
+        )
+
+
+        samples = [
+
+            row
+
+            for row in hikari_rows
+
+            if (
+                    start
+                    <= row["elapsed"]
+                    < end
+            )
+
+        ]
+
+
+        if not samples:
+            continue
+
+
+        active_values = [
+
+            row["active"]
+
+            for row in samples
+
+            if row["active"]
+               is not None
+
+        ]
+
+
+        idle_values = [
+
+            row["idle"]
+
+            for row in samples
+
+            if row["idle"]
+               is not None
+
+        ]
+
+
+        pending_values = [
+
+            row["pending"]
+
+            for row in samples
+
+            if row["pending"]
+               is not None
+
+        ]
+
+
+        max_values = [
+
+            row["max"]
+
+            for row in samples
+
+            if row["max"]
+               is not None
+
+        ]
+
+
+        # 중요한 부분:
+        #
+        # Active Max / Idle Min / Pending Max가
+        # 서로 다른 순간에 찍힌 값일 수 있으므로
+        # 단순히 세 극단값만 조합해서
+        # 포화라고 판정하지 않는다.
+        #
+        # 동일한 샘플 시점에
+        #
+        # active >= max
+        # idle <= 0
+        # pending > 0
+        #
+        # 이 모두 발생했는지 확인한다.
+
+        saturation_detected = any(
+
+            row["active"]
+            is not None
+
+            and
+
+            row["idle"]
+            is not None
+
+            and
+
+            row["pending"]
+            is not None
+
+            and
+
+            row["max"]
+            is not None
+
+            and
+
+            row["active"]
+            >= row["max"]
+
+            and
+
+            row["idle"]
+            <= 0
+
+            and
+
+            row["pending"]
+            > 0
+
+            for row in samples
+
+        )
+
+
+        results[
+            stage_name
+        ] = {
+
+            "maxActive":
+                (
+                    max(
+                        active_values
+                    )
+                    if active_values
+                    else None
+                ),
+
+            "minIdle":
+                (
+                    min(
+                        idle_values
+                    )
+                    if idle_values
+                    else None
+                ),
+
+            "maxPending":
+                (
+                    max(
+                        pending_values
+                    )
+                    if pending_values
+                    else None
+                ),
+
+            "poolMax":
+                (
+                    max(
+                        max_values
+                    )
+                    if max_values
+                    else None
+                ),
+
+            "saturationDetected":
+                saturation_detected,
+        }
+
+
+    return results
+
+
+# ============================================================
+# 한 Run 분석
+# ============================================================
+
+def analyze_run(
+        run_name
+):
+
+    run_dir = (
+            BASE_DIR
+            / run_name
+    )
+
 
     summary_file = (
             run_dir
             / "all-api-result.json"
     )
+
 
     metrics_file = (
             run_dir
@@ -169,14 +694,25 @@ def analyze_run(run_name):
     )
 
 
+    hikari_file = (
+            run_dir
+            / "hikari-metrics.csv"
+    )
+
+
     if not summary_file.exists():
+
         raise FileNotFoundError(
-            f"{summary_file} 파일이 없습니다."
+            f"{summary_file} "
+            f"파일이 없습니다."
         )
 
+
     if not metrics_file.exists():
+
         raise FileNotFoundError(
-            f"{metrics_file} 파일이 없습니다."
+            f"{metrics_file} "
+            f"파일이 없습니다."
         )
 
 
@@ -189,64 +725,22 @@ def analyze_run(run_name):
             encoding="utf-8"
     ) as f:
 
-        summary = json.load(f)
+        summary = json.load(
+            f
+        )
 
 
     # --------------------------------------------------------
-    # CSV
+    # k6 CSV
     # --------------------------------------------------------
 
-    rows = []
-
-    with open(
-            metrics_file,
-            encoding="utf-8"
-    ) as f:
-
-        reader = csv.DictReader(f)
-
-        for row in reader:
-
-            if not row["extra_tags"]:
-                continue
-
-            api = None
-
-            for tag in row[
-                "extra_tags"
-            ].split(","):
-
-                key, _, value = (
-                    tag.partition("=")
-                )
-
-                if key == "api":
-                    api = value
-                    break
-
-
-            if api is None:
-                continue
-
-
-            rows.append({
-                "metric":
-                    row["metric_name"],
-
-                "timestamp":
-                    int(row["timestamp"]),
-
-                "value":
-                    float(
-                        row["metric_value"]
-                    ),
-
-                "api":
-                    api,
-            })
+    rows = read_k6_metrics(
+        metrics_file
+    )
 
 
     if not rows:
+
         raise RuntimeError(
             f"{run_name}: "
             f"CSV에서 API metric을 "
@@ -255,13 +749,16 @@ def analyze_run(run_name):
 
 
     start_time = min(
+
         row["timestamp"]
+
         for row in rows
+
     )
 
 
     # --------------------------------------------------------
-    # Hold 구간 분석
+    # API Hold 분석
     # --------------------------------------------------------
 
     results = {}
@@ -271,23 +768,47 @@ def analyze_run(run_name):
             summary.items()
     ):
 
-        results[api_key] = {
-            "name":
-                api_summary["name"],
+        results[
+            api_key
+        ] = {
 
-            "stages": {},
+            "name":
+                api_summary[
+                    "name"
+                ],
+
+            "stages":
+                {},
         }
 
 
         for window in HOLD_WINDOWS:
 
-            start = window["start"]
-            end = window["end"]
+            stage_name = (
+                window[
+                    "name"
+                ]
+            )
+
+            start = (
+                window[
+                    "start"
+                ]
+            )
+
+            end = (
+                window[
+                    "end"
+                ]
+            )
 
 
             durations = [
+
                 row["value"]
+
                 for row in rows
+
                 if (
                         row["api"]
                         == api_key
@@ -306,12 +827,16 @@ def analyze_run(run_name):
                         )
                         < end
                 )
+
             ]
 
 
             request_count = sum(
+
                 row["value"]
+
                 for row in rows
+
                 if (
                         row["api"]
                         == api_key
@@ -330,6 +855,7 @@ def analyze_run(run_name):
                         )
                         < end
                 )
+
             )
 
 
@@ -338,7 +864,8 @@ def analyze_run(run_name):
 
 
             duration_seconds = (
-                    end - start
+                    end
+                    - start
             )
 
 
@@ -347,12 +874,18 @@ def analyze_run(run_name):
             ][
                 "stages"
             ][
-                window["name"]
+                stage_name
             ] = {
 
                 "avg":
-                    sum(durations)
-                    / len(durations),
+                    (
+                            sum(
+                                durations
+                            )
+                            / len(
+                        durations
+                    )
+                    ),
 
                 "p95":
                     percentile(
@@ -367,15 +900,30 @@ def analyze_run(run_name):
                     ),
 
                 "rps":
-                    request_count
-                    / duration_seconds,
+                    (
+                            request_count
+                            / duration_seconds
+                    ),
 
                 "requestCount":
-                    int(request_count),
+                    int(
+                        request_count
+                    ),
             }
 
 
+    # --------------------------------------------------------
+    # Hikari
+    # --------------------------------------------------------
+
+    hikari_results = analyze_hikari(
+        hikari_file,
+        start_time
+    )
+
+
     return {
+
         "name":
             run_name,
 
@@ -384,20 +932,25 @@ def analyze_run(run_name):
 
         "results":
             results,
+
+        "hikari":
+            hikari_results,
     }
 
 
 # ============================================================
-# 3개 Run 분석
+# Run 분석
 # ============================================================
 
 runs = []
+
 
 for run_name in RUN_NAMES:
 
     print(
         f"Analyzing {run_name}..."
     )
+
 
     runs.append(
         analyze_run(
@@ -407,24 +960,30 @@ for run_name in RUN_NAMES:
 
 
 # ============================================================
-# API 일관성 확인
+# API 일관성
 # ============================================================
 
 first_api_keys = set(
-    runs[0]["results"].keys()
+    runs[0][
+        "results"
+    ].keys()
 )
 
 
 for run in runs[1:]:
 
     current_api_keys = set(
-        run["results"].keys()
+        run[
+            "results"
+        ].keys()
     )
+
 
     if (
             current_api_keys
             != first_api_keys
     ):
+
         raise RuntimeError(
             "Run마다 API 목록이 다릅니다. "
             "동일한 all-api-test.js로 "
@@ -433,7 +992,7 @@ for run in runs[1:]:
 
 
 # ============================================================
-# 통합 결과
+# API 통합 결과
 # ============================================================
 
 aggregated = {}
@@ -442,41 +1001,47 @@ aggregated = {}
 for api_key in first_api_keys:
 
     api_name = (
-        runs[0]["results"]
-        [api_key]["name"]
+        runs[0]
+        ["results"]
+        [api_key]
+        ["name"]
     )
 
 
-    aggregated[api_key] = {
+    aggregated[
+        api_key
+    ] = {
+
         "name":
             api_name,
 
-        "stages": {},
+        "stages":
+            {},
     }
 
 
     for window in HOLD_WINDOWS:
 
         stage_name = (
-            window["name"]
+            window[
+                "name"
+            ]
         )
 
 
-        p95_values = []
-
-        p99_values = []
-
         avg_values = []
-
+        p95_values = []
+        p99_values = []
         rps_values = []
-
         request_count_values = []
 
 
         for run in runs:
 
             stage = (
-                run["results"]
+                run[
+                    "results"
+                ]
                 .get(
                     api_key,
                     {}
@@ -496,23 +1061,33 @@ for api_key in first_api_keys:
 
 
             avg_values.append(
-                stage["avg"]
+                stage[
+                    "avg"
+                ]
             )
 
             p95_values.append(
-                stage["p95"]
+                stage[
+                    "p95"
+                ]
             )
 
             p99_values.append(
-                stage["p99"]
+                stage[
+                    "p99"
+                ]
             )
 
             rps_values.append(
-                stage["rps"]
+                stage[
+                    "rps"
+                ]
             )
 
             request_count_values.append(
-                stage["requestCount"]
+                stage[
+                    "requestCount"
+                ]
             )
 
 
@@ -528,7 +1103,6 @@ for api_key in first_api_keys:
             stage_name
         ] = {
 
-            # AVG
             "avgMean":
                 statistics.mean(
                     avg_values
@@ -539,7 +1113,6 @@ for api_key in first_api_keys:
                     avg_values
                 ),
 
-            # P95
             "p95Mean":
                 statistics.mean(
                     p95_values
@@ -560,7 +1133,6 @@ for api_key in first_api_keys:
                     p95_values
                 ),
 
-            # P99
             "p99Mean":
                 statistics.mean(
                     p99_values
@@ -581,7 +1153,6 @@ for api_key in first_api_keys:
                     p99_values
                 ),
 
-            # RPS
             "rpsMean":
                 statistics.mean(
                     rps_values
@@ -592,7 +1163,6 @@ for api_key in first_api_keys:
                     rps_values
                 ),
 
-            # 요청 수
             "requestCountMean":
                 statistics.mean(
                     request_count_values
@@ -601,35 +1171,55 @@ for api_key in first_api_keys:
 
 
 # ============================================================
-# Stage 정보
+# Stage
 # ============================================================
 
 STAGE_NAMES = [
-    window["name"]
+
+    window[
+        "name"
+    ]
+
     for window in HOLD_WINDOWS
+
 ]
 
 
-FIRST_STAGE = STAGE_NAMES[0]
-LAST_STAGE = STAGE_NAMES[-1]
+FIRST_STAGE = (
+    STAGE_NAMES[0]
+)
+
+LAST_STAGE = (
+    STAGE_NAMES[-1]
+)
 
 
 stage_headers = "".join(
+
     f"<th>{stage}</th>"
+
     for stage in STAGE_NAMES
+
 )
 
 
 # ============================================================
-# P95 중앙값 비교표
+# P95 Table
 # ============================================================
 
 p95_rows = ""
 
 
-for api_key, api in aggregated.items():
+for api_key, api in (
+        aggregated.items()
+):
 
-    stages = api["stages"]
+    stages = (
+        api[
+            "stages"
+        ]
+    )
+
 
     values = []
 
@@ -640,21 +1230,33 @@ for api_key, api in aggregated.items():
             stage_name
         )
 
+
         values.append(
-            stage["p95Median"]
+
+            stage[
+                "p95Median"
+            ]
+
             if stage
+
             else None
+
         )
 
 
     cells = ""
 
+
     for value in values:
 
         if value is None:
-            cells += "<td>-</td>"
+
+            cells += (
+                "<td>-</td>"
+            )
 
         else:
+
             cells += (
                 f"<td>"
                 f"{value:.2f} ms"
@@ -670,23 +1272,38 @@ for api_key, api in aggregated.items():
 
     p95_rows += f"""
         <tr>
-            <td>{api['name']}</td>
+
+            <td>
+                {api['name']}
+            </td>
+
             {cells}
-            <td>{change}</td>
+
+            <td>
+                {change}
+            </td>
+
         </tr>
     """
 
 
 # ============================================================
-# P99 중앙값 비교표
+# P99 Table
 # ============================================================
 
 p99_rows = ""
 
 
-for api_key, api in aggregated.items():
+for api_key, api in (
+        aggregated.items()
+):
 
-    stages = api["stages"]
+    stages = (
+        api[
+            "stages"
+        ]
+    )
+
 
     values = []
 
@@ -697,21 +1314,33 @@ for api_key, api in aggregated.items():
             stage_name
         )
 
+
         values.append(
-            stage["p99Median"]
+
+            stage[
+                "p99Median"
+            ]
+
             if stage
+
             else None
+
         )
 
 
     cells = ""
 
+
     for value in values:
 
         if value is None:
-            cells += "<td>-</td>"
+
+            cells += (
+                "<td>-</td>"
+            )
 
         else:
+
             cells += (
                 f"<td>"
                 f"{value:.2f} ms"
@@ -727,23 +1356,37 @@ for api_key, api in aggregated.items():
 
     p99_rows += f"""
         <tr>
-            <td>{api['name']}</td>
+
+            <td>
+                {api['name']}
+            </td>
+
             {cells}
-            <td>{change}</td>
+
+            <td>
+                {change}
+            </td>
+
         </tr>
     """
 
 
 # ============================================================
-# RPS 평균 비교표
+# RPS Table
 # ============================================================
 
 rps_rows = ""
 
 
-for api_key, api in aggregated.items():
+for api_key, api in (
+        aggregated.items()
+):
 
-    stages = api["stages"]
+    stages = (
+        api[
+            "stages"
+        ]
+    )
 
 
     cells = ""
@@ -757,9 +1400,13 @@ for api_key, api in aggregated.items():
 
 
         if stage is None:
-            cells += "<td>-</td>"
+
+            cells += (
+                "<td>-</td>"
+            )
 
         else:
+
             cells += (
                 f"<td>"
                 f"{stage['rpsMean']:.2f}"
@@ -769,24 +1416,33 @@ for api_key, api in aggregated.items():
 
     rps_rows += f"""
         <tr>
-            <td>{api['name']}</td>
+
+            <td>
+                {api['name']}
+            </td>
+
             {cells}
+
         </tr>
     """
 
 
 # ============================================================
-# P99 변동폭
-#
-# 3회 결과 중 최소 ~ 최대
+# P99 Variation
 # ============================================================
 
 variation_rows = ""
 
 
-for api_key, api in aggregated.items():
+for api_key, api in (
+        aggregated.items()
+):
 
-    stages = api["stages"]
+    stages = (
+        api[
+            "stages"
+        ]
+    )
 
 
     cells = ""
@@ -800,50 +1456,65 @@ for api_key, api in aggregated.items():
 
 
         if stage is None:
-            cells += "<td>-</td>"
 
-        else:
-
-            min_value = (
-                stage["p99Min"]
+            cells += (
+                "<td>-</td>"
             )
 
-            max_value = (
-                stage["p99Max"]
-            )
-
-            diff = (
-                    max_value
-                    - min_value
-            )
+            continue
 
 
-            cells += f"""
-                <td>
-                    {min_value:.2f}
-                    ~
-                    {max_value:.2f}
-                    ms
+        min_value = (
+            stage[
+                "p99Min"
+            ]
+        )
 
-                    <br>
+        max_value = (
+            stage[
+                "p99Max"
+            ]
+        )
 
-                    <small>
-                        폭 {diff:.2f} ms
-                    </small>
-                </td>
-            """
+        diff = (
+                max_value
+                - min_value
+        )
+
+
+        cells += f"""
+            <td>
+
+                {min_value:.2f}
+                ~
+                {max_value:.2f}
+                ms
+
+                <br>
+
+                <small>
+                    폭 {diff:.2f} ms
+                </small>
+
+            </td>
+        """
 
 
     variation_rows += f"""
         <tr>
-            <td>{api['name']}</td>
+
+            <td>
+                {api['name']}
+            </td>
+
             {cells}
+
         </tr>
     """
 
 
 # ============================================================
-# Run별 상세 데이터
+# Run별 API 상세
 # ============================================================
 
 detail_rows = ""
@@ -851,17 +1522,25 @@ detail_rows = ""
 
 for run in runs:
 
-    run_name = run["name"]
+    run_name = (
+        run[
+            "name"
+        ]
+    )
 
 
     for api_key, api in (
-            run["results"].items()
+            run[
+                "results"
+            ].items()
     ):
 
         for stage_name in STAGE_NAMES:
 
             stage = (
-                api["stages"]
+                api[
+                    "stages"
+                ]
                 .get(
                     stage_name
                 )
@@ -874,9 +1553,18 @@ for run in runs:
 
             detail_rows += f"""
                 <tr>
-                    <td>{run_name}</td>
-                    <td>{stage_name}</td>
-                    <td>{api['name']}</td>
+
+                    <td>
+                        {run_name}
+                    </td>
+
+                    <td>
+                        {stage_name}
+                    </td>
+
+                    <td>
+                        {api['name']}
+                    </td>
 
                     <td>
                         {stage['avg']:.2f} ms
@@ -897,22 +1585,28 @@ for run in runs:
                     <td>
                         {stage['requestCount']:,}
                     </td>
+
                 </tr>
             """
 
 
 # ============================================================
-# 가장 큰 P95 / P99 증가율
+# P95 / P99 최대 증가율
 # ============================================================
 
 p95_changes = []
-
 p99_changes = []
 
 
-for api_key, api in aggregated.items():
+for api_key, api in (
+        aggregated.items()
+):
 
-    stages = api["stages"]
+    stages = (
+        api[
+            "stages"
+        ]
+    )
 
 
     first = stages.get(
@@ -929,18 +1623,27 @@ for api_key, api in aggregated.items():
             or
             last is None
     ):
+
         continue
 
 
     p95_change = change_rate(
-        first["p95Median"],
-        last["p95Median"]
+        first[
+            "p95Median"
+        ],
+        last[
+            "p95Median"
+        ]
     )
 
 
     p99_change = change_rate(
-        first["p99Median"],
-        last["p99Median"]
+        first[
+            "p99Median"
+        ],
+        last[
+            "p99Median"
+        ]
     )
 
 
@@ -949,7 +1652,9 @@ for api_key, api in aggregated.items():
         p95_changes.append(
             (
                 p95_change,
-                api["name"]
+                api[
+                    "name"
+                ]
             )
         )
 
@@ -959,20 +1664,539 @@ for api_key, api in aggregated.items():
         p99_changes.append(
             (
                 p99_change,
-                api["name"]
+                api[
+                    "name"
+                ]
             )
         )
 
 
-max_p95_change = max(
-    p95_changes,
-    key=lambda x: x[0]
+max_p95_change = (
+
+    max(
+        p95_changes,
+        key=lambda x:
+        x[0]
+    )
+
+    if p95_changes
+
+    else (
+        0,
+        "-"
+    )
+
 )
 
 
-max_p99_change = max(
-    p99_changes,
-    key=lambda x: x[0]
+max_p99_change = (
+
+    max(
+        p99_changes,
+        key=lambda x:
+        x[0]
+    )
+
+    if p99_changes
+
+    else (
+        0,
+        "-"
+    )
+
+)
+
+
+# ============================================================
+# Hikari 통합
+# ============================================================
+
+hikari_detail_rows = ""
+
+
+all_active = []
+all_idle = []
+all_pending = []
+all_pool_max = []
+
+global_saturation = False
+
+
+# ------------------------------------------------------------
+# Run별 상세
+# ------------------------------------------------------------
+
+for run in runs:
+
+    run_name = (
+        run[
+            "name"
+        ]
+    )
+
+    hikari = run.get(
+        "hikari",
+        {}
+    )
+
+
+    for stage_name in STAGE_NAMES:
+
+        value = hikari.get(
+            stage_name
+        )
+
+
+        if value is None:
+            continue
+
+
+        max_active = value.get(
+            "maxActive"
+        )
+
+        min_idle = value.get(
+            "minIdle"
+        )
+
+        max_pending = value.get(
+            "maxPending"
+        )
+
+        pool_max = value.get(
+            "poolMax"
+        )
+
+
+        if max_active is not None:
+
+            all_active.append(
+                max_active
+            )
+
+
+        if min_idle is not None:
+
+            all_idle.append(
+                min_idle
+            )
+
+
+        if max_pending is not None:
+
+            all_pending.append(
+                max_pending
+            )
+
+
+        if pool_max is not None:
+
+            all_pool_max.append(
+                pool_max
+            )
+
+
+        if value.get(
+                "saturationDetected",
+                False
+        ):
+
+            global_saturation = True
+
+
+        status = hikari_status(
+            value
+        )
+
+
+        hikari_detail_rows += f"""
+            <tr>
+
+                <td>
+                    {run_name}
+                </td>
+
+                <td>
+                    {stage_name}
+                </td>
+
+                <td>
+                    {format_number(max_active)}
+                </td>
+
+                <td>
+                    {format_number(min_idle)}
+                </td>
+
+                <td>
+                    {format_number(max_pending)}
+                </td>
+
+                <td>
+                    {format_number(pool_max)}
+                </td>
+
+                <td>
+                    {status}
+                </td>
+
+            </tr>
+        """
+
+
+# ------------------------------------------------------------
+# 전체 Worst Case
+# ------------------------------------------------------------
+
+hikari_peak_active = (
+
+    max(
+        all_active
+    )
+
+    if all_active
+
+    else None
+
+)
+
+
+hikari_min_idle = (
+
+    min(
+        all_idle
+    )
+
+    if all_idle
+
+    else None
+
+)
+
+
+hikari_peak_pending = (
+
+    max(
+        all_pending
+    )
+
+    if all_pending
+
+    else None
+
+)
+
+
+hikari_pool_max = (
+
+    max(
+        all_pool_max
+    )
+
+    if all_pool_max
+
+    else None
+
+)
+
+
+if not all_active:
+
+    hikari_overall_status = (
+        "수집 데이터 없음"
+    )
+
+elif global_saturation:
+
+    hikari_overall_status = (
+        "Pool 포화 흔적 있음"
+    )
+
+elif (
+        hikari_peak_pending
+        is not None
+
+        and
+
+        hikari_peak_pending
+        > 0
+):
+
+    hikari_overall_status = (
+        "Connection 대기 발생"
+    )
+
+else:
+
+    hikari_overall_status = (
+        "Connection 대기 없음"
+    )
+
+
+# ============================================================
+# VU별 Hikari Worst Case
+# ============================================================
+
+hikari_stage_rows = ""
+
+
+for stage_name in STAGE_NAMES:
+
+    values = []
+
+
+    for run in runs:
+
+        value = (
+            run
+            .get(
+                "hikari",
+                {}
+            )
+            .get(
+                stage_name
+            )
+        )
+
+
+        if value is not None:
+
+            values.append(
+                value
+            )
+
+
+    if not values:
+
+        hikari_stage_rows += f"""
+            <tr>
+
+                <td>
+                    {stage_name}
+                </td>
+
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+
+                <td>
+                    수집 데이터 없음
+                </td>
+
+            </tr>
+        """
+
+        continue
+
+
+    active_values = [
+
+        value[
+            "maxActive"
+        ]
+
+        for value in values
+
+        if value.get(
+            "maxActive"
+        )
+           is not None
+
+    ]
+
+
+    idle_values = [
+
+        value[
+            "minIdle"
+        ]
+
+        for value in values
+
+        if value.get(
+            "minIdle"
+        )
+           is not None
+
+    ]
+
+
+    pending_values = [
+
+        value[
+            "maxPending"
+        ]
+
+        for value in values
+
+        if value.get(
+            "maxPending"
+        )
+           is not None
+
+    ]
+
+
+    max_values = [
+
+        value[
+            "poolMax"
+        ]
+
+        for value in values
+
+        if value.get(
+            "poolMax"
+        )
+           is not None
+
+    ]
+
+
+    stage_value = {
+
+        "maxActive":
+            (
+                max(
+                    active_values
+                )
+                if active_values
+                else None
+            ),
+
+        "minIdle":
+            (
+                min(
+                    idle_values
+                )
+                if idle_values
+                else None
+            ),
+
+        "maxPending":
+            (
+                max(
+                    pending_values
+                )
+                if pending_values
+                else None
+            ),
+
+        "poolMax":
+            (
+                max(
+                    max_values
+                )
+                if max_values
+                else None
+            ),
+
+        "saturationDetected":
+            any(
+                value.get(
+                    "saturationDetected",
+                    False
+                )
+                for value in values
+            ),
+    }
+
+
+    hikari_stage_rows += f"""
+        <tr>
+
+            <td>
+                {stage_name}
+            </td>
+
+            <td>
+                {
+    format_number(
+        stage_value[
+            'maxActive'
+        ]
+    )
+    }
+            </td>
+
+            <td>
+                {
+    format_number(
+        stage_value[
+            'minIdle'
+        ]
+    )
+    }
+            </td>
+
+            <td>
+                {
+    format_number(
+        stage_value[
+            'maxPending'
+        ]
+    )
+    }
+            </td>
+
+            <td>
+                {
+    format_number(
+        stage_value[
+            'poolMax'
+        ]
+    )
+    }
+            </td>
+
+            <td>
+                {
+    hikari_status(
+        stage_value
+    )
+    }
+            </td>
+
+        </tr>
+    """
+
+
+# ============================================================
+# HTML용 값
+# ============================================================
+
+p95_change_text = (
+    f"{max_p95_change[0]:+.1f}%"
+)
+
+p99_change_text = (
+    f"{max_p99_change[0]:+.1f}%"
+)
+
+
+hikari_pool_max_text = (
+    format_number(
+        hikari_pool_max
+    )
+)
+
+hikari_peak_active_text = (
+    format_number(
+        hikari_peak_active
+    )
+)
+
+hikari_min_idle_text = (
+    format_number(
+        hikari_min_idle
+    )
+)
+
+hikari_peak_pending_text = (
+    format_number(
+        hikari_peak_pending
+    )
 )
 
 
@@ -1004,52 +2228,68 @@ html = f"""
                 Arial,
                 sans-serif;
 
-            max-width: 1400px;
+            max-width:
+                1400px;
 
-            margin: 40px auto;
+            margin:
+                40px auto;
 
-            padding: 0 24px;
+            padding:
+                0 24px;
 
-            color: #222;
+            color:
+                #222;
         }}
 
 
         h1 {{
-            margin-bottom: 10px;
+            margin-bottom:
+                10px;
         }}
 
 
         h2 {{
-            margin-top: 55px;
+            margin-top:
+                55px;
 
-            margin-bottom: 16px;
+            margin-bottom:
+                16px;
         }}
 
 
         .description {{
-            color: #666;
+            color:
+                #666;
 
-            margin-bottom: 20px;
+            margin-bottom:
+                20px;
+
+            line-height:
+                1.6;
         }}
 
 
         .cards {{
-            display: grid;
+            display:
+                grid;
 
             grid-template-columns:
                 repeat(
                     auto-fit,
                     minmax(
-                        230px,
+                        210px,
                         1fr
                     )
                 );
 
-            gap: 16px;
+            gap:
+                16px;
 
-            margin-top: 30px;
+            margin-top:
+                30px;
 
-            margin-bottom: 40px;
+            margin-bottom:
+                40px;
         }}
 
 
@@ -1201,16 +2441,28 @@ html = f"""
 
 
 <h1>
-    k6 3회 성능 테스트 비교
+    k6 {len(runs)}회 성능 테스트 비교
 </h1>
 
+
 <p class="description">
-    동일한 부하 테스트를 3회 실행한 결과를 비교합니다.
-    P95 / P99는 중앙값을 대표값으로 사용합니다.
+
+    동일한 부하 테스트를
+    {len(runs)}회 실행한 결과입니다.
+
+    P95 / P99는
+    실행 결과의 중앙값을
+    대표값으로 사용합니다.
+
 </p>
 
 
+<!-- ===================================================== -->
+<!-- Summary -->
+<!-- ===================================================== -->
+
 <div class="cards">
+
 
     <div class="card">
 
@@ -1245,7 +2497,7 @@ html = f"""
         </div>
 
         <div class="card-value">
-            +{max_p95_change[0]:.1f}%
+            {p95_change_text}
         </div>
 
         <div>
@@ -1262,7 +2514,7 @@ html = f"""
         </div>
 
         <div class="card-value">
-            +{max_p99_change[0]:.1f}%
+            {p99_change_text}
         </div>
 
         <div>
@@ -1270,6 +2522,7 @@ html = f"""
         </div>
 
     </div>
+
 
 </div>
 
@@ -1282,9 +2535,19 @@ html = f"""
     P95 중앙값 비교
 </h2>
 
+
 <p class="description">
-    각 VU에서 3회 테스트의 P95 중앙값입니다.
-    마지막 열은 {FIRST_STAGE} 대비 {LAST_STAGE} 변화율입니다.
+
+    각 VU 유지 구간에서
+    {len(runs)}회 테스트의
+    P95 중앙값입니다.
+
+    마지막 열은
+    {FIRST_STAGE}
+    대비
+    {LAST_STAGE}
+    변화율입니다.
+
 </p>
 
 
@@ -1296,7 +2559,9 @@ html = f"""
 
         <tr>
 
-            <th>API</th>
+            <th>
+                API
+            </th>
 
             {stage_headers}
 
@@ -1330,8 +2595,13 @@ html = f"""
     P99 중앙값 비교
 </h2>
 
+
 <p class="description">
-    Tail Latency가 부하 증가에 따라 반복적으로 증가하는지 확인합니다.
+
+    Tail Latency가
+    부하 증가에 따라
+    반복적으로 증가하는지 확인합니다.
+
 </p>
 
 
@@ -1343,7 +2613,9 @@ html = f"""
 
         <tr>
 
-            <th>API</th>
+            <th>
+                API
+            </th>
 
             {stage_headers}
 
@@ -1377,8 +2649,12 @@ html = f"""
     평균 RPS 비교
 </h2>
 
+
 <p class="description">
-    동일 VU 구간에서 3회 측정한 API별 RPS 평균입니다.
+
+    동일 VU 구간에서
+    실행별 API RPS 평균입니다.
+
 </p>
 
 
@@ -1390,7 +2666,9 @@ html = f"""
 
         <tr>
 
-            <th>API</th>
+            <th>
+                API
+            </th>
 
             {stage_headers}
 
@@ -1411,17 +2689,108 @@ html = f"""
 
 
 <!-- ===================================================== -->
-<!-- Variation -->
+<!-- Hikari -->
 <!-- ===================================================== -->
 
 <h2>
-    P99 실행별 변동폭
+    HikariCP Connection Pool
 </h2>
 
+
 <p class="description">
-    3회 테스트 중 최소값과 최대값입니다.
-    범위가 크다면 일시적인 네트워크 지연이나
-    서버/DB 환경 변동의 영향을 의심할 수 있습니다.
+
+    k6 부하 테스트 중
+    Spring Boot의 DB Connection Pool 상태입니다.
+
+    Pending 값이 0보다 크다면
+    DB Connection을 얻지 못하고
+    기다린 요청이 있었다는 의미입니다.
+
+</p>
+
+
+<div class="cards">
+
+
+    <div class="card">
+
+        <div class="card-title">
+            Pool Max
+        </div>
+
+        <div class="card-value">
+            {hikari_pool_max_text}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-title">
+            Peak Active
+        </div>
+
+        <div class="card-value">
+            {hikari_peak_active_text}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-title">
+            Minimum Idle
+        </div>
+
+        <div class="card-value">
+            {hikari_min_idle_text}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-title">
+            Peak Pending
+        </div>
+
+        <div class="card-value">
+            {hikari_peak_pending_text}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-title">
+            Connection Pool 상태
+        </div>
+
+        <div class="card-value">
+            {hikari_overall_status}
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<h2>
+    VU별 HikariCP 상태
+</h2>
+
+
+<p class="description">
+
+    각 VU 유지 구간에서
+    모든 Run 중 가장 불리했던
+    Connection Pool 상태입니다.
+
 </p>
 
 
@@ -1433,7 +2802,80 @@ html = f"""
 
         <tr>
 
-            <th>API</th>
+            <th>
+                VU
+            </th>
+
+            <th>
+                Max Active
+            </th>
+
+            <th>
+                Min Idle
+            </th>
+
+            <th>
+                Max Pending
+            </th>
+
+            <th>
+                Pool Max
+            </th>
+
+            <th>
+                판단
+            </th>
+
+        </tr>
+
+    </thead>
+
+
+    <tbody>
+
+        {hikari_stage_rows}
+
+    </tbody>
+
+</table>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- P99 Variation -->
+<!-- ===================================================== -->
+
+<h2>
+    P99 실행별 변동폭
+</h2>
+
+
+<p class="description">
+
+    반복 테스트 중
+    최소값과 최대값입니다.
+
+    범위가 크다면
+    일시적인 네트워크 지연,
+    JVM,
+    서버 또는 DB 환경 변동 등을
+    추가로 확인할 필요가 있습니다.
+
+</p>
+
+
+<div class="table-wrapper">
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>
+                API
+            </th>
 
             {stage_headers}
 
@@ -1454,13 +2896,13 @@ html = f"""
 
 
 <!-- ===================================================== -->
-<!-- Detail -->
+<!-- Hikari Detail -->
 <!-- ===================================================== -->
 
 <details>
 
     <summary>
-        Run별 상세 결과 보기
+        Run별 HikariCP 상세 결과 보기
     </summary>
 
 
@@ -1472,21 +2914,102 @@ html = f"""
 
             <tr>
 
-                <th>Run</th>
+                <th>
+                    Run
+                </th>
 
-                <th>VU</th>
+                <th>
+                    VU
+                </th>
 
-                <th>API</th>
+                <th>
+                    Max Active
+                </th>
 
-                <th>AVG</th>
+                <th>
+                    Min Idle
+                </th>
 
-                <th>P95</th>
+                <th>
+                    Max Pending
+                </th>
 
-                <th>P99</th>
+                <th>
+                    Pool Max
+                </th>
 
-                <th>RPS</th>
+                <th>
+                    판단
+                </th>
 
-                <th>요청 수</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {hikari_detail_rows}
+
+        </tbody>
+
+    </table>
+
+    </div>
+
+</details>
+
+
+<!-- ===================================================== -->
+<!-- API Detail -->
+<!-- ===================================================== -->
+
+<details>
+
+    <summary>
+        Run별 API 상세 결과 보기
+    </summary>
+
+
+    <div class="table-wrapper">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Run
+                </th>
+
+                <th>
+                    VU
+                </th>
+
+                <th>
+                    API
+                </th>
+
+                <th>
+                    AVG
+                </th>
+
+                <th>
+                    P95
+                </th>
+
+                <th>
+                    P99
+                </th>
+
+                <th>
+                    RPS
+                </th>
+
+                <th>
+                    요청 수
+                </th>
 
             </tr>
 
@@ -1522,10 +3045,16 @@ with open(
         encoding="utf-8"
 ) as f:
 
-    f.write(html)
+    f.write(
+        html
+    )
 
 
 print()
-print("Comparison report generated:")
-print(REPORT_FILE)
+print(
+    "Comparison report generated:"
+)
+print(
+    REPORT_FILE
+)
 print()

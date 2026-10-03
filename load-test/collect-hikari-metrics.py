@@ -3,6 +3,8 @@ import csv
 import json
 import time
 import base64
+import ssl
+import certifi
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -13,7 +15,7 @@ from pathlib import Path
 # 환경 변수
 # ============================================================
 
-BASE_URL = os.environ["BASE_URL"]
+BASE_URL = os.environ["BASE_URL"].rstrip("/")
 
 ADMIN_USERNAME = os.environ["ADMIN_USERNAME"]
 ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
@@ -62,9 +64,21 @@ credentials = (
 
 encoded_credentials = (
     base64.b64encode(
-        credentials.encode()
+        credentials.encode("utf-8")
     )
-    .decode()
+    .decode("utf-8")
+)
+
+
+# ============================================================
+# SSL
+#
+# macOS Python에서 Railway HTTPS 인증서 검증 실패 방지를 위해
+# certifi CA Bundle 사용
+# ============================================================
+
+SSL_CONTEXT = ssl.create_default_context(
+    cafile=certifi.where()
 )
 
 
@@ -93,7 +107,8 @@ def get_metric(metric_name):
 
         with urllib.request.urlopen(
                 request,
-                timeout=5
+                timeout=5,
+                context=SSL_CONTEXT
         ) as response:
 
             data = json.loads(
@@ -117,7 +132,8 @@ def get_metric(metric_name):
 
         print(
             f"[HIKARI] "
-            f"{metric_name} 조회 실패: {e}"
+            f"{metric_name} 조회 실패: {e}",
+            flush=True
         )
 
         return None
@@ -148,9 +164,18 @@ start_time = time.time()
 
 
 print()
-print("HikariCP metric collector started")
-print(f"BASE_URL : {BASE_URL}")
-print(f"OUTPUT   : {RESULT_FILE}")
+print(
+    "HikariCP metric collector started",
+    flush=True
+)
+print(
+    f"BASE_URL : {BASE_URL}",
+    flush=True
+)
+print(
+    f"OUTPUT   : {RESULT_FILE}",
+    flush=True
+)
 print()
 
 
@@ -177,11 +202,7 @@ with open(
 
     while True:
 
-        now = time.time()
-
-        elapsed = (
-                now - start_time
-        )
+        cycle_started_at = time.time()
 
 
         values = {}
@@ -193,6 +214,13 @@ with open(
             values[key] = get_metric(
                 metric_name
             )
+
+
+        now = time.time()
+
+        elapsed = (
+                now - start_time
+        )
 
 
         row = {
@@ -225,7 +253,9 @@ with open(
         }
 
 
-        writer.writerow(row)
+        writer.writerow(
+            row
+        )
 
         f.flush()
 
@@ -235,10 +265,27 @@ with open(
             f"active={values['active']} "
             f"idle={values['idle']} "
             f"pending={values['pending']} "
-            f"max={values['max']}"
+            f"max={values['max']}",
+            flush=True
         )
 
 
-        time.sleep(
+        # API 호출 시간까지 포함해서
+        # 가능한 한 설정한 polling interval에 맞춘다.
+        cycle_duration = (
+                time.time()
+                - cycle_started_at
+        )
+
+        sleep_seconds = max(
+            0,
             INTERVAL_SECONDS
+            - cycle_duration
         )
+
+
+        if sleep_seconds > 0:
+
+            time.sleep(
+                sleep_seconds
+            )

@@ -1,0 +1,74 @@
+{
+  "transfers_list": {
+    "name": "Transfers List",
+    "avg": 160.51984940739,
+    "p95": 183.70069999999998,
+    "p99": 243.11087999999944,
+    "rps": 30.40595045934396,
+    "failRate": 0,
+    "requestCount": 4303
+  },
+  "team_transfers_list": {
+    "name": "Team Transfers List",
+    "avg": 159.79637810829706,
+    "p95": 183.5221,
+    "p99": 252.84721999999994,
+    "rps": 30.40595045934396,
+    "failRate": 0,
+    "requestCount": 4303
+  },
+  "teams_list": {
+    "name": "Team List",
+    "avg": 182.9911085289333,
+    "p95": 229.02469999999985,
+    "p99": 383.5084599999999,
+    "rps": 30.40595045934396,
+    "failRate": 0,
+    "requestCount": 4303
+  },
+  "team_detail": {
+    "name": "Team Detail",
+    "avg": 157.82940483383678,
+    "p95": 180.29299999999998,
+    "p99": 248.73225999999997,
+    "rps": 30.40595045934396,
+    "failRate": 0,
+    "requestCount": 4303
+  },
+  "players_list": {
+    "name": "Players List",
+    "avg": 160.7022637694628,
+    "p95": 183.4317,
+    "p99": 258.3514799999999,
+    "rps": 30.40595045934396,
+    "failRate": 0,
+    "requestCount": 4303
+  },
+  "players_league_filter": {
+    "name": "Players - EPL Filter",
+    "avg": 157.4736239832682,
+    "p95": 180.5424,
+    "p99": 241.6900199999998,
+    "rps": 30.40595045934396,
+    "failRate": 0,
+    "requestCount": 4303
+  },
+  "players_team_filter": {
+    "name": "Players - Team Filter",
+    "avg": 155.90654310945848,
+    "p95": 178.23559999999998,
+    "p99": 249.16496,
+    "rps": 30.40595045934396,
+    "failRate": 0,
+    "requestCount": 4303
+  },
+  "players_league_team_filter": {
+    "name": "Players - EPL + Team Filter",
+    "avg": 155.5521696490818,
+    "p95": 178.3078,
+    "p99": 252.54239999999996,
+    "rps": 30.40595045934396,
+    "failRate": 0,
+    "requestCount": 4303
+  }
+}
