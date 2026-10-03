@@ -17,7 +17,9 @@ public class TransferResponseDto {
     private String playerName;
     private String photoUrl;
     private String inTeamName;
+    private String inTeamNameKo;
     private String outTeamName;
+    private String outTeamNameKo;
     private LocalDate date;
     private String type;
 
@@ -27,7 +29,9 @@ public class TransferResponseDto {
                 transfer.getPlayer().getPlayerName(),
                 "https://media.api-sports.io/football/players/" + transfer.getPlayer().getApiFootballId() + ".png",
                 transfer.getInTeam().getTeamName(),
+                transfer.getInTeam().getTeamNameKo(),
                 transfer.getOutTeam().getTeamName(),
+                transfer.getOutTeam().getTeamNameKo(),
                 transfer.getTransferDate(),
                 transfer.getTransferType()
         );
