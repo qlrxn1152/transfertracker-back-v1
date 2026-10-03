@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.player.dto.response;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,6 +27,16 @@ public class PlayerItemResponseDto {
                 team.getTeamName(),
                 team.getTeamNameKo()
                 );
+    }
+
+    public static PlayerItemResponseDto of(TeamPlayer teamPlayer) {
+        return new PlayerItemResponseDto(
+                teamPlayer.getPlayer().getId(),
+                teamPlayer.getPlayer().getPlayerName(),
+                "https://media.api-sports.io/football/players/" + teamPlayer.getPlayer().getApiFootballId() + ".png",
+                teamPlayer.getTeam().getTeamName(),
+                teamPlayer.getTeam().getTeamNameKo()
+        );
     }
 
     public static PlayerItemResponseDto of(Player player) {

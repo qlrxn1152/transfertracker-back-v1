@@ -7,6 +7,7 @@ import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPa
 import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
+import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,8 @@ class PlayerServiceImpl implements PlayerService {
     private final PlayerRepository playerRepository;
     private final TeamPlayerRepository teamPlayerRepository;
 
+
+    // N + 1
     @Override
     @Transactional(readOnly = true)
     public PlayerItemResponseDto getPlayer(Long playerId) {
@@ -40,9 +43,10 @@ class PlayerServiceImpl implements PlayerService {
                 .orElseGet(() -> PlayerItemResponseDto.of(player));
     }
 
+
     @Override
     @Transactional(readOnly = true)
-    public PlayersResponseDto getPlayers(int page, String keyWord) {
+    public PlayersResponseDto getPlayers(int page, String keyWord, LeagueCode leagueCode, Long teamId) {
         if (page < 0) {
             throw new InvalidPlayerSearchPageValueException();
         }
@@ -50,33 +54,21 @@ class PlayerServiceImpl implements PlayerService {
         PageRequest pageable = PageRequest.of(
                 page,
                 50,
-                Sort.by(Sort.Order.asc("playerName"), Sort.Order.asc("id"))
+                Sort.by(Sort.Order.asc("player.playerName"), Sort.Order.asc("player.id"))
         );
 
         String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
-        Slice<Player> playerSlice;
+        Slice<TeamPlayer> playerSlice;
 
-        if (normalizedKeyWord.isBlank()) {
-            playerSlice = playerRepository.findAllBy(pageable);
-        }
-
-        else {
-            playerSlice = playerRepository.findByPlayerNameContainingIgnoreCase(normalizedKeyWord, pageable);
-        }
-
-        List<PlayerItemResponseDto> players = new ArrayList<>();
-
-        playerSlice.forEach(
-                player ->
-                        teamPlayerRepository.findByPlayerId(player.getId())
-                                .ifPresentOrElse(
-                                        tp -> players.add(PlayerItemResponseDto.of(player, tp.getTeam())),
-                                        () -> players.add(PlayerItemResponseDto.of(player))
-                                )
-        );
+        playerSlice = teamPlayerRepository.findTeamPlayers(normalizedKeyWord, pageable, leagueCode, teamId);
 
 
-        return PlayersResponseDto.of(players, playerSlice.hasNext(), playerSlice.hasPrevious());
+        List<PlayerItemResponseDto> data = playerSlice.getContent()
+                .stream()
+                .map(PlayerItemResponseDto::of)
+                .toList();
+
+        return PlayersResponseDto.of(data, playerSlice.hasNext(), playerSlice.hasPrevious());
     }
 
 }
