@@ -2,31 +2,88 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
 
-    const APIs = [
-        {
-            key: 'transfers_list',
-            name: 'Transfers List',
-            method: 'GET',
-            url: 'http://localhost:8080/api/transfers'
-        },
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
-        {
-            key: 'team_transfers_list',
-            name: 'Team Transfers List',
-            method: 'GET',
-            url: 'http://localhost:8080/api/transfers/team/2' // Manchester United 기준.
-        },
+const RESULT_DIR = __ENV.RESULT_DIR || 'load-test/results/local';
+
+const VU_1 = Number(__ENV.VU_1 || 10);
+const VU_2 = Number(__ENV.VU_2 || 25);
+const VU_3 = Number(__ENV.VU_3 || 30);
+
+    const APIs = [
+         {
+             key: 'transfers_list',
+             name: 'Transfers List',
+             method: 'GET',
+             url: `${BASE_URL}/api/transfers`,
+         },
+
+         {
+             key: 'team_transfers_list',
+             name: 'Team Transfers List',
+             method: 'GET',
+             url: `${BASE_URL}/api/transfers/team/2`,
+         },
+
+         {
+             key: 'teams_list',
+             name: 'Team List',
+             method: 'GET',
+             url: `${BASE_URL}/api/teams`,
+         },
+
+         {
+             key: 'team_detail',
+             name: 'Team Detail',
+             method: 'GET',
+             url: `${BASE_URL}/api/team/test/2`,
+         },
+
+         // 이번에 개선한 Player 조회
+         {
+             key: 'players_list',
+             name: 'Players List',
+             method: 'GET',
+             url: `${BASE_URL}/api/players?page=0`,
+         },
+
+         {
+             key: 'players_league_filter',
+             name: 'Players - EPL Filter',
+             method: 'GET',
+             url: `${BASE_URL}/api/players?page=0&leagueCode=EPL`,
+         },
+
+         {
+             key: 'players_team_filter',
+             name: 'Players - Team Filter',
+             method: 'GET',
+             url: `${BASE_URL}/api/players?page=0&teamId=2`,
+         },
+
+         {
+             key: 'players_league_team_filter',
+             name: 'Players - EPL + Team Filter',
+             method: 'GET',
+             url: `${BASE_URL}/api/players?page=0&leagueCode=EPL&teamId=2`,
+         },
+
     ]
 
 export const options = {
 
     stages: [
-        { duration: '20s', target: 20 },
-        { duration: '30s', target: 40 },
-        { duration: '1m', target: 45 },
-        { duration: '30s', target: 30 },
-        { duration: '10s', target: 20 },
-        { duration: '20s', target: 0 },
+        { duration: '10s', target: VU_1 },
+        { duration: '20s', target: VU_1 },
+
+        { duration: '10s', target: VU_2 },
+        { duration: '30s', target: VU_2 },
+
+        { duration: '10s', target: VU_3 },
+        { duration: '30s', target: VU_3 },
+
+        { duration: '20s', target: VU_1 },
+        { duration: '10s', target: 0 },
     ],
 
     summaryTrendStats: [
@@ -156,10 +213,10 @@ export function handleSummary(data) {
 
 
     return {
-        'load-test/results/all-api-result.json':
+        [`${RESULT_DIR}/all-api-result.json`]:
             JSON.stringify(result, null, 2),
 
-        'load-test/results/all-api-result.md':
+        [`${RESULT_DIR}/all-api-result.md`]:
             markdown,
     };
 }

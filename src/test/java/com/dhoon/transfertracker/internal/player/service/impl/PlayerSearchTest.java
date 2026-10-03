@@ -36,11 +36,11 @@ class PlayersSearchTest {
     PlayerRepository playerRepository;
 
     // [신규]
-    // 선수 검색의 기준이 TeamPlayer가 되었기 때문에 필요.
+    // 현재 선수 목록은 TeamPlayer 기준으로 조회하므로
+    // Team / TeamPlayer Fixture가 필요하다.
     @Autowired
     TeamRepository teamRepository;
 
-    // [신규]
     @Autowired
     TeamPlayerRepository teamPlayerRepository;
 
@@ -52,21 +52,21 @@ class PlayersSearchTest {
     /*
      * [기존 수정]
      *
-     * 기존에는 Player만 저장하면 검색 가능했지만,
-     * 현재 정책은 "현재 팀에 소속된 선수만 검색한다."
+     * 기존에는 Player만 저장했지만,
+     * 현재는 TeamPlayer가 존재하는 선수만 검색 대상이다.
      *
-     * 따라서 Player + Team + TeamPlayer를 함께 생성한다.
+     * leagueCode = null
+     * teamId = null
      *
-     * leagueCode == null
-     * → 리그 필터 없이 기존 이름 검색 동작 검증.
+     * → 리그 / 팀 필터 없이 기존 이름 검색 동작 검증.
      */
     @Test
     @DisplayName("선수 이름의 일부를 이용해서 검색할 수 있다.")
     void searchPlayer_byPartialName() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -74,28 +74,31 @@ class PlayersSearchTest {
         savePlayerWithTeam(
                 "Son Heung-min",
                 1L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Bukayo Saka",
                 2L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Bruno Fernandes",
                 3L,
-                team
+                arsenal
         );
+
 
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "Heung",
+                        null,
                         null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -109,18 +112,14 @@ class PlayersSearchTest {
 
     /*
      * [기존 수정]
-     *
-     * 기존 ignore case 정책은 그대로.
-     * leagueCode 인자만 추가되고,
-     * 선수는 반드시 TeamPlayer를 가진 상태로 생성.
      */
     @Test
     @DisplayName("선수 이름 검색은 대소문자를 구분하지 않는다.")
     void searchPlayer_ignoreCase() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -128,22 +127,25 @@ class PlayersSearchTest {
         savePlayerWithTeam(
                 "Bukayo Saka",
                 1L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Son Heung-min",
                 2L,
-                team
+                arsenal
         );
+
 
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "sAkA",
+                        null,
                         null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -155,21 +157,21 @@ class PlayersSearchTest {
     /*
      * [기존 수정]
      *
-     * 현재 정렬 기준:
+     * 조회 대상이 TeamPlayer가 되었으므로
+     * Service의 Sort는:
      *
      * player.playerName ASC
      * player.id ASC
      *
-     * 조회 대상이 TeamPlayer가 되었기 때문에
-     * Service Pageable의 property path도 player.playerName을 사용.
+     * 를 사용한다.
      */
     @Test
     @DisplayName("선수 목록은 이름 오름차순으로 조회된다.")
     void searchPlayer_sortByName() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -177,28 +179,31 @@ class PlayersSearchTest {
         savePlayerWithTeam(
                 "Son Heung-min",
                 1L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Bruno Fernandes",
                 2L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Bukayo Saka",
                 3L,
-                team
+                arsenal
         );
+
 
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "",
+                        null,
                         null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -212,20 +217,68 @@ class PlayersSearchTest {
 
 
     /*
+     * [신규]
+     *
+     * playerName이 동일하면 player.id ASC가
+     * 두 번째 정렬 기준이 된다.
+     */
+    @Test
+    @DisplayName("선수 이름이 같으면 먼저 저장된 선수가 먼저 조회된다.")
+    void searchPlayer_sameName_sortByIdAsc() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        Player firstPlayer = savePlayerWithTeam(
+                "Same Player",
+                1L,
+                arsenal
+        );
+
+        Player secondPlayer = savePlayerWithTeam(
+                "Same Player",
+                2L,
+                arsenal
+        );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "Same Player",
+                        null,
+                        null
+                );
+
+
+        // then
+        assertThat(response.getPlayers())
+                .extracting(PlayerItemResponseDto::getPlayerId)
+                .containsExactly(
+                        firstPlayer.getId(),
+                        secondPlayer.getId()
+                );
+    }
+
+
+    /*
      * [기존 수정]
      *
-     * 기존 Slice paging 정책 그대로.
-     *
-     * 다만 51명의 Player만 만드는 것이 아니라
-     * 51명의 Player가 TeamPlayer에 연결되어 있어야 한다.
+     * 51명의 Player뿐 아니라
+     * 51개의 TeamPlayer도 존재해야 한다.
      */
     @Test
     @DisplayName("검색 결과가 50개를 초과하면 Slice 페이징 정보가 정상적으로 반환된다.")
     void searchPlayer_paging() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -235,15 +288,17 @@ class PlayersSearchTest {
                         savePlayerWithTeam(
                                 String.format("Player%02d", i),
                                 (long) i,
-                                team
+                                arsenal
                         )
                 );
+
 
         // when
         PlayersResponseDto firstPage =
                 playerService.getPlayers(
                         0,
                         "player",
+                        null,
                         null
                 );
 
@@ -251,8 +306,10 @@ class PlayersSearchTest {
                 playerService.getPlayers(
                         1,
                         "player",
+                        null,
                         null
                 );
+
 
         // then
         assertThat(firstPage.getPlayers())
@@ -276,6 +333,111 @@ class PlayersSearchTest {
     }
 
 
+    /*
+     * [신규]
+     */
+    @Test
+    @DisplayName("검색 결과가 정확히 50개이면 다음 페이지가 존재하지 않는다.")
+    void searchPlayer_exactPageSize() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        IntStream.rangeClosed(1, 50)
+                .forEach(i ->
+                        savePlayerWithTeam(
+                                String.format("Player%02d", i),
+                                (long) i,
+                                arsenal
+                        )
+                );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "",
+                        null,
+                        null
+                );
+
+
+        // then
+        assertThat(response.getPlayers())
+                .hasSize(50);
+
+        assertThat(response.isHasNext())
+                .isFalse();
+
+        assertThat(response.isHasPrevious())
+                .isFalse();
+    }
+
+
+    /*
+     * [신규]
+     *
+     * fetch join으로 Player / Team을 함께 가져온 뒤
+     * DTO에 정상적으로 매핑되는지 검증.
+     */
+    @Test
+    @DisplayName("선수 검색 결과에 현재 소속팀 정보가 함께 포함된다.")
+    void searchPlayer_mappingTeam() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        arsenal.assignKoTeamName("아스널");
+
+        Player saka = savePlayerWithTeam(
+                "Bukayo Saka",
+                1L,
+                arsenal
+        );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "Saka",
+                        null,
+                        null
+                );
+
+
+        // then
+        PlayerItemResponseDto player =
+                response.getPlayers().get(0);
+
+        assertThat(player.getPlayerId())
+                .isEqualTo(saka.getId());
+
+        assertThat(player.getPlayerName())
+                .isEqualTo("Bukayo Saka");
+
+        assertThat(player.getTeamName())
+                .isEqualTo("Arsenal");
+
+        assertThat(player.getTeamNameKo())
+                .isEqualTo("아스널");
+
+        assertThat(player.getPhotoUrl())
+                .isEqualTo(
+                        "https://media.api-sports.io/football/players/1.png"
+                );
+    }
+
+
     // ==================================================
     // [신규] 리그 필터
     // ==================================================
@@ -283,11 +445,12 @@ class PlayersSearchTest {
     /*
      * [신규]
      *
-     * TeamPlayer.team.leagueCode가
-     * 요청한 leagueCode와 같을 때만 조회한다.
+     * t.leagueCode = :leagueCode
+     *
+     * 조건 검증.
      */
     @Test
-    @DisplayName("선수의 현재 소속팀이 선택한 리그에 속하면 조회한다.")
+    @DisplayName("현재 소속팀이 선택한 리그에 속한 선수만 조회한다.")
     void searchPlayer_filterByLeague() {
 
         // given
@@ -315,13 +478,16 @@ class PlayersSearchTest {
                 barcelona
         );
 
+
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "",
-                        LeagueCode.EPL
+                        LeagueCode.EPL,
+                        null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -335,12 +501,9 @@ class PlayersSearchTest {
 
     /*
      * [신규]
-     *
-     * 선택한 리그와 다른 팀에 소속된 선수는
-     * 검색 결과에서 제외되어야 한다.
      */
     @Test
-    @DisplayName("현재 소속팀이 선택한 리그가 아니면 조회하지 않는다.")
+    @DisplayName("현재 소속팀이 선택한 리그가 아니면 선수를 조회하지 않는다.")
     void searchPlayer_filterByLeague_excludeOtherLeague() {
 
         // given
@@ -356,38 +519,31 @@ class PlayersSearchTest {
                 barcelona
         );
 
+
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "",
-                        LeagueCode.EPL
+                        LeagueCode.EPL,
+                        null
                 );
+
 
         // then
         assertThat(response.getPlayers())
                 .isEmpty();
-
-        assertThat(response.isHasNext())
-                .isFalse();
-
-        assertThat(response.isHasPrevious())
-                .isFalse();
     }
 
 
     /*
      * [신규]
      *
-     * Repository 조건:
+     * :leagueCode is null
      *
-     * (:leagueCode is null OR t.leagueCode = :leagueCode)
+     * → 리그 조건을 사용하지 않는다.
      *
-     * leagueCode == null이면
-     * 리그 필터가 적용되지 않는다.
-     *
-     * 단, 현재 조회 기준은 TeamPlayer이므로
-     * "팀에 소속된 선수들 전체"를 의미한다.
+     * 단, 현재 정책상 TeamPlayer가 존재하는 선수만 대상.
      */
     @Test
     @DisplayName("리그 조건이 null이면 모든 리그의 소속 선수를 조회한다.")
@@ -418,18 +574,18 @@ class PlayersSearchTest {
                 barcelona
         );
 
+
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "",
+                        null,
                         null
                 );
 
-        // then
-        assertThat(response.getPlayers())
-                .hasSize(2);
 
+        // then
         assertThat(response.getPlayers())
                 .extracting(PlayerItemResponseDto::getPlayerName)
                 .containsExactly(
@@ -440,18 +596,16 @@ class PlayersSearchTest {
 
 
     /*
-     * [신규 - 중요]
+     * [신규]
      *
-     * Repository JPQL:
-     *
-     * (league 조건)
+     * leagueCode
      * AND
-     * (keyword 조건)
+     * keyWord
      *
-     * 두 조건을 모두 만족하는 선수만 조회되어야 한다.
+     * 두 조건을 모두 만족해야 한다.
      */
     @Test
-    @DisplayName("리그와 선수 이름 검색 조건을 모두 만족하는 선수만 조회한다.")
+    @DisplayName("리그와 선수 이름 조건을 모두 만족하는 선수만 조회한다.")
     void searchPlayer_filterByLeagueAndKeyword() {
 
         // given
@@ -473,49 +627,99 @@ class PlayersSearchTest {
                 LeagueCode.LA_LIGA
         );
 
-        /*
-         * Saka + EPL
-         * → 리그 O
-         * → keyword O
-         * → 조회 대상
-         */
+
+        // league O / keyword O
         savePlayerWithTeam(
                 "Bukayo Saka",
                 1L,
                 arsenal
         );
 
-        /*
-         * Bruno + EPL
-         * → 리그 O
-         * → keyword X
-         * → 제외
-         */
+        // league O / keyword X
         savePlayerWithTeam(
                 "Bruno Fernandes",
                 2L,
                 manUnited
         );
 
-        /*
-         * Saka Test + LA_LIGA
-         * → keyword O
-         * → 리그 X
-         * → 제외
-         */
+        // league X / keyword O
         savePlayerWithTeam(
                 "Saka Test",
                 3L,
                 barcelona
         );
 
+
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "Saka",
-                        LeagueCode.EPL
+                        LeagueCode.EPL,
+                        null
                 );
+
+
+        // then
+        assertThat(response.getPlayers())
+                .hasSize(1);
+
+        assertThat(response.getPlayers())
+                .extracting(PlayerItemResponseDto::getPlayerName)
+                .containsExactly("Bukayo Saka");
+    }
+
+
+    // ==================================================
+    // [신규] 팀 필터
+    // ==================================================
+
+    /*
+     * [신규]
+     *
+     * t.id = :teamId
+     *
+     * 조건을 검증한다.
+     */
+    @Test
+    @DisplayName("선택한 팀에 현재 소속된 선수만 조회한다.")
+    void searchPlayer_filterByTeam() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        Team chelsea = saveTeam(
+                "Chelsea",
+                200L,
+                LeagueCode.EPL
+        );
+
+        savePlayerWithTeam(
+                "Bukayo Saka",
+                1L,
+                arsenal
+        );
+
+        savePlayerWithTeam(
+                "Cole Palmer",
+                2L,
+                chelsea
+        );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "",
+                        null,
+                        arsenal.getId()
+                );
+
 
         // then
         assertThat(response.getPlayers())
@@ -533,24 +737,15 @@ class PlayersSearchTest {
 
 
     /*
-     * [신규 - 중요]
+     * [신규]
      *
-     * 리그 필터는 페이지 조회 후 Java에서 거르는 게 아니라
-     * DB WHERE 절에서 먼저 적용되어야 한다.
-     *
-     * EPL 선수 51명
-     * LA_LIGA 선수 10명
-     *
-     * EPL 검색 결과:
-     *
-     * page 0 → 50명
-     * page 1 → 1명
-     *
-     * 이어야 한다.
+     * teamId
+     * AND
+     * keyWord
      */
     @Test
-    @DisplayName("리그 필터가 적용된 결과를 기준으로 페이징한다.")
-    void searchPlayer_filterByLeague_paging() {
+    @DisplayName("팀과 선수 이름 조건을 모두 만족하는 선수만 조회한다.")
+    void searchPlayer_filterByTeamAndKeyword() {
 
         // given
         Team arsenal = saveTeam(
@@ -559,30 +754,382 @@ class PlayersSearchTest {
                 LeagueCode.EPL
         );
 
+        Team chelsea = saveTeam(
+                "Chelsea",
+                200L,
+                LeagueCode.EPL
+        );
+
+
+        // team O / keyword O
+        savePlayerWithTeam(
+                "Bukayo Saka",
+                1L,
+                arsenal
+        );
+
+        // team O / keyword X
+        savePlayerWithTeam(
+                "Martin Odegaard",
+                2L,
+                arsenal
+        );
+
+        // team X / keyword O
+        savePlayerWithTeam(
+                "Saka Test",
+                3L,
+                chelsea
+        );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "Saka",
+                        null,
+                        arsenal.getId()
+                );
+
+
+        // then
+        assertThat(response.getPlayers())
+                .hasSize(1);
+
+        assertThat(response.getPlayers())
+                .extracting(PlayerItemResponseDto::getPlayerName)
+                .containsExactly("Bukayo Saka");
+    }
+
+
+    /*
+     * [신규]
+     *
+     * leagueCode
+     * AND
+     * teamId
+     *
+     * 둘 다 만족해야 한다.
+     */
+    @Test
+    @DisplayName("리그와 팀 조건을 모두 만족하는 선수만 조회한다.")
+    void searchPlayer_filterByLeagueAndTeam() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        Team chelsea = saveTeam(
+                "Chelsea",
+                200L,
+                LeagueCode.EPL
+        );
+
         Team barcelona = saveTeam(
                 "Barcelona",
+                300L,
+                LeagueCode.LA_LIGA
+        );
+
+        savePlayerWithTeam(
+                "Bukayo Saka",
+                1L,
+                arsenal
+        );
+
+        savePlayerWithTeam(
+                "Cole Palmer",
+                2L,
+                chelsea
+        );
+
+        savePlayerWithTeam(
+                "Pedri",
+                3L,
+                barcelona
+        );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "",
+                        LeagueCode.EPL,
+                        arsenal.getId()
+                );
+
+
+        // then
+        assertThat(response.getPlayers())
+                .hasSize(1);
+
+        assertThat(response.getPlayers())
+                .extracting(PlayerItemResponseDto::getPlayerName)
+                .containsExactly("Bukayo Saka");
+    }
+
+
+    /*
+     * [신규 - 중요]
+     *
+     * leagueCode / teamId 조합이 서로 맞지 않으면
+     * 한 조건을 무시하는 것이 아니라
+     * AND이므로 빈 결과를 반환한다.
+     *
+     * 예:
+     *
+     * leagueCode = LA_LIGA
+     * teamId = Arsenal(EPL)
+     */
+    @Test
+    @DisplayName("선택한 리그와 팀이 서로 일치하지 않으면 빈 리스트를 반환한다.")
+    void searchPlayer_filterByLeagueAndTeam_mismatch() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        savePlayerWithTeam(
+                "Bukayo Saka",
+                1L,
+                arsenal
+        );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "",
+                        LeagueCode.LA_LIGA,
+                        arsenal.getId()
+                );
+
+
+        // then
+        assertThat(response.getPlayers())
+                .isEmpty();
+
+        assertThat(response.isHasNext())
+                .isFalse();
+
+        assertThat(response.isHasPrevious())
+                .isFalse();
+    }
+
+
+    /*
+     * [신규 - 중요]
+     *
+     * leagueCode
+     * AND
+     * teamId
+     * AND
+     * keyWord
+     *
+     * 세 조건이 모두 적용되는지 검증한다.
+     */
+    @Test
+    @DisplayName("리그, 팀, 선수 이름 조건을 모두 만족하는 선수만 조회한다.")
+    void searchPlayer_filterByLeagueAndTeamAndKeyword() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        Team chelsea = saveTeam(
+                "Chelsea",
                 200L,
+                LeagueCode.EPL
+        );
+
+        Team barcelona = saveTeam(
+                "Barcelona",
+                300L,
                 LeagueCode.LA_LIGA
         );
 
 
-        // EPL 51명
-        IntStream.rangeClosed(1, 51)
+        // 세 조건 모두 O
+        savePlayerWithTeam(
+                "Bukayo Saka",
+                1L,
+                arsenal
+        );
+
+        // league O / team O / keyword X
+        savePlayerWithTeam(
+                "Martin Odegaard",
+                2L,
+                arsenal
+        );
+
+        // league O / team X / keyword O
+        savePlayerWithTeam(
+                "Saka Chelsea",
+                3L,
+                chelsea
+        );
+
+        // league X / team X / keyword O
+        savePlayerWithTeam(
+                "Saka Barcelona",
+                4L,
+                barcelona
+        );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "Saka",
+                        LeagueCode.EPL,
+                        arsenal.getId()
+                );
+
+
+        // then
+        assertThat(response.getPlayers())
+                .hasSize(1);
+
+        PlayerItemResponseDto player =
+                response.getPlayers().get(0);
+
+        assertThat(player.getPlayerName())
+                .isEqualTo("Bukayo Saka");
+
+        assertThat(player.getTeamName())
+                .isEqualTo("Arsenal");
+    }
+
+
+    /*
+     * [신규]
+     *
+     * 존재하지 않는 teamId를 필터로 전달해도
+     * 예외가 아니라 빈 검색 결과를 반환하는 정책.
+     *
+     * 현재 Repository 검색 조건 방식이라면
+     * 자연스럽게 0건이 반환된다.
+     */
+    @Test
+    @DisplayName("존재하지 않는 팀으로 필터링하면 빈 리스트를 반환한다.")
+    void searchPlayer_unknownTeamId_empty() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        savePlayerWithTeam(
+                "Bukayo Saka",
+                1L,
+                arsenal
+        );
+
+
+        // when
+        PlayersResponseDto response =
+                playerService.getPlayers(
+                        0,
+                        "",
+                        null,
+                        999999L
+                );
+
+
+        // then
+        assertThat(response.getPlayers())
+                .isEmpty();
+    }
+
+
+    // ==================================================
+    // [신규] 필터 + 페이징
+    // ==================================================
+
+    /*
+     * [신규 - 중요]
+     *
+     * 필터링을 Java에서 페이지 조회 후 하는 것이 아니라
+     * DB WHERE 절에서 먼저 처리한 뒤
+     * Slice 페이징하는지 검증한다.
+     *
+     * Arsenal(EPL) → 51명
+     * Chelsea(EPL) → 10명
+     * Barcelona(LA_LIGA) → 10명
+     *
+     * EPL + Arsenal 필터 결과는 정확히 51명이어야 하므로:
+     *
+     * page 0 = 50명
+     * page 1 = 1명
+     */
+    @Test
+    @DisplayName("리그와 팀 필터가 적용된 결과를 기준으로 페이징한다.")
+    void searchPlayer_filterByLeagueAndTeam_paging() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                100L,
+                LeagueCode.EPL
+        );
+
+        Team chelsea = saveTeam(
+                "Chelsea",
+                200L,
+                LeagueCode.EPL
+        );
+
+        Team barcelona = saveTeam(
+                "Barcelona",
+                300L,
+                LeagueCode.LA_LIGA
+        );
+
+
+        // 검색 대상 51명
+        IntStream.rangeClosed(1, 51) // 아스날에 51명.
                 .forEach(i ->
                         savePlayerWithTeam(
-                                String.format("EPL Player%02d", i),
+                                String.format("Arsenal Player%02d", i),
                                 10_000L + i,
                                 arsenal
                         )
                 );
 
 
-        // LA_LIGA 10명
-        IntStream.rangeClosed(1, 10)
+        // 같은 EPL이지만 다른 팀 → 제외되어야 함.
+        IntStream.rangeClosed(1, 10) // 첼시에 10명
                 .forEach(i ->
                         savePlayerWithTeam(
-                                String.format("LaLiga Player%02d", i),
+                                String.format("Chelsea Player%02d", i),
                                 20_000L + i,
+                                chelsea
+                        )
+                );
+
+
+        // 다른 리그 → 제외되어야 함.
+        IntStream.rangeClosed(1, 10) // 바르샤10명
+                .forEach(i ->
+                        savePlayerWithTeam(
+                                String.format("Barcelona Player%02d", i),
+                                30_000L + i,
                                 barcelona
                         )
                 );
@@ -593,14 +1140,16 @@ class PlayersSearchTest {
                 playerService.getPlayers(
                         0,
                         "",
-                        LeagueCode.EPL
+                        LeagueCode.EPL,
+                        arsenal.getId()
                 );
 
         PlayersResponseDto secondPage =
                 playerService.getPlayers(
                         1,
                         "",
-                        LeagueCode.EPL
+                        LeagueCode.EPL,
+                        arsenal.getId()
                 );
 
 
@@ -625,48 +1174,48 @@ class PlayersSearchTest {
                 .isTrue();
 
 
-        /*
-         * 다른 리그 선수가 섞이지 않았는지도 확인.
-         */
         assertThat(firstPage.getPlayers())
-                .extracting(PlayerItemResponseDto::getPlayerName)
-                .allMatch(name ->
-                        name.startsWith("EPL Player")
+                .allSatisfy(player ->
+                        assertThat(player.getTeamName())
+                                .isEqualTo("Arsenal")
                 );
 
         assertThat(secondPage.getPlayers())
-                .extracting(PlayerItemResponseDto::getPlayerName)
-                .allMatch(name ->
-                        name.startsWith("EPL Player")
+                .allSatisfy(player ->
+                        assertThat(player.getTeamName())
+                                .isEqualTo("Arsenal")
                 );
     }
 
 
+    // ==================================================
+    // [신규] 현재 소속팀 정책
+    // ==================================================
+
     /*
      * [신규 - 정책 테스트]
      *
-     * 이번에 정한 정책:
+     * 현재 정책:
      *
-     * "현재 팀에 소속되어 있는 선수만 선수 검색 결과에 노출한다."
+     * "현재 TeamPlayer가 존재하는 선수만
+     * 선수 목록 검색 결과에 노출한다."
      *
-     * 따라서 Player 테이블에는 존재하지만
-     * TeamPlayer가 없는 선수는 조회되면 안 된다.
+     * Player 테이블에만 존재하는 FA / 무소속 선수는
+     * 목록에서 제외한다.
      */
     @Test
     @DisplayName("현재 소속팀이 없는 선수는 선수 검색 결과에 포함하지 않는다.")
     void searchPlayer_withoutTeamPlayer_excluded() {
 
         // given
-
-        /*
-         * TeamPlayer가 있는 선수
-         */
         Team arsenal = saveTeam(
                 "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
 
+
+        // 정상 소속 선수
         savePlayerWithTeam(
                 "Bukayo Saka",
                 1L,
@@ -674,10 +1223,8 @@ class PlayersSearchTest {
         );
 
 
-        /*
-         * Player에만 존재.
-         * TeamPlayer는 생성하지 않는다.
-         */
+        // Player만 존재.
+        // TeamPlayer는 생성하지 않음.
         savePlayer(
                 "Free Agent Player",
                 2L
@@ -689,6 +1236,7 @@ class PlayersSearchTest {
                 playerService.getPlayers(
                         0,
                         "",
+                        null,
                         null
                 );
 
@@ -707,62 +1255,6 @@ class PlayersSearchTest {
     }
 
 
-    /*
-     * [신규]
-     *
-     * fetch join으로 가져온 Team이
-     * PlayerItemResponseDto에도 정상적으로 매핑되는지 확인한다.
-     */
-    @Test
-    @DisplayName("검색한 선수의 현재 소속팀 정보가 함께 반환된다.")
-    void searchPlayer_mappingTeam() {
-
-        // given
-        Team arsenal = saveTeam(
-                "Arsenal",
-                100L,
-                LeagueCode.EPL
-        );
-
-        arsenal.assignKoTeamName("아스널");
-
-        Player saka = savePlayerWithTeam(
-                "Bukayo Saka",
-                1L,
-                arsenal
-        );
-
-        // when
-        PlayersResponseDto response =
-                playerService.getPlayers(
-                        0,
-                        "Saka",
-                        null
-                );
-
-        // then
-        PlayerItemResponseDto player =
-                response.getPlayers().get(0);
-
-        assertThat(player.getPlayerId())
-                .isEqualTo(saka.getId());
-
-        assertThat(player.getPlayerName())
-                .isEqualTo("Bukayo Saka");
-
-        assertThat(player.getTeamName())
-                .isEqualTo("Arsenal");
-
-        assertThat(player.getTeamNameKo())
-                .isEqualTo("아스널");
-
-        assertThat(player.getPhotoUrl())
-                .isEqualTo(
-                        "https://media.api-sports.io/football/players/1.png"
-                );
-    }
-
-
     // ==================================================
     // 예외 상황
     // ==================================================
@@ -770,8 +1262,7 @@ class PlayersSearchTest {
     /*
      * [기존 수정]
      *
-     * page 정책은 그대로.
-     * 새 leagueCode 파라미터만 추가.
+     * leagueCode / teamId 인자만 추가.
      */
     @Test
     @DisplayName("페이지 번호가 음수이면 예외가 발생한다.")
@@ -780,11 +1271,13 @@ class PlayersSearchTest {
         // given
         int page = -1;
 
+
         // when & then
         assertThatThrownBy(() ->
                 playerService.getPlayers(
                         page,
                         "Saka",
+                        null,
                         null
                 )
         )
@@ -809,8 +1302,8 @@ class PlayersSearchTest {
     void searchPlayer_trimKeyword() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -818,22 +1311,25 @@ class PlayersSearchTest {
         savePlayerWithTeam(
                 "Bukayo Saka",
                 1L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Son Heung-min",
                 2L,
-                team
+                arsenal
         );
+
 
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "   Saka   ",
+                        null,
                         null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -850,8 +1346,8 @@ class PlayersSearchTest {
     void searchPlayer_notFound() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -859,22 +1355,25 @@ class PlayersSearchTest {
         savePlayerWithTeam(
                 "Bukayo Saka",
                 1L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Son Heung-min",
                 2L,
-                team
+                arsenal
         );
+
 
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "Messi",
+                        null,
                         null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -891,21 +1390,20 @@ class PlayersSearchTest {
     /*
      * [기존 수정]
      *
-     * "모든 선수"라는 의미가 조금 바뀌었다.
+     * 여기서 "모든 선수"는:
      *
-     * 기존:
-     * Player 전체
+     * Player 전체가 아니라
+     * TeamPlayer가 존재하는 모든 선수
      *
-     * 현재:
-     * TeamPlayer가 존재하는 선수 전체
+     * 를 의미한다.
      */
     @Test
     @DisplayName("검색어가 공백이면 현재 팀에 소속된 모든 선수를 조회한다.")
     void searchPlayer_blankKeyword_findAll() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -913,28 +1411,31 @@ class PlayersSearchTest {
         savePlayerWithTeam(
                 "Son Heung-min",
                 1L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Bukayo Saka",
                 2L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Bruno Fernandes",
                 3L,
-                team
+                arsenal
         );
+
 
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         "   ",
+                        null,
                         null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -958,8 +1459,8 @@ class PlayersSearchTest {
     void searchPlayer_nullKeyword_findAll() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -967,22 +1468,25 @@ class PlayersSearchTest {
         savePlayerWithTeam(
                 "Son Heung-min",
                 1L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Bukayo Saka",
                 2L,
-                team
+                arsenal
         );
+
 
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         0,
                         null,
+                        null,
                         null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -1005,8 +1509,8 @@ class PlayersSearchTest {
     void searchPlayer_pageOutOfRange() {
 
         // given
-        Team team = saveTeam(
-                "Test Team",
+        Team arsenal = saveTeam(
+                "Arsenal",
                 100L,
                 LeagueCode.EPL
         );
@@ -1014,22 +1518,25 @@ class PlayersSearchTest {
         savePlayerWithTeam(
                 "Bukayo Saka",
                 1L,
-                team
+                arsenal
         );
 
         savePlayerWithTeam(
                 "Son Heung-min",
                 2L,
-                team
+                arsenal
         );
+
 
         // when
         PlayersResponseDto response =
                 playerService.getPlayers(
                         100,
                         "",
+                        null,
                         null
                 );
+
 
         // then
         assertThat(response.getPlayers())
@@ -1050,8 +1557,8 @@ class PlayersSearchTest {
     /*
      * [기존 유지]
      *
-     * TeamPlayer가 없는 Player 정책을 테스트할 때도 필요하므로
-     * 기존 savePlayer Fixture는 그대로 유지한다.
+     * TeamPlayer가 없는 선수 정책을 테스트하기 위해
+     * Player 단독 저장 Fixture도 유지한다.
      */
     private Player savePlayer(
             String playerName,
@@ -1069,8 +1576,6 @@ class PlayersSearchTest {
 
     /*
      * [신규 Fixture]
-     *
-     * 리그 필터 및 현재 소속팀 생성용.
      */
     private Team saveTeam(
             String teamName,
@@ -1091,16 +1596,13 @@ class PlayersSearchTest {
     /*
      * [신규 Fixture]
      *
-     * 현재 선수 검색 정책에서는
-     * Player만 저장하면 검색 대상이 아니다.
+     * 현재 선수 목록의 기본 단위:
      *
-     * 따라서 대부분의 테스트에서
-     *
-     * Player 저장
+     * Player
      * +
-     * TeamPlayer 저장
-     *
-     * 을 한 번에 처리한다.
+     * TeamPlayer
+     * +
+     * Team
      */
     private Player savePlayerWithTeam(
             String playerName,
@@ -1108,10 +1610,11 @@ class PlayersSearchTest {
             Team team
     ) {
 
-        Player player = savePlayer(
-                playerName,
-                apiFootballId
-        );
+        Player player =
+                savePlayer(
+                        playerName,
+                        apiFootballId
+                );
 
         teamPlayerRepository.save(
                 TeamPlayer.of(

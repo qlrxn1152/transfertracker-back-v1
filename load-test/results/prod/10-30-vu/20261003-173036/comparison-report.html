@@ -1,0 +1,2889 @@
+
+<!DOCTYPE html>
+
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        k6 Multi Run Comparison Report
+    </title>
+
+
+    <style>
+
+        body {
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            max-width: 1400px;
+
+            margin: 40px auto;
+
+            padding: 0 24px;
+
+            color: #222;
+        }
+
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+
+        h2 {
+            margin-top: 55px;
+
+            margin-bottom: 16px;
+        }
+
+
+        .description {
+            color: #666;
+
+            margin-bottom: 20px;
+        }
+
+
+        .cards {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        230px,
+                        1fr
+                    )
+                );
+
+            gap: 16px;
+
+            margin-top: 30px;
+
+            margin-bottom: 40px;
+        }
+
+
+        .card {
+            border:
+                1px solid #ddd;
+
+            border-radius:
+                10px;
+
+            padding:
+                20px;
+        }
+
+
+        .card-title {
+            font-size:
+                14px;
+
+            color:
+                #666;
+
+            margin-bottom:
+                8px;
+        }
+
+
+        .card-value {
+            font-size:
+                24px;
+
+            font-weight:
+                700;
+        }
+
+
+        .table-wrapper {
+            overflow-x:
+                auto;
+
+            margin-bottom:
+                50px;
+        }
+
+
+        table {
+            width:
+                100%;
+
+            min-width:
+                850px;
+
+            border-collapse:
+                collapse;
+        }
+
+
+        th,
+        td {
+            padding:
+                12px 14px;
+
+            border-bottom:
+                1px solid #ddd;
+
+            text-align:
+                right;
+
+            white-space:
+                nowrap;
+        }
+
+
+        th {
+            background:
+                #f5f5f5;
+        }
+
+
+        th:first-child,
+        td:first-child {
+            text-align:
+                left;
+        }
+
+
+        tbody tr:hover {
+            background:
+                #fafafa;
+        }
+
+
+        td:first-child {
+            font-weight:
+                500;
+        }
+
+
+        small {
+            color:
+                #777;
+        }
+
+
+        details {
+            margin-top:
+                30px;
+
+            margin-bottom:
+                50px;
+
+            border:
+                1px solid #ddd;
+
+            border-radius:
+                8px;
+
+            padding:
+                16px;
+        }
+
+
+        summary {
+            cursor:
+                pointer;
+
+            font-size:
+                18px;
+
+            font-weight:
+                600;
+        }
+
+
+        details .table-wrapper {
+            margin-top:
+                20px;
+
+            margin-bottom:
+                0;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<h1>
+    k6 3회 성능 테스트 비교
+</h1>
+
+<p class="description">
+    동일한 부하 테스트를 3회 실행한 결과를 비교합니다.
+    P95 / P99는 중앙값을 대표값으로 사용합니다.
+</p>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <div class="card-title">
+            테스트 반복 횟수
+        </div>
+
+        <div class="card-value">
+            3회
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-title">
+            최대 VU
+        </div>
+
+        <div class="card-value">
+            30 VU
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-title">
+            P95 증가폭이 가장 큰 API
+        </div>
+
+        <div class="card-value">
+            +8.3%
+        </div>
+
+        <div>
+            Players - EPL Filter
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-title">
+            P99 증가폭이 가장 큰 API
+        </div>
+
+        <div class="card-value">
+            +36.1%
+        </div>
+
+        <div>
+            Players - Team Filter
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- P95 -->
+<!-- ===================================================== -->
+
+<h2>
+    P95 중앙값 비교
+</h2>
+
+<p class="description">
+    각 VU에서 3회 테스트의 P95 중앙값입니다.
+    마지막 열은 10 VU 대비 30 VU 변화율입니다.
+</p>
+
+
+<div class="table-wrapper">
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>API</th>
+
+            <th>10 VU</th><th>25 VU</th><th>30 VU</th>
+
+            <th>
+                10 VU
+                →
+                30 VU
+            </th>
+
+        </tr>
+
+    </thead>
+
+
+    <tbody>
+
+        
+        <tr>
+            <td>Players List</td>
+            <td>165.16 ms</td><td>180.22 ms</td><td>177.27 ms</td>
+            <td>+7.3%</td>
+        </tr>
+    
+        <tr>
+            <td>Players - EPL + Team Filter</td>
+            <td>160.58 ms</td><td>175.06 ms</td><td>173.29 ms</td>
+            <td>+7.9%</td>
+        </tr>
+    
+        <tr>
+            <td>Team Transfers List</td>
+            <td>183.14 ms</td><td>179.51 ms</td><td>181.07 ms</td>
+            <td>-1.1%</td>
+        </tr>
+    
+        <tr>
+            <td>Players - Team Filter</td>
+            <td>176.77 ms</td><td>174.98 ms</td><td>173.91 ms</td>
+            <td>-1.6%</td>
+        </tr>
+    
+        <tr>
+            <td>Team List</td>
+            <td>213.12 ms</td><td>210.57 ms</td><td>205.23 ms</td>
+            <td>-3.7%</td>
+        </tr>
+    
+        <tr>
+            <td>Transfers List</td>
+            <td>170.06 ms</td><td>180.32 ms</td><td>178.03 ms</td>
+            <td>+4.7%</td>
+        </tr>
+    
+        <tr>
+            <td>Players - EPL Filter</td>
+            <td>160.21 ms</td><td>176.44 ms</td><td>173.43 ms</td>
+            <td>+8.3%</td>
+        </tr>
+    
+        <tr>
+            <td>Team Detail</td>
+            <td>173.08 ms</td><td>176.97 ms</td><td>173.68 ms</td>
+            <td>+0.3%</td>
+        </tr>
+    
+
+    </tbody>
+
+</table>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- P99 -->
+<!-- ===================================================== -->
+
+<h2>
+    P99 중앙값 비교
+</h2>
+
+<p class="description">
+    Tail Latency가 부하 증가에 따라 반복적으로 증가하는지 확인합니다.
+</p>
+
+
+<div class="table-wrapper">
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>API</th>
+
+            <th>10 VU</th><th>25 VU</th><th>30 VU</th>
+
+            <th>
+                10 VU
+                →
+                30 VU
+            </th>
+
+        </tr>
+
+    </thead>
+
+
+    <tbody>
+
+        
+        <tr>
+            <td>Players List</td>
+            <td>175.88 ms</td><td>246.09 ms</td><td>218.13 ms</td>
+            <td>+24.0%</td>
+        </tr>
+    
+        <tr>
+            <td>Players - EPL + Team Filter</td>
+            <td>179.08 ms</td><td>184.91 ms</td><td>213.41 ms</td>
+            <td>+19.2%</td>
+        </tr>
+    
+        <tr>
+            <td>Team Transfers List</td>
+            <td>251.32 ms</td><td>234.91 ms</td><td>319.04 ms</td>
+            <td>+26.9%</td>
+        </tr>
+    
+        <tr>
+            <td>Players - Team Filter</td>
+            <td>184.65 ms</td><td>194.84 ms</td><td>251.36 ms</td>
+            <td>+36.1%</td>
+        </tr>
+    
+        <tr>
+            <td>Team List</td>
+            <td>302.60 ms</td><td>301.50 ms</td><td>371.01 ms</td>
+            <td>+22.6%</td>
+        </tr>
+    
+        <tr>
+            <td>Transfers List</td>
+            <td>230.76 ms</td><td>251.18 ms</td><td>217.39 ms</td>
+            <td>-5.8%</td>
+        </tr>
+    
+        <tr>
+            <td>Players - EPL Filter</td>
+            <td>273.06 ms</td><td>191.42 ms</td><td>234.01 ms</td>
+            <td>-14.3%</td>
+        </tr>
+    
+        <tr>
+            <td>Team Detail</td>
+            <td>205.67 ms</td><td>228.00 ms</td><td>246.81 ms</td>
+            <td>+20.0%</td>
+        </tr>
+    
+
+    </tbody>
+
+</table>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- RPS -->
+<!-- ===================================================== -->
+
+<h2>
+    평균 RPS 비교
+</h2>
+
+<p class="description">
+    동일 VU 구간에서 3회 측정한 API별 RPS 평균입니다.
+</p>
+
+
+<div class="table-wrapper">
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>API</th>
+
+            <th>10 VU</th><th>25 VU</th><th>30 VU</th>
+
+        </tr>
+
+    </thead>
+
+
+    <tbody>
+
+        
+        <tr>
+            <td>Players List</td>
+            <td>4.43</td><td>11.02</td><td>13.26</td>
+        </tr>
+    
+        <tr>
+            <td>Players - EPL + Team Filter</td>
+            <td>4.37</td><td>11.00</td><td>13.32</td>
+        </tr>
+    
+        <tr>
+            <td>Team Transfers List</td>
+            <td>4.38</td><td>11.08</td><td>13.29</td>
+        </tr>
+    
+        <tr>
+            <td>Players - Team Filter</td>
+            <td>4.38</td><td>11.01</td><td>13.32</td>
+        </tr>
+    
+        <tr>
+            <td>Team List</td>
+            <td>4.42</td><td>11.08</td><td>13.28</td>
+        </tr>
+    
+        <tr>
+            <td>Transfers List</td>
+            <td>4.42</td><td>11.06</td><td>13.32</td>
+        </tr>
+    
+        <tr>
+            <td>Players - EPL Filter</td>
+            <td>4.37</td><td>10.99</td><td>13.28</td>
+        </tr>
+    
+        <tr>
+            <td>Team Detail</td>
+            <td>4.47</td><td>11.06</td><td>13.29</td>
+        </tr>
+    
+
+    </tbody>
+
+</table>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- Variation -->
+<!-- ===================================================== -->
+
+<h2>
+    P99 실행별 변동폭
+</h2>
+
+<p class="description">
+    3회 테스트 중 최소값과 최대값입니다.
+    범위가 크다면 일시적인 네트워크 지연이나
+    서버/DB 환경 변동의 영향을 의심할 수 있습니다.
+</p>
+
+
+<div class="table-wrapper">
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>API</th>
+
+            <th>10 VU</th><th>25 VU</th><th>30 VU</th>
+
+        </tr>
+
+    </thead>
+
+
+    <tbody>
+
+        
+        <tr>
+            <td>Players List</td>
+            
+                <td>
+                    173.48
+                    ~
+                    210.99
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 37.51 ms
+                    </small>
+                </td>
+            
+                <td>
+                    195.93
+                    ~
+                    268.08
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 72.14 ms
+                    </small>
+                </td>
+            
+                <td>
+                    199.48
+                    ~
+                    254.50
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 55.02 ms
+                    </small>
+                </td>
+            
+        </tr>
+    
+        <tr>
+            <td>Players - EPL + Team Filter</td>
+            
+                <td>
+                    155.29
+                    ~
+                    179.62
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 24.33 ms
+                    </small>
+                </td>
+            
+                <td>
+                    183.69
+                    ~
+                    246.83
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 63.13 ms
+                    </small>
+                </td>
+            
+                <td>
+                    179.08
+                    ~
+                    215.92
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 36.84 ms
+                    </small>
+                </td>
+            
+        </tr>
+    
+        <tr>
+            <td>Team Transfers List</td>
+            
+                <td>
+                    235.92
+                    ~
+                    266.57
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 30.64 ms
+                    </small>
+                </td>
+            
+                <td>
+                    224.80
+                    ~
+                    335.65
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 110.84 ms
+                    </small>
+                </td>
+            
+                <td>
+                    232.17
+                    ~
+                    340.72
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 108.55 ms
+                    </small>
+                </td>
+            
+        </tr>
+    
+        <tr>
+            <td>Players - Team Filter</td>
+            
+                <td>
+                    163.96
+                    ~
+                    329.25
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 165.29 ms
+                    </small>
+                </td>
+            
+                <td>
+                    173.82
+                    ~
+                    239.44
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 65.62 ms
+                    </small>
+                </td>
+            
+                <td>
+                    182.30
+                    ~
+                    263.05
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 80.75 ms
+                    </small>
+                </td>
+            
+        </tr>
+    
+        <tr>
+            <td>Team List</td>
+            
+                <td>
+                    270.22
+                    ~
+                    353.34
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 83.12 ms
+                    </small>
+                </td>
+            
+                <td>
+                    224.26
+                    ~
+                    358.64
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 134.38 ms
+                    </small>
+                </td>
+            
+                <td>
+                    214.16
+                    ~
+                    412.76
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 198.59 ms
+                    </small>
+                </td>
+            
+        </tr>
+    
+        <tr>
+            <td>Transfers List</td>
+            
+                <td>
+                    191.74
+                    ~
+                    231.40
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 39.67 ms
+                    </small>
+                </td>
+            
+                <td>
+                    230.39
+                    ~
+                    332.98
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 102.59 ms
+                    </small>
+                </td>
+            
+                <td>
+                    191.41
+                    ~
+                    264.10
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 72.69 ms
+                    </small>
+                </td>
+            
+        </tr>
+    
+        <tr>
+            <td>Players - EPL Filter</td>
+            
+                <td>
+                    247.05
+                    ~
+                    337.10
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 90.06 ms
+                    </small>
+                </td>
+            
+                <td>
+                    184.84
+                    ~
+                    208.73
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 23.89 ms
+                    </small>
+                </td>
+            
+                <td>
+                    180.68
+                    ~
+                    244.44
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 63.76 ms
+                    </small>
+                </td>
+            
+        </tr>
+    
+        <tr>
+            <td>Team Detail</td>
+            
+                <td>
+                    197.98
+                    ~
+                    216.03
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 18.05 ms
+                    </small>
+                </td>
+            
+                <td>
+                    224.58
+                    ~
+                    251.79
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 27.20 ms
+                    </small>
+                </td>
+            
+                <td>
+                    222.97
+                    ~
+                    251.34
+                    ms
+
+                    <br>
+
+                    <small>
+                        폭 28.36 ms
+                    </small>
+                </td>
+            
+        </tr>
+    
+
+    </tbody>
+
+</table>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- Detail -->
+<!-- ===================================================== -->
+
+<details>
+
+    <summary>
+        Run별 상세 결과 보기
+    </summary>
+
+
+    <div class="table-wrapper">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Run</th>
+
+                <th>VU</th>
+
+                <th>API</th>
+
+                <th>AVG</th>
+
+                <th>P95</th>
+
+                <th>P99</th>
+
+                <th>RPS</th>
+
+                <th>요청 수</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>10 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        156.47 ms
+                    </td>
+
+                    <td>
+                        170.06 ms
+                    </td>
+
+                    <td>
+                        191.74 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>25 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        158.84 ms
+                    </td>
+
+                    <td>
+                        180.32 ms
+                    </td>
+
+                    <td>
+                        332.98 ms
+                    </td>
+
+                    <td>
+                        11.03
+                    </td>
+
+                    <td>
+                        331
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>30 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        157.29 ms
+                    </td>
+
+                    <td>
+                        181.70 ms
+                    </td>
+
+                    <td>
+                        191.41 ms
+                    </td>
+
+                    <td>
+                        13.20
+                    </td>
+
+                    <td>
+                        396
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>10 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        157.45 ms
+                    </td>
+
+                    <td>
+                        200.96 ms
+                    </td>
+
+                    <td>
+                        251.32 ms
+                    </td>
+
+                    <td>
+                        4.35
+                    </td>
+
+                    <td>
+                        87
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>25 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        156.26 ms
+                    </td>
+
+                    <td>
+                        179.51 ms
+                    </td>
+
+                    <td>
+                        224.80 ms
+                    </td>
+
+                    <td>
+                        11.07
+                    </td>
+
+                    <td>
+                        332
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>30 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        157.19 ms
+                    </td>
+
+                    <td>
+                        181.07 ms
+                    </td>
+
+                    <td>
+                        232.17 ms
+                    </td>
+
+                    <td>
+                        13.13
+                    </td>
+
+                    <td>
+                        394
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>10 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        180.02 ms
+                    </td>
+
+                    <td>
+                        218.60 ms
+                    </td>
+
+                    <td>
+                        353.34 ms
+                    </td>
+
+                    <td>
+                        4.35
+                    </td>
+
+                    <td>
+                        87
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>25 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        176.05 ms
+                    </td>
+
+                    <td>
+                        210.57 ms
+                    </td>
+
+                    <td>
+                        301.50 ms
+                    </td>
+
+                    <td>
+                        10.97
+                    </td>
+
+                    <td>
+                        329
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>30 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        176.89 ms
+                    </td>
+
+                    <td>
+                        210.04 ms
+                    </td>
+
+                    <td>
+                        371.01 ms
+                    </td>
+
+                    <td>
+                        13.13
+                    </td>
+
+                    <td>
+                        394
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>10 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        154.28 ms
+                    </td>
+
+                    <td>
+                        173.08 ms
+                    </td>
+
+                    <td>
+                        205.67 ms
+                    </td>
+
+                    <td>
+                        4.50
+                    </td>
+
+                    <td>
+                        90
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>25 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        155.00 ms
+                    </td>
+
+                    <td>
+                        177.61 ms
+                    </td>
+
+                    <td>
+                        251.79 ms
+                    </td>
+
+                    <td>
+                        10.97
+                    </td>
+
+                    <td>
+                        329
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>30 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        155.49 ms
+                    </td>
+
+                    <td>
+                        177.20 ms
+                    </td>
+
+                    <td>
+                        251.34 ms
+                    </td>
+
+                    <td>
+                        13.13
+                    </td>
+
+                    <td>
+                        394
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>10 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        154.77 ms
+                    </td>
+
+                    <td>
+                        165.16 ms
+                    </td>
+
+                    <td>
+                        173.48 ms
+                    </td>
+
+                    <td>
+                        4.45
+                    </td>
+
+                    <td>
+                        89
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>25 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        157.87 ms
+                    </td>
+
+                    <td>
+                        180.22 ms
+                    </td>
+
+                    <td>
+                        246.09 ms
+                    </td>
+
+                    <td>
+                        10.93
+                    </td>
+
+                    <td>
+                        328
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>30 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        158.26 ms
+                    </td>
+
+                    <td>
+                        180.54 ms
+                    </td>
+
+                    <td>
+                        199.48 ms
+                    </td>
+
+                    <td>
+                        13.10
+                    </td>
+
+                    <td>
+                        393
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>10 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        157.58 ms
+                    </td>
+
+                    <td>
+                        160.21 ms
+                    </td>
+
+                    <td>
+                        337.10 ms
+                    </td>
+
+                    <td>
+                        4.45
+                    </td>
+
+                    <td>
+                        89
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>25 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        154.72 ms
+                    </td>
+
+                    <td>
+                        176.44 ms
+                    </td>
+
+                    <td>
+                        208.73 ms
+                    </td>
+
+                    <td>
+                        10.97
+                    </td>
+
+                    <td>
+                        329
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>30 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        155.79 ms
+                    </td>
+
+                    <td>
+                        177.61 ms
+                    </td>
+
+                    <td>
+                        244.44 ms
+                    </td>
+
+                    <td>
+                        13.23
+                    </td>
+
+                    <td>
+                        397
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>10 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        157.32 ms
+                    </td>
+
+                    <td>
+                        181.11 ms
+                    </td>
+
+                    <td>
+                        329.25 ms
+                    </td>
+
+                    <td>
+                        4.35
+                    </td>
+
+                    <td>
+                        87
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>25 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        153.93 ms
+                    </td>
+
+                    <td>
+                        175.31 ms
+                    </td>
+
+                    <td>
+                        239.44 ms
+                    </td>
+
+                    <td>
+                        10.97
+                    </td>
+
+                    <td>
+                        329
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>30 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        154.86 ms
+                    </td>
+
+                    <td>
+                        178.23 ms
+                    </td>
+
+                    <td>
+                        263.05 ms
+                    </td>
+
+                    <td>
+                        13.23
+                    </td>
+
+                    <td>
+                        397
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>10 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        151.00 ms
+                    </td>
+
+                    <td>
+                        160.58 ms
+                    </td>
+
+                    <td>
+                        179.62 ms
+                    </td>
+
+                    <td>
+                        4.30
+                    </td>
+
+                    <td>
+                        86
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>25 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        153.16 ms
+                    </td>
+
+                    <td>
+                        175.06 ms
+                    </td>
+
+                    <td>
+                        246.83 ms
+                    </td>
+
+                    <td>
+                        10.97
+                    </td>
+
+                    <td>
+                        329
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-1</td>
+                    <td>30 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        153.69 ms
+                    </td>
+
+                    <td>
+                        176.07 ms
+                    </td>
+
+                    <td>
+                        215.92 ms
+                    </td>
+
+                    <td>
+                        13.23
+                    </td>
+
+                    <td>
+                        397
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>10 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        161.04 ms
+                    </td>
+
+                    <td>
+                        186.03 ms
+                    </td>
+
+                    <td>
+                        231.40 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>25 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        158.45 ms
+                    </td>
+
+                    <td>
+                        180.92 ms
+                    </td>
+
+                    <td>
+                        230.39 ms
+                    </td>
+
+                    <td>
+                        11.13
+                    </td>
+
+                    <td>
+                        334
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>30 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        154.56 ms
+                    </td>
+
+                    <td>
+                        178.03 ms
+                    </td>
+
+                    <td>
+                        217.39 ms
+                    </td>
+
+                    <td>
+                        13.47
+                    </td>
+
+                    <td>
+                        404
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>10 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        159.82 ms
+                    </td>
+
+                    <td>
+                        183.14 ms
+                    </td>
+
+                    <td>
+                        266.57 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>25 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        159.23 ms
+                    </td>
+
+                    <td>
+                        184.54 ms
+                    </td>
+
+                    <td>
+                        335.65 ms
+                    </td>
+
+                    <td>
+                        11.07
+                    </td>
+
+                    <td>
+                        332
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>30 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        156.94 ms
+                    </td>
+
+                    <td>
+                        182.77 ms
+                    </td>
+
+                    <td>
+                        319.04 ms
+                    </td>
+
+                    <td>
+                        13.47
+                    </td>
+
+                    <td>
+                        404
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>10 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        180.79 ms
+                    </td>
+
+                    <td>
+                        211.55 ms
+                    </td>
+
+                    <td>
+                        302.60 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>25 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        178.05 ms
+                    </td>
+
+                    <td>
+                        210.88 ms
+                    </td>
+
+                    <td>
+                        358.64 ms
+                    </td>
+
+                    <td>
+                        11.17
+                    </td>
+
+                    <td>
+                        335
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>30 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        170.32 ms
+                    </td>
+
+                    <td>
+                        204.24 ms
+                    </td>
+
+                    <td>
+                        214.16 ms
+                    </td>
+
+                    <td>
+                        13.40
+                    </td>
+
+                    <td>
+                        402
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>10 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        157.07 ms
+                    </td>
+
+                    <td>
+                        179.24 ms
+                    </td>
+
+                    <td>
+                        216.03 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>25 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        154.55 ms
+                    </td>
+
+                    <td>
+                        176.97 ms
+                    </td>
+
+                    <td>
+                        228.00 ms
+                    </td>
+
+                    <td>
+                        11.10
+                    </td>
+
+                    <td>
+                        333
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>30 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        151.85 ms
+                    </td>
+
+                    <td>
+                        173.68 ms
+                    </td>
+
+                    <td>
+                        222.97 ms
+                    </td>
+
+                    <td>
+                        13.33
+                    </td>
+
+                    <td>
+                        400
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>10 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        160.40 ms
+                    </td>
+
+                    <td>
+                        185.42 ms
+                    </td>
+
+                    <td>
+                        210.99 ms
+                    </td>
+
+                    <td>
+                        4.35
+                    </td>
+
+                    <td>
+                        87
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>25 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        158.32 ms
+                    </td>
+
+                    <td>
+                        180.38 ms
+                    </td>
+
+                    <td>
+                        195.93 ms
+                    </td>
+
+                    <td>
+                        11.00
+                    </td>
+
+                    <td>
+                        330
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>30 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        155.21 ms
+                    </td>
+
+                    <td>
+                        177.27 ms
+                    </td>
+
+                    <td>
+                        218.13 ms
+                    </td>
+
+                    <td>
+                        13.30
+                    </td>
+
+                    <td>
+                        399
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>10 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        157.53 ms
+                    </td>
+
+                    <td>
+                        180.54 ms
+                    </td>
+
+                    <td>
+                        247.05 ms
+                    </td>
+
+                    <td>
+                        4.25
+                    </td>
+
+                    <td>
+                        85
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>25 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        154.72 ms
+                    </td>
+
+                    <td>
+                        177.51 ms
+                    </td>
+
+                    <td>
+                        191.42 ms
+                    </td>
+
+                    <td>
+                        10.87
+                    </td>
+
+                    <td>
+                        326
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>30 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        151.31 ms
+                    </td>
+
+                    <td>
+                        173.43 ms
+                    </td>
+
+                    <td>
+                        180.68 ms
+                    </td>
+
+                    <td>
+                        13.23
+                    </td>
+
+                    <td>
+                        397
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>10 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        153.91 ms
+                    </td>
+
+                    <td>
+                        176.77 ms
+                    </td>
+
+                    <td>
+                        184.65 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>25 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        152.44 ms
+                    </td>
+
+                    <td>
+                        174.98 ms
+                    </td>
+
+                    <td>
+                        194.84 ms
+                    </td>
+
+                    <td>
+                        10.93
+                    </td>
+
+                    <td>
+                        328
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>30 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        151.03 ms
+                    </td>
+
+                    <td>
+                        173.91 ms
+                    </td>
+
+                    <td>
+                        182.30 ms
+                    </td>
+
+                    <td>
+                        13.23
+                    </td>
+
+                    <td>
+                        397
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>10 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        153.73 ms
+                    </td>
+
+                    <td>
+                        175.76 ms
+                    </td>
+
+                    <td>
+                        179.08 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>25 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        152.18 ms
+                    </td>
+
+                    <td>
+                        175.55 ms
+                    </td>
+
+                    <td>
+                        184.91 ms
+                    </td>
+
+                    <td>
+                        10.97
+                    </td>
+
+                    <td>
+                        329
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-2</td>
+                    <td>30 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        150.50 ms
+                    </td>
+
+                    <td>
+                        173.29 ms
+                    </td>
+
+                    <td>
+                        179.08 ms
+                    </td>
+
+                    <td>
+                        13.23
+                    </td>
+
+                    <td>
+                        397
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>10 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        155.14 ms
+                    </td>
+
+                    <td>
+                        162.21 ms
+                    </td>
+
+                    <td>
+                        230.76 ms
+                    </td>
+
+                    <td>
+                        4.45
+                    </td>
+
+                    <td>
+                        89
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>25 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        158.10 ms
+                    </td>
+
+                    <td>
+                        162.68 ms
+                    </td>
+
+                    <td>
+                        251.18 ms
+                    </td>
+
+                    <td>
+                        11.00
+                    </td>
+
+                    <td>
+                        330
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>30 VU</td>
+                    <td>Transfers List</td>
+
+                    <td>
+                        155.51 ms
+                    </td>
+
+                    <td>
+                        174.84 ms
+                    </td>
+
+                    <td>
+                        264.10 ms
+                    </td>
+
+                    <td>
+                        13.30
+                    </td>
+
+                    <td>
+                        399
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>10 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        152.93 ms
+                    </td>
+
+                    <td>
+                        160.17 ms
+                    </td>
+
+                    <td>
+                        235.92 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>25 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        154.37 ms
+                    </td>
+
+                    <td>
+                        164.31 ms
+                    </td>
+
+                    <td>
+                        234.91 ms
+                    </td>
+
+                    <td>
+                        11.10
+                    </td>
+
+                    <td>
+                        333
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>30 VU</td>
+                    <td>Team Transfers List</td>
+
+                    <td>
+                        155.79 ms
+                    </td>
+
+                    <td>
+                        176.88 ms
+                    </td>
+
+                    <td>
+                        340.72 ms
+                    </td>
+
+                    <td>
+                        13.27
+                    </td>
+
+                    <td>
+                        398
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>10 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        174.27 ms
+                    </td>
+
+                    <td>
+                        213.12 ms
+                    </td>
+
+                    <td>
+                        270.22 ms
+                    </td>
+
+                    <td>
+                        4.50
+                    </td>
+
+                    <td>
+                        90
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>25 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        171.41 ms
+                    </td>
+
+                    <td>
+                        181.08 ms
+                    </td>
+
+                    <td>
+                        224.26 ms
+                    </td>
+
+                    <td>
+                        11.10
+                    </td>
+
+                    <td>
+                        333
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>30 VU</td>
+                    <td>Team List</td>
+
+                    <td>
+                        176.32 ms
+                    </td>
+
+                    <td>
+                        205.23 ms
+                    </td>
+
+                    <td>
+                        412.76 ms
+                    </td>
+
+                    <td>
+                        13.30
+                    </td>
+
+                    <td>
+                        399
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>10 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        150.95 ms
+                    </td>
+
+                    <td>
+                        156.35 ms
+                    </td>
+
+                    <td>
+                        197.98 ms
+                    </td>
+
+                    <td>
+                        4.50
+                    </td>
+
+                    <td>
+                        90
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>25 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        152.48 ms
+                    </td>
+
+                    <td>
+                        159.22 ms
+                    </td>
+
+                    <td>
+                        224.58 ms
+                    </td>
+
+                    <td>
+                        11.10
+                    </td>
+
+                    <td>
+                        333
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>30 VU</td>
+                    <td>Team Detail</td>
+
+                    <td>
+                        152.77 ms
+                    </td>
+
+                    <td>
+                        171.02 ms
+                    </td>
+
+                    <td>
+                        246.81 ms
+                    </td>
+
+                    <td>
+                        13.40
+                    </td>
+
+                    <td>
+                        402
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>10 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        153.83 ms
+                    </td>
+
+                    <td>
+                        162.16 ms
+                    </td>
+
+                    <td>
+                        175.88 ms
+                    </td>
+
+                    <td>
+                        4.50
+                    </td>
+
+                    <td>
+                        90
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>25 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        157.40 ms
+                    </td>
+
+                    <td>
+                        162.27 ms
+                    </td>
+
+                    <td>
+                        268.08 ms
+                    </td>
+
+                    <td>
+                        11.13
+                    </td>
+
+                    <td>
+                        334
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>30 VU</td>
+                    <td>Players List</td>
+
+                    <td>
+                        155.97 ms
+                    </td>
+
+                    <td>
+                        169.37 ms
+                    </td>
+
+                    <td>
+                        254.50 ms
+                    </td>
+
+                    <td>
+                        13.37
+                    </td>
+
+                    <td>
+                        401
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>10 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        153.51 ms
+                    </td>
+
+                    <td>
+                        155.19 ms
+                    </td>
+
+                    <td>
+                        273.06 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>25 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        152.34 ms
+                    </td>
+
+                    <td>
+                        158.80 ms
+                    </td>
+
+                    <td>
+                        184.84 ms
+                    </td>
+
+                    <td>
+                        11.13
+                    </td>
+
+                    <td>
+                        334
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>30 VU</td>
+                    <td>Players - EPL Filter</td>
+
+                    <td>
+                        152.41 ms
+                    </td>
+
+                    <td>
+                        164.73 ms
+                    </td>
+
+                    <td>
+                        234.01 ms
+                    </td>
+
+                    <td>
+                        13.37
+                    </td>
+
+                    <td>
+                        401
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>10 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        148.98 ms
+                    </td>
+
+                    <td>
+                        154.81 ms
+                    </td>
+
+                    <td>
+                        163.96 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>25 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        150.35 ms
+                    </td>
+
+                    <td>
+                        157.95 ms
+                    </td>
+
+                    <td>
+                        173.82 ms
+                    </td>
+
+                    <td>
+                        11.13
+                    </td>
+
+                    <td>
+                        334
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>30 VU</td>
+                    <td>Players - Team Filter</td>
+
+                    <td>
+                        151.41 ms
+                    </td>
+
+                    <td>
+                        167.66 ms
+                    </td>
+
+                    <td>
+                        251.36 ms
+                    </td>
+
+                    <td>
+                        13.50
+                    </td>
+
+                    <td>
+                        405
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>10 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        148.30 ms
+                    </td>
+
+                    <td>
+                        153.76 ms
+                    </td>
+
+                    <td>
+                        155.29 ms
+                    </td>
+
+                    <td>
+                        4.40
+                    </td>
+
+                    <td>
+                        88
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>25 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        150.55 ms
+                    </td>
+
+                    <td>
+                        156.32 ms
+                    </td>
+
+                    <td>
+                        183.69 ms
+                    </td>
+
+                    <td>
+                        11.07
+                    </td>
+
+                    <td>
+                        332
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>run-3</td>
+                    <td>30 VU</td>
+                    <td>Players - EPL + Team Filter</td>
+
+                    <td>
+                        151.05 ms
+                    </td>
+
+                    <td>
+                        164.73 ms
+                    </td>
+
+                    <td>
+                        213.41 ms
+                    </td>
+
+                    <td>
+                        13.50
+                    </td>
+
+                    <td>
+                        405
+                    </td>
+                </tr>
+            
+
+        </tbody>
+
+    </table>
+
+    </div>
+
+</details>
+
+
+</body>
+
+</html>

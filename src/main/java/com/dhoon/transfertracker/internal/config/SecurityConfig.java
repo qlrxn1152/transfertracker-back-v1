@@ -38,6 +38,12 @@ public class SecurityConfig {
                                 "/api/member/login"
                         ).denyAll()
 
+                        .requestMatchers("/actuator/health")
+                        .permitAll()
+
+                        .requestMatchers("/actuator/**")
+                        .hasRole("ADMIN")
+
                         // 외부 API 호출 / 데이터 동기화는 ADMIN만
                         .requestMatchers("/external/**")
                         .hasRole("ADMIN")
