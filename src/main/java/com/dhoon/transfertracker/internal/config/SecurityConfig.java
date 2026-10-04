@@ -26,10 +26,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf ->
-                        csrf.ignoringRequestMatchers("/external/**")
-                )
-
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/external/**"))
                 .authorizeHttpRequests(auth -> auth
 
                         // 현재 회원 기능 사용하지 않음
@@ -48,11 +45,9 @@ public class SecurityConfig {
                         .requestMatchers("/external/**")
                         .hasRole("ADMIN")
 
-
                         // 사용자 조회 API
                         .requestMatchers(HttpMethod.GET, "/api/**")
                         .permitAll()
-
 
                         // 그 외 요청은 기본적으로 차단
                         .anyRequest()

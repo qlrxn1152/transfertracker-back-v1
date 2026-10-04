@@ -58,7 +58,6 @@ public class TeamServiceImpl implements TeamService {
                 .map(TeamItemResponseDto::of)
                 .toList();
 
-
         return TeamsResponseDto.of(leagueTeams);
     }
 

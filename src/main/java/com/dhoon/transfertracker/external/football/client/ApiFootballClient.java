@@ -234,7 +234,7 @@ public class ApiFootballClient {
     private void savePlayerTransfers(Player player, TeamTransferData data, Team inTeam, Team outTeam) {
         Transfer transfer = Transfer.of(player, inTeam, outTeam, data.getTransferType(), LocalDate.parse(data.getTransferDate()));
 
-        if (!transferRepository.existsByInTeamIdAndOutTeamIdAndPlayerId(transfer.getInTeam().getId(), transfer.getOutTeam().getId(), player.getId())) {
+        if (!transferRepository.existsByInTeamIdAndOutTeamIdAndPlayerId(transfer.getInTeam().getId(), transfer.getOutTeam().getId(), player.getId(), transfer.getTransferDate())) {
             transferRepository.save(transfer);
             log.info("[{}] 의 이적정보가 등록되었습니다.", player.getPlayerName());
         }
@@ -348,7 +348,7 @@ public class ApiFootballClient {
                 Team inTeam = getOrCreateTeam(Team.of(inTeamName, inTeamApiId));
                 Team outTeam = getOrCreateTeam(Team.of(outTeamName, outTeamApiId));
 
-                transferRepository.findByInTeamIdAndOutTeamIdAndPlayerId(inTeam.getId(), outTeam.getId(), player.getId())
+                transferRepository.findByInTeamIdAndOutTeamIdAndPlayerId(inTeam.getId(), outTeam.getId(), player.getId(), transferDate)
                         .orElseGet(() -> transferRepository.save(Transfer.of(player, inTeam, outTeam, transferType, transferDate)));
             }
         });
