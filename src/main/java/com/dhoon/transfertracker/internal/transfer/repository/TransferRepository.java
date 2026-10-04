@@ -85,10 +85,9 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             """)
     Slice<Transfer> findTransfers(String keyWord, Pageable pageable, LeagueCode leagueCode, Long teamId);
 
-
-
-
     boolean existsByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId, LocalDate transferDate);
 
-    Optional<Transfer> findByInTeamIdAndOutTeamIdAndPlayerId(Long inTeamId, Long outTeamId, Long playerId, LocalDate transferDate);
+    Optional<Transfer> findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(Long inTeamId, Long outTeamId, Long playerId, LocalDate transferDate);
+
+    long countByPlayerId(Long playerId);
 }

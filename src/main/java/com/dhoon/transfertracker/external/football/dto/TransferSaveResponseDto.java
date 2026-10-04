@@ -12,10 +12,11 @@ import lombok.NoArgsConstructor;
 public class TransferSaveResponseDto {
 
     private String playerName;
-    private Long playerAPIID;
+    private Long playerAPIId;
+    private String message;
 
     public static TransferSaveResponseDto of(Player player) {
-        return new TransferSaveResponseDto(player.getPlayerName(), player.getApiFootballId());
+        return new TransferSaveResponseDto(player.getPlayerName(), player.getApiFootballId(), "이적 정보 저장 성공.");
     }
 
 }

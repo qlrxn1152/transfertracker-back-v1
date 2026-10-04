@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.external.football.dto;
 
+import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,10 +11,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TeamPlayerSaveResponseDto {
 
-    private Long playerApiId;
+    private Long playerId;
     private String playerName;
+    private Long teamId;
+    private String teamName;
 
-    public static TeamPlayerSaveResponseDto of(Long playerApiId, String playerName) {
-        return new TeamPlayerSaveResponseDto(playerApiId, playerName);
+    public static TeamPlayerSaveResponseDto of(TeamPlayer teamPlayer) {
+        return new TeamPlayerSaveResponseDto(
+                teamPlayer.getPlayer().getId(),
+                teamPlayer.getPlayer().getPlayerName(),
+                teamPlayer.getTeam().getId(),
+                teamPlayer.getTeam().getTeamName()
+        );
     }
 }
