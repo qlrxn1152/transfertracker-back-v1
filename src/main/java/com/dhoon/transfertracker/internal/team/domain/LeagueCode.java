@@ -11,7 +11,8 @@ public enum LeagueCode {
     LA_LIGA(140L),
     BUNDESLIGA(78L),
     SERIE_A(135L),
-    LIGUE_1(61L);
+    LIGUE_1(61L),
+    K_LEAGUE(292L);
 
     private final long apiFootballLeagueId;
 }

@@ -55,7 +55,6 @@ public class TransferServiceImpl implements TransferService {
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(int page, String keyWord, LeagueCode leagueCode, Long teamId) {
-
         if (page < 0) {
             throw new InvalidTransferSearchPageValueException();
         }
