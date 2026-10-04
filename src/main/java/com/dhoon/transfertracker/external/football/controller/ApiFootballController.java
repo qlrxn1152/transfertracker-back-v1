@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-public class NewApiFootballController {
+public class ApiFootballController {
 
     private final FootballSyncService footballSyncService;
 

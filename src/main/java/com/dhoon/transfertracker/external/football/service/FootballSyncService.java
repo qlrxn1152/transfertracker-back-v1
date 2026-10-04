@@ -99,6 +99,7 @@ public class FootballSyncService {
                     JsonNode playerData = data.get("player");
                     Player player = footballSyncTxService.getOrCreatePlayer(playerData);
 
+
                     data.get("transfers").forEach(transferData -> footballSyncTxService.getOrCreatePlayerTransfers(playerData, transferData, player.getApiFootballId()));
                 });
 
