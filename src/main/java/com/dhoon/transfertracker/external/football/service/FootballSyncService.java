@@ -10,6 +10,7 @@ import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerReposi
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 
@@ -20,10 +21,13 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class FootballSyncService {
 
     private final ApiFootballHttpClient footballRestClient;
     private final FootballSyncTxService footballSyncTxService;
+
+    private final TransferRepository transferRepository;
 
 
     /**
@@ -49,21 +53,6 @@ public class FootballSyncService {
     }
 
     /**
-     * 외부 API 를 호출해서, 해당 선수의 이적 데이터를 DB 에 저장하는 작업.
-     * @param playerApiId -> 외부 API ID
-     */
-    public TransferSaveResponseDto syncPlayerTransfers(Long playerApiId) {
-        JsonNode node = footballRestClient.callExternalPlayerTransferApi(playerApiId);
-
-        JsonNode playerData = node.get("response").get(0).get("player");
-        JsonNode transferData = node.get("response").get(0).get("transfers");
-
-        Player player = footballSyncTxService.getOrCreatePlayerTransfers(playerData, transferData, playerApiId);
-
-        return TransferSaveResponseDto.of(player);
-    }
-
-    /**
      * 외부 API 를 호출해서, 해당 팀의 선수들을 DB 에 저장하는 작업.
      * @param teamApiId -> 외부 API ID
      */
@@ -76,7 +65,6 @@ public class FootballSyncService {
 
         List<TeamPlayerSaveResponseDto> response = new ArrayList<>();
 
-
         playersData.forEach(player -> {
             Player savePlayer = footballSyncTxService.getOrCreatePlayer(player);
             TeamPlayer saveTeamPlayer = footballSyncTxService.getOrCreateTeamPlayer(savePlayer, saveTeam);
@@ -88,20 +76,37 @@ public class FootballSyncService {
     }
 
     /**
+     * 외부 API 를 호출해서, 해당 선수의 이적 데이터를 DB 에 저장하는 작업.
+     * @param playerApiId -> 외부 API ID
+     */
+    public TransferSaveResponseDto syncPlayerTransfers(Long playerApiId) {
+        JsonNode node = footballRestClient.callExternalPlayerTransferApi(playerApiId);
+
+        JsonNode playerData = node.get("response").get(0).get("player");
+        JsonNode transferData = node.get("response").get(0).get("transfers");
+
+        Player player = footballSyncTxService.getOrCreatePlayerTransfers(playerData, transferData);
+
+        return TransferSaveResponseDto.of(player);
+    }
+
+
+
+    /**
      * 외부 API 를 호출해서, 해당 팀의 선수들을 DB 에 저장하는 작업. ( 2020 년 이상의 이적정보만 저장합니다.)
      * @param teamApiId -> 외부 API ID
      */
     public String saveTeamTransfers(Long teamApiId) {
         JsonNode node = footballRestClient.callExternalTeamTransfersApi(teamApiId);
 
-        node.get("response")
-                .forEach(data -> {
-                    JsonNode playerData = data.get("player");
-                    Player player = footballSyncTxService.getOrCreatePlayer(playerData);
+        JsonNode responses = node.get("response");
 
+        for (JsonNode response : responses) {
+            JsonNode playerData = response.get("player");
+            JsonNode transferData = response.get("transfers");
 
-                    data.get("transfers").forEach(transferData -> footballSyncTxService.getOrCreatePlayerTransfers(playerData, transferData, player.getApiFootballId()));
-                });
+            footballSyncTxService.getOrCreatePlayerTransfers(playerData, transferData);
+        }
 
         return "FootballSyncService.saveTeamTransfers";
     }

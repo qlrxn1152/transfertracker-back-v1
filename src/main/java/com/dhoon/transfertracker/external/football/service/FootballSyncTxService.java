@@ -42,7 +42,6 @@ public class FootballSyncTxService {
                 );
     }
 
-    // Transaction
     public Team getOrCreateTeam(JsonNode teamData) {
         long teamApiId = teamData.get("id").asLong();
 
@@ -56,26 +55,26 @@ public class FootballSyncTxService {
     }
 
 
-    public Player getOrCreatePlayerTransfers(JsonNode playerData, JsonNode transferData, Long playerApiId) {
-        Player player = getOrCreatePlayer(playerData);// 플레이어 없으면 먼저 저장
+    public Player getOrCreatePlayerTransfers(JsonNode playerData, JsonNode transferData) {
 
-        // 팀 없으면 먼저 저장
+        Player player = getOrCreatePlayer(playerData);
+
         transferData.forEach(transfer -> {
+            LocalDate transferDate = LocalDate.parse(transfer.get("date").asString());
+            String transferType = transfer.get("type").asString();
 
-            LocalDate transferDate = LocalDate.parse(transferData.get("date").asString());
-            String transferType = transferData.get("type").asString();
             JsonNode inTeamData = transfer.get("teams").get("in");
             JsonNode outTeamData = transfer.get("teams").get("out");
-
-            long inTeamId = inTeamData.get("id").asLong();
-            long outTeamId = outTeamData.get("id").asLong();
 
             Team inTeam = getOrCreateTeam(inTeamData);
             Team outTeam = getOrCreateTeam(outTeamData);
 
-            transferRepository.findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(inTeamId, outTeamId, playerApiId, LocalDate.now())
-                    .orElseGet(() -> transferRepository.save(Transfer.of(player, inTeam, outTeam, transferType, transferDate)));
+            transferRepository.findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(inTeam.getId(), outTeam.getId(), player.getId(), transferDate)
+                    .orElseGet(() -> transferRepository.save(Transfer.of(
+                            player, inTeam, outTeam, transferType, transferDate
+                    )));
         });
+
 
         return player;
     }
