@@ -20,7 +20,7 @@ public class Player {
     @Column(name = "player_name", nullable = false)
     private String playerName;
 
-    @Column(name = "api_football_id", nullable = false)
+    @Column(name = "api_football_id", nullable = false, unique = true)
     private Long apiFootballId;
 
     @Column(name = "player_name_ko")
