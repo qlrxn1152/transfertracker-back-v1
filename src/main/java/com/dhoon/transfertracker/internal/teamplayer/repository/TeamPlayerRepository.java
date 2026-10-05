@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.teamplayer.repository;
 
+import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
@@ -44,6 +45,16 @@ public interface TeamPlayerRepository extends JpaRepository<TeamPlayer, Long> {
                 )
             """)
     Slice<TeamPlayer> findTeamPlayers(String keyWord, Pageable pageable, LeagueCode leagueCode, Long teamId);
+
+    @Query("""
+            select tp from TeamPlayer tp
+                        join fetch tp.player p
+                        join fetch tp.team t
+            where p.playerNameKo is null
+                and t.leagueCode is not null
+            order by p.id asc
+            """)
+    List<TeamPlayer> findPlayerNameTranslationTargets(Pageable pageable);
 
 
 

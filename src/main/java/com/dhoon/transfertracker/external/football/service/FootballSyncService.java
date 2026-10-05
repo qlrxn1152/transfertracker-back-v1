@@ -112,6 +112,7 @@ public class FootballSyncService {
     public String syncLeagueTeams(LeagueCode leagueCode) {
         JsonNode node = footballRestClient.callExternalLeagueTeamsApi(leagueCode);
 
+        // 2024 년 기준으로 설정합니다. 리그 처음 만들때에만 설정하고, 이후에는 실행하지않는것을 권장합니다.
         node.get("response")
                 .forEach(responseData -> {
                     JsonNode teamData = responseData.get("team");

@@ -18,7 +18,7 @@ public class TeamPlayerItemResponseDto {
     public static TeamPlayerItemResponseDto of(TeamPlayer teamPlayer) {
         return new TeamPlayerItemResponseDto(
                 teamPlayer.getPlayer().getId(),
-                teamPlayer.getPlayer().getPlayerName(),
+                teamPlayer.getPlayer().getDisplayName(),
                 "https://media.api-sports.io/football/players/" + teamPlayer.getPlayer().getApiFootballId() + ".png"
         );
     }

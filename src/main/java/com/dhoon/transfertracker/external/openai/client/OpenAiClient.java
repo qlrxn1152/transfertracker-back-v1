@@ -1,6 +1,8 @@
 package com.dhoon.transfertracker.external.openai.client;
 
+import com.dhoon.transfertracker.external.openai.dto.request.PlayerNameTranslationTarget;
 import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;
+import com.dhoon.transfertracker.external.openai.dto.response.PlayerNameTranslationBatchResult;
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -105,6 +107,85 @@ public class OpenAiClient {
 
         throw new IllegalStateException(
                 "OpenAI 응답에서 output_text를 찾을 수 없습니다."
+        );
+    }
+
+    public PlayerNameTranslationBatchResult translatePlayerNames(
+            List<PlayerNameTranslationTarget> targets
+    ) {
+
+        String input =
+                objectMapper
+                        .valueToTree(
+                                targets
+                        )
+                        .toString();
+
+
+        Map<String, Object> request =
+                Map.of(
+                        "model",
+                        model,
+
+                        "instructions",
+                        """
+                        Convert football player names into natural Korean names
+                        commonly understandable to Korean football fans.
+    
+                        Rules:
+                        - playerName is the value to convert.
+                        - teamName is context only for identifying the player.
+                        - Never include teamName in playerNameKo.
+                        - Do not translate the meaning of a person's name.
+                        - Use natural Korean transliteration for foreign players.
+                        - For well-known football players, prefer the commonly used Korean spelling.
+                        - For Korean players written in Roman letters, restore the natural Korean name when confidently identifiable.
+                        - Never invent additional player information.
+                        - Preserve every playerId exactly.
+                        - Return one result for every input player.
+                        - Do not omit or duplicate playerId.
+                        - Return JSON only.
+    
+                        Response format:
+                        {
+                          "players": [
+                            {
+                              "playerId": 1,
+                              "playerNameKo": "브루노 페르난데스"
+                            }
+                          ]
+                        }
+                        """,
+
+                        "input",
+                        input
+                );
+
+
+        JsonNode response =
+                openAiRestClient
+                        .post()
+                        .uri(
+                                "/v1/responses"
+                        )
+                        .body(
+                                request
+                        )
+                        .retrieve()
+                        .body(
+                                JsonNode.class
+                        );
+
+
+        String outputText =
+                extractOutputText(
+                        response
+                );
+
+
+        return objectMapper.readValue(
+                outputText,
+                PlayerNameTranslationBatchResult.class
         );
     }
 }

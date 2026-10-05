@@ -22,7 +22,7 @@ public class PlayerItemResponseDto {
     public static PlayerItemResponseDto of(Player player, Team team) {
         return new PlayerItemResponseDto(
                 player.getId(),
-                player.getPlayerName(),
+                player.getDisplayName(),
                 "https://media.api-sports.io/football/players/" + player.getApiFootballId() + ".png",
                 team.getTeamName(),
                 team.getTeamNameKo()
@@ -32,7 +32,7 @@ public class PlayerItemResponseDto {
     public static PlayerItemResponseDto of(TeamPlayer teamPlayer) {
         return new PlayerItemResponseDto(
                 teamPlayer.getPlayer().getId(),
-                teamPlayer.getPlayer().getPlayerName(),
+                teamPlayer.getPlayer().getDisplayName(),
                 "https://media.api-sports.io/football/players/" + teamPlayer.getPlayer().getApiFootballId() + ".png",
                 teamPlayer.getTeam().getTeamName(),
                 teamPlayer.getTeam().getTeamNameKo()
@@ -42,7 +42,7 @@ public class PlayerItemResponseDto {
     public static PlayerItemResponseDto of(Player player) {
         return new PlayerItemResponseDto(
                 player.getId(),
-                player.getPlayerName(),
+                player.getDisplayName(),
                 "https://media.api-sports.io/football/players/" + player.getApiFootballId() + ".png",
                 null,
                 null

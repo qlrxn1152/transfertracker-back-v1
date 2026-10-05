@@ -26,7 +26,7 @@ public class TransferResponseDto {
     public static TransferResponseDto of(Transfer transfer) {
         return new TransferResponseDto(
                 transfer.getPlayer().getId(),
-                transfer.getPlayer().getPlayerName(),
+                transfer.getPlayer().getDisplayName(),
                 "https://media.api-sports.io/football/players/" + transfer.getPlayer().getApiFootballId() + ".png",
                 transfer.getInTeam().getTeamName(),
                 transfer.getInTeam().getTeamNameKo(),
