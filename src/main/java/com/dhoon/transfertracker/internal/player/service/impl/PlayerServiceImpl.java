@@ -62,7 +62,6 @@ class PlayerServiceImpl implements PlayerService {
 
         playerSlice = teamPlayerRepository.findTeamPlayers(normalizedKeyWord, pageable, leagueCode, teamId);
 
-
         List<PlayerItemResponseDto> data = playerSlice.getContent()
                 .stream()
                 .map(PlayerItemResponseDto::of)

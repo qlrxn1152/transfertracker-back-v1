@@ -76,7 +76,6 @@ public class FootballSyncTxService {
                     )));
         });
 
-
         return player;
     }
 

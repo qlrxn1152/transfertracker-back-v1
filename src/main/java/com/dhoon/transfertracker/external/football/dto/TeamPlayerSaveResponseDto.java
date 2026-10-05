@@ -19,7 +19,7 @@ public class TeamPlayerSaveResponseDto {
     public static TeamPlayerSaveResponseDto of(TeamPlayer teamPlayer) {
         return new TeamPlayerSaveResponseDto(
                 teamPlayer.getPlayer().getId(),
-                teamPlayer.getPlayer().getPlayerName(),
+                teamPlayer.getPlayer().getDisplayName(),
                 teamPlayer.getTeam().getId(),
                 teamPlayer.getTeam().getTeamName()
         );

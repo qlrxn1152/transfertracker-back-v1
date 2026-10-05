@@ -17,6 +17,7 @@ public interface TeamPlayerRepository extends JpaRepository<TeamPlayer, Long> {
     @Query("select tp from TeamPlayer tp join fetch tp.player where tp.team.id = :teamId")
     List<TeamPlayer> findAllByTeamIdWithLazyEntity(Long teamId);
 
+    @Query("select tp from TeamPlayer tp join fetch tp.player join fetch tp.team where tp.player.id = :playerId and tp.team.id = :teamId")
     Optional<TeamPlayer> findByPlayerIdAndTeamId(Long playerId, Long teamId);
 
     @Query("select tp from TeamPlayer tp join fetch tp.team where tp.player.id = :playerId")
