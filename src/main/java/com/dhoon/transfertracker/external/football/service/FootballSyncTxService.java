@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.external.football.service;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
+import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
@@ -79,8 +80,6 @@ public class FootballSyncTxService {
         return player;
     }
 
-
-
     public TeamPlayer getOrCreateTeamPlayer(Player player, Team team) {
         return teamPlayerRepository.findByPlayerIdAndTeamId(player.getId(), team.getId())
                 .orElseGet(() -> teamPlayerRepository.save(
@@ -89,6 +88,10 @@ public class FootballSyncTxService {
                                 player
                         )
                 ));
+    }
+
+    public void getOrCreateTeamAndAssignLeague(JsonNode teamData, LeagueCode leagueCode) {
+        getOrCreateTeam(teamData).assignTeamLeague(leagueCode);
     }
 
 }

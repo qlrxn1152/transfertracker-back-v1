@@ -6,16 +6,11 @@ import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
-import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
-import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 
-import java.time.Instant;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +22,6 @@ public class FootballSyncService {
     private final ApiFootballHttpClient footballRestClient;
     private final FootballSyncTxService footballSyncTxService;
 
-    private final TransferRepository transferRepository;
 
 
     /**
@@ -119,8 +113,10 @@ public class FootballSyncService {
         JsonNode node = footballRestClient.callExternalLeagueTeamsApi(leagueCode);
 
         node.get("response")
-                .forEach(teamData -> footballSyncTxService.getOrCreateTeam(teamData).assignTeamLeague(leagueCode));
-
+                .forEach(responseData -> {
+                    JsonNode teamData = responseData.get("team");
+                    footballSyncTxService.getOrCreateTeamAndAssignLeague(teamData, leagueCode);
+                });
 
         return "FootballSyncService.syncLeagueTeams";
     }
