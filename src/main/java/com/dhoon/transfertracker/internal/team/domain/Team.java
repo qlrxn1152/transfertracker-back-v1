@@ -56,5 +56,13 @@ public class Team {
         return new Team(teamName, apiFootballId, leagueCode);
     }
 
+    public String getDisplayName() {
+
+        if ( teamNameKo == null || teamNameKo.isEmpty() ) {
+            return teamName;
+        }
+
+        return teamNameKo;
+    }
 
 }

@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerTransferItemResponseDto {
 
+    private String playerName;
     private String inTeamName;
     private String outTeamName;
     private LocalDate date;
@@ -20,8 +21,9 @@ public class PlayerTransferItemResponseDto {
 
     public static PlayerTransferItemResponseDto of(Transfer transfer) {
         return new PlayerTransferItemResponseDto(
-                transfer.getInTeam().getTeamName(),
-                transfer.getOutTeam().getTeamName(),
+                transfer.getPlayer().getDisplayName(),
+                transfer.getInTeam().getDisplayName(),
+                transfer.getOutTeam().getDisplayName(),
                 transfer.getTransferDate(),
                 transfer.getTransferType()
         );

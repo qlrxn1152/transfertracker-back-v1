@@ -9,6 +9,7 @@ import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
+import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -162,7 +163,7 @@ class FootballSyncServiceTest {
 
 
         // when
-        TransferSaveResponseDto response =
+        PlayerTransfersResponseDto response =
                 footballSyncService
                         .syncPlayerTransfers(
                                 playerApiId

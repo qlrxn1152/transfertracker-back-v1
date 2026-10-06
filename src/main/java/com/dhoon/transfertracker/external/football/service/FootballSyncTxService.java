@@ -1,5 +1,9 @@
 package com.dhoon.transfertracker.external.football.service;
 
+import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
+import com.dhoon.transfertracker.external.football.dto.TeamPlayerSaveResponseDto;
+import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
+import com.dhoon.transfertracker.external.football.dto.TransferSaveResponseDto;
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
@@ -8,6 +12,7 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
+import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransferItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +36,13 @@ public class FootballSyncTxService {
     private final TeamPlayerRepository teamPlayerRepository;
 
 
-    public Player getOrCreatePlayer(JsonNode playerData) {
+    public PlayerSaveResponseDto getOrCreatePlayerResponse(JsonNode playerData) {
+        Player player = getOrCreatePlayer(playerData);
+
+        return PlayerSaveResponseDto.of(player);
+    }
+
+    private Player getOrCreatePlayer(JsonNode playerData) {
         long playerApiId = playerData.get("id").asLong();
 
         return playerRepository.findByApiFootballId(playerApiId)
@@ -43,7 +54,14 @@ public class FootballSyncTxService {
                 );
     }
 
-    public Team getOrCreateTeam(JsonNode teamData) {
+
+    public TeamSaveResponseDto getOrCreateTeamResponse(JsonNode teamData) {
+        Team team = getOrCreateTeam(teamData);
+        return TeamSaveResponseDto.of(team);
+    }
+
+
+    private Team getOrCreateTeam(JsonNode teamData) {
         long teamApiId = teamData.get("id").asLong();
 
         return teamRepository.findByApiFootballId(teamApiId)
@@ -55,31 +73,15 @@ public class FootballSyncTxService {
                 ));
     }
 
-
-    public Player getOrCreatePlayerTransfers(JsonNode playerData, JsonNode transferData) {
-
+    public TeamPlayerSaveResponseDto getOrCreateTeamPlayerResponse(JsonNode playerData, JsonNode teamData) {
         Player player = getOrCreatePlayer(playerData);
+        Team team = getOrCreateTeam(teamData);
+        TeamPlayer teamPlayer = getOrCreateTeamPlayer(player, team);
 
-        transferData.forEach(transfer -> {
-            LocalDate transferDate = LocalDate.parse(transfer.get("date").asString());
-            String transferType = transfer.get("type").asString();
-
-            JsonNode inTeamData = transfer.get("teams").get("in");
-            JsonNode outTeamData = transfer.get("teams").get("out");
-
-            Team inTeam = getOrCreateTeam(inTeamData);
-            Team outTeam = getOrCreateTeam(outTeamData);
-
-            transferRepository.findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(inTeam.getId(), outTeam.getId(), player.getId(), transferDate)
-                    .orElseGet(() -> transferRepository.save(Transfer.of(
-                            player, inTeam, outTeam, transferType, transferDate
-                    )));
-        });
-
-        return player;
+        return TeamPlayerSaveResponseDto.of(teamPlayer);
     }
 
-    public TeamPlayer getOrCreateTeamPlayer(Player player, Team team) {
+    private TeamPlayer getOrCreateTeamPlayer(Player player, Team team) {
         return teamPlayerRepository.findByPlayerIdAndTeamId(player.getId(), team.getId())
                 .orElseGet(() -> teamPlayerRepository.save(
                         TeamPlayer.of(
@@ -87,6 +89,32 @@ public class FootballSyncTxService {
                                 player
                         )
                 ));
+    }
+
+
+
+
+
+
+    public PlayerTransferItemResponseDto getOrCreatePlayerTransfersResponse(JsonNode playerData, JsonNode transferData) {
+        Transfer transfer = getOrCreatePlayerTransfers(playerData, transferData);
+
+        return PlayerTransferItemResponseDto.of(transfer);
+    }
+
+    public Transfer getOrCreatePlayerTransfers(JsonNode playerData, JsonNode transferData) {
+        JsonNode teamData = transferData.get("teams");
+        String transferType = transferData.get("type").asString();
+        LocalDate transferDate = LocalDate.parse(transferData.get("date").asString());
+
+        Player player = getOrCreatePlayer(playerData);
+        Team inTeam = getOrCreateTeam(teamData.get("in"));
+        Team outTeam = getOrCreateTeam(teamData.get("out"));
+
+        return transferRepository.findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(inTeam.getId(), outTeam.getId(), player.getId(), transferDate)
+                .orElseGet(() -> transferRepository.save(Transfer.of(
+                        player, inTeam, outTeam, transferType, transferDate
+                )));
     }
 
     // 실행하지 않기를 권장합니다. ( 2024 년 기준 데이터이므로, 새로만든 리그가 아니라, 기존에 있던 리그면 팀 데이터가 왜곡됨.)

@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.transfer.dto.response;
 
+import com.dhoon.transfertracker.internal.player.domain.Player;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,12 +13,10 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerTransfersResponseDto {
-
-    private String playerName;
     private List<PlayerTransferItemResponseDto> playerTransfers = new ArrayList<>();
 
-    public static PlayerTransfersResponseDto of(String playerName, List<PlayerTransferItemResponseDto> playerTransfers) {
-        return new PlayerTransfersResponseDto(playerName, playerTransfers);
+    public static PlayerTransfersResponseDto of(List<PlayerTransferItemResponseDto> playerTransfers) {
+        return new PlayerTransfersResponseDto(playerTransfers);
     }
 
 }
