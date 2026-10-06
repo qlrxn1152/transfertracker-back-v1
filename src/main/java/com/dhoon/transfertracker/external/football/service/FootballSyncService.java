@@ -80,11 +80,7 @@ public class FootballSyncService {
         JsonNode playerData = node.get("response").get(0).get("player");
         JsonNode transferDatas = node.get("response").get(0).get("transfers");
 
-        List<PlayerTransferItemResponseDto> playerTransfers = new ArrayList<>();
-
-        transferDatas.forEach(transferData -> playerTransfers.add(footballSyncTxService.getOrCreatePlayerTransfersResponse(playerData, transferData)));
-
-        return PlayerTransfersResponseDto.of(playerTransfers);
+        return footballSyncTxService.getOrCreatePlayerTransfersResponse(playerData, transferDatas);
     }
 
 
@@ -102,7 +98,7 @@ public class FootballSyncService {
             JsonNode playerData = response.get("player");
             JsonNode transferData = response.get("transfers");
 
-            footballSyncTxService.getOrCreatePlayerTransfers(playerData, transferData);
+            footballSyncTxService.getOrCreatePlayerTransfersResponse(playerData, transferData);
         }
 
         return "FootballSyncService.saveTeamTransfers";

@@ -13,10 +13,12 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerTransfersResponseDto {
+
+    private String playerName;
     private List<PlayerTransferItemResponseDto> playerTransfers = new ArrayList<>();
 
-    public static PlayerTransfersResponseDto of(List<PlayerTransferItemResponseDto> playerTransfers) {
-        return new PlayerTransfersResponseDto(playerTransfers);
+    public static PlayerTransfersResponseDto of(String playerName, List<PlayerTransferItemResponseDto> playerTransfers) {
+        return new PlayerTransfersResponseDto(playerName, playerTransfers);
     }
 
 }

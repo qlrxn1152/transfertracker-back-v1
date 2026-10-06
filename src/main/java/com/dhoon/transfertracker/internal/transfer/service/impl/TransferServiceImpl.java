@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.transfer.service.impl;
 
 import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
+import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
@@ -34,6 +35,13 @@ public class TransferServiceImpl implements TransferService {
     private final PlayerService playerService;
     private final TeamService teamService;
 
+    private final PlayerRepository playerRepository;
+
+
+
+
+
+
     @Override
     @Transactional(readOnly = true)
     public PlayerTransfersResponseDto getPlayerTransfers(Long playerId) {
@@ -42,7 +50,9 @@ public class TransferServiceImpl implements TransferService {
             throw new InvalidPlayerIdException();
         }
 
+
         PlayerItemResponseDto player = playerService.getPlayer(playerId);
+
 
         List<PlayerTransferItemResponseDto> playerTransfers = transferRepository.findAllByPlayerId(playerId)
                 .stream()
