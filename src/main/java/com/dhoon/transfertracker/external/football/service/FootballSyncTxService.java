@@ -93,11 +93,6 @@ public class FootballSyncTxService {
                 ));
     }
 
-
-
-
-
-
     public PlayerTransfersResponseDto getOrCreatePlayerTransfersResponse(JsonNode playerData, JsonNode transferDatas) {
         Player player = getOrCreatePlayer(playerData);
         List<PlayerTransferItemResponseDto> transfers = getOrCreatePlayerTransfers(player, transferDatas);
@@ -142,6 +137,5 @@ public class FootballSyncTxService {
 
         return TeamItemResponseDto.of(team);
     }
-
 
 }

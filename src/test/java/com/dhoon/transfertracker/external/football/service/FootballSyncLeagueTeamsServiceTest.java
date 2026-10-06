@@ -1,9 +1,11 @@
 package com.dhoon.transfertracker.external.football.service;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
+import com.dhoon.transfertracker.external.football.dto.LeagueTeamsResponseDto;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
@@ -36,11 +38,12 @@ import static org.mockito.Mockito.times;
 @ActiveProfiles("test")
 
 /*
- * [신규 - 중요]
+ * [기존 유지 - 중요]
  *
- * @DataJpaTest는 기본적으로 Test를 Transaction으로 감싼다.
+ * @DataJpaTest는 기본적으로 각각의 테스트를
+ * Transaction으로 감싼다.
  *
- * 하지만 실제 syncLeagueTeams() 구조는
+ * 하지만 실제 syncLeagueTeams() 구조는:
  *
  * FootballSyncService
  *      → API-Football 호출
@@ -49,16 +52,20 @@ import static org.mockito.Mockito.times;
  * FootballSyncTxService
  *      → Team 조회 / 생성
  *      → leagueCode 할당
+ *      → TeamItemResponseDto 생성
  *      → Transaction O
  *
  * 이다.
  *
- * 또한 syncLeagueTeams()는 여러 Team을 순회하면서
- * getOrCreateTeamAndAssignLeague()를 각각 호출한다.
+ * syncLeagueTeams()는 여러 Team을 반복하면서
  *
- * 따라서 Team 하나마다 별도의 Transaction이 실행되는
+ * getOrCreateTeamAndAssignLeagueResponse()
+ *
+ * 를 Team마다 호출한다.
+ *
+ * 따라서 Team 하나당 하나의 Transaction이라는
  * 실제 애플리케이션 동작을 검증하기 위해
- * Test 자체 Transaction은 비활성화한다.
+ * Test 자체 Transaction을 비활성화한다.
  */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class FootballSyncLeagueTeamsServiceTest {
@@ -73,35 +80,35 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
     /*
-     * 아래 Repository들은 syncLeagueTeams() 자체에서 사용하는 것은 아니다.
+     * syncLeagueTeams() 자체에서 직접 사용하는 Repository는 아니지만
+     * Test Transaction을 비활성화했으므로
+     * 테스트 간 데이터 격리를 위해 함께 정리한다.
      *
-     * 하지만 Test 자체 Transaction을 비활성화했기 때문에
-     * 다른 테스트에서 Commit된 데이터가 남아 있을 수 있다.
-     *
-     * Transfer / TeamPlayer가 Team을 FK로 참조하므로
-     * 안전한 테스트 격리를 위해 같이 정리한다.
+     * FK 자식부터 삭제하기 위해 필요하다.
      */
     @Autowired
     PlayerRepository playerRepository;
 
+
     @Autowired
     TeamPlayerRepository teamPlayerRepository;
+
 
     @Autowired
     TransferRepository transferRepository;
 
 
     /*
-     * 실제 API-Football 서버는 호출하지 않는다.
+     * 실제 API-Football은 호출하지 않는다.
      *
      * 테스트에서
      *
-     * - 정상 리그 팀 응답
+     * - 정상 응답
      * - 빈 응답
-     * - API 실패
+     * - 외부 API 실패
      * - 중간 Team 데이터 오류
      *
-     * 상황을 직접 만든다.
+     * 를 직접 만든다.
      */
     @MockitoBean
     ApiFootballHttpClient footballRestClient;
@@ -116,13 +123,6 @@ class FootballSyncLeagueTeamsServiceTest {
 
         /*
          * FK 자식 Entity부터 삭제한다.
-         *
-         * Transfer
-         * TeamPlayer
-         * Player
-         * Team
-         *
-         * 순서로 정리하여 테스트 간 데이터 영향을 제거한다.
          */
         transferRepository.deleteAll();
         teamPlayerRepository.deleteAll();
@@ -138,29 +138,59 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 수정 - 중요]
      *
-     * 나타내는 상황:
+     * 가장 기본적인 syncLeagueTeams() 정상 동작.
      *
-     * API-Football에서 EPL 소속 Team으로
+     *
+     * 상황:
+     *
+     * API-Football에서 EPL Team으로
      *
      * Arsenal
      * Chelsea
      *
-     * 두 팀을 정상적으로 반환한다.
+     * 를 반환한다.
      *
      *
-     * 기대 결과:
+     * 현재 리팩토링 구조:
      *
-     * Team 2건이 저장되고
-     * 두 Team 모두 leagueCode = EPL 이어야 한다.
+     * FootballSyncService.syncLeagueTeams()
      *
-     * 특히 assignTeamLeague()가 Transaction 안에서 실행되어
-     * Dirty Checking을 통해 DB에 실제 반영되는지 확인한다.
+     *      ↓
+     *
+     * 외부 API 호출
+     *
+     *      ↓
+     *
+     * Arsenal
+     *
+     * FootballSyncTxService
+     * .getOrCreateTeamAndAssignLeagueResponse()
+     *
+     *      ↓
+     *
+     * Team 생성
+     * leagueCode = EPL
+     * TeamItemResponseDto 생성
+     *
+     *      ↓
+     *
+     * COMMIT
+     *
+     *
+     * Chelsea도 동일한 별도 Transaction으로 처리한다.
+     *
+     *
+     * 최종적으로 Service에서는
+     *
+     * LeagueTeamsResponseDto
+     *
+     * 를 반환한다.
      */
     @Test
     @DisplayName(
-            "리그 팀을 동기화하면 Team이 저장되고 leagueCode가 DB에 반영된다."
+            "리그 팀을 동기화하면 Team이 저장되고 leagueCode가 반영된 응답을 반환한다."
     )
     void syncLeagueTeams_success() {
 
@@ -185,7 +215,7 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         // when
-        String response =
+        LeagueTeamsResponseDto response =
                 footballSyncService
                         .syncLeagueTeams(
                                 leagueCode
@@ -193,12 +223,50 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         // then
-        assertThat(response)
+
+        /*
+         * [신규 - 응답 DTO 검증]
+         *
+         * 기존에는 String을 반환했지만
+         * 현재는 LeagueTeamsResponseDto를 반환한다.
+         */
+        assertThat(response.getLeagueCode())
                 .isEqualTo(
-                        "FootballSyncService.syncLeagueTeams"
+                        LeagueCode.EPL
                 );
 
 
+        assertThat(response.getTeams())
+                .hasSize(2);
+
+
+        assertThat(response.getTeams())
+                .extracting(
+                        TeamItemResponseDto::getTeamName
+                )
+                .containsExactly(
+                        "Arsenal",
+                        "Chelsea"
+                );
+
+
+        /*
+         * TeamItemResponseDto 생성 역시
+         * TxService 내부에서 완료된다.
+         */
+        assertThat(response.getTeams())
+                .extracting(
+                        TeamItemResponseDto::getLogoUrl
+                )
+                .containsExactly(
+                        "https://media.api-sports.io/football/teams/42.png",
+                        "https://media.api-sports.io/football/teams/49.png"
+                );
+
+
+        /*
+         * 실제 DB 상태 검증.
+         */
         assertThat(teamRepository.count())
                 .isEqualTo(2);
 
@@ -241,25 +309,35 @@ class FootballSyncLeagueTeamsServiceTest {
                 .isEqualTo(
                         LeagueCode.EPL
                 );
+
+
+        /*
+         * DTO의 teamId는 API-Football ID가 아니라
+         * 우리 DB Team PK다.
+         *
+         * 실제 저장된 Team PK와 같은지 검증한다.
+         */
+        assertThat(response.getTeams().get(0).getTeamId())
+                .isEqualTo(
+                        arsenal.getId()
+                );
+
+
+        assertThat(response.getTeams().get(1).getTeamId())
+                .isEqualTo(
+                        chelsea.getId()
+                );
     }
 
 
     /*
-     * [신규 - 중요]
+     * [기존 유지 - 중요]
      *
-     * 나타내는 상황:
+     * 외부 API 호출 동안에는
+     * DB Transaction이 없어야 한다.
      *
-     * FootballSyncService가
-     * 리그의 Team 정보를 API-Football에 요청하는 순간.
-     *
-     *
-     * 기대 결과:
-     *
-     * 외부 HTTP 응답을 기다리는 동안에는
-     * DB Transaction이 활성화되어 있지 않아야 한다.
-     *
-     * Transaction은 API 응답을 모두 받은 이후
-     * 각 Team을 DB에 반영할 때 시작되어야 한다.
+     * Transaction은 API 응답을 받은 이후
+     * Team을 하나씩 처리하면서 시작된다.
      */
     @Test
     @DisplayName(
@@ -285,10 +363,10 @@ class FootballSyncLeagueTeamsServiceTest {
                 .willAnswer(invocation -> {
 
                     /*
-                     * true라면
+                     * true라면 외부 API 응답을 기다리는 동안에도
+                     * DB Transaction을 잡고 있다는 뜻이다.
                      *
-                     * API-Football 응답을 기다리는 동안에도
-                     * DB Transaction이 열려 있다는 의미다.
+                     * 현재 설계에서는 false가 정상이다.
                      */
                     assertThat(
                             TransactionSynchronizationManager
@@ -302,10 +380,11 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         // when
-        footballSyncService
-                .syncLeagueTeams(
-                        leagueCode
-                );
+        LeagueTeamsResponseDto response =
+                footballSyncService
+                        .syncLeagueTeams(
+                                leagueCode
+                        );
 
 
         // then
@@ -316,26 +395,43 @@ class FootballSyncLeagueTeamsServiceTest {
                 );
 
 
+        assertThat(response.getLeagueCode())
+                .isEqualTo(
+                        LeagueCode.EPL
+                );
+
+
+        assertThat(response.getTeams())
+                .hasSize(2);
+
+
         assertThat(teamRepository.count())
                 .isEqualTo(2);
     }
 
 
     /*
-     * [신규 - 중요]
+     * [기존 수정 - 중요]
      *
-     * 나타내는 상황:
+     * 동일한 리그 Team Sync가 반복되어도
+     * Team을 중복 생성하면 안 된다.
      *
-     * 동일한 EPL Team 데이터를 가지고
+     *
+     * 상황:
+     *
+     * 동일 EPL 응답으로
      * syncLeagueTeams()를 두 번 실행한다.
      *
      *
      * 기대 결과:
      *
-     * 두 번째 Sync에서도
-     * apiFootballId 기준으로 기존 Team을 재사용해야 한다.
+     * API 호출 = 2회
      *
-     * 따라서 Team 개수는 2개로 유지되어야 한다.
+     * DB Team = 2건 유지
+     *
+     * 기존 Team PK 유지
+     *
+     * 응답 DTO도 두 번째 요청에서 정상 반환
      */
     @Test
     @DisplayName(
@@ -364,10 +460,11 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         // when
-        footballSyncService
-                .syncLeagueTeams(
-                        leagueCode
-                );
+        LeagueTeamsResponseDto firstResponse =
+                footballSyncService
+                        .syncLeagueTeams(
+                                leagueCode
+                        );
 
 
         Team firstArsenal =
@@ -382,10 +479,11 @@ class FootballSyncLeagueTeamsServiceTest {
                 firstArsenal.getId();
 
 
-        footballSyncService
-                .syncLeagueTeams(
-                        leagueCode
-                );
+        LeagueTeamsResponseDto secondResponse =
+                footballSyncService
+                        .syncLeagueTeams(
+                                leagueCode
+                        );
 
 
         // then
@@ -402,8 +500,7 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         /*
-         * 단순히 count == 2만 확인하지 않고
-         * 기존 Arsenal Entity가 실제로 재사용됐는지
+         * 기존 Entity가 실제 재사용됐는지
          * PK까지 확인한다.
          */
         assertThat(secondArsenal.getId())
@@ -418,6 +515,34 @@ class FootballSyncLeagueTeamsServiceTest {
                 );
 
 
+        /*
+         * 첫 번째 / 두 번째 요청 모두
+         * 정상적인 DTO를 반환해야 한다.
+         */
+        assertThat(firstResponse.getTeams())
+                .hasSize(2);
+
+
+        assertThat(secondResponse.getTeams())
+                .hasSize(2);
+
+
+        assertThat(secondResponse.getLeagueCode())
+                .isEqualTo(
+                        LeagueCode.EPL
+                );
+
+
+        assertThat(secondResponse.getTeams())
+                .extracting(
+                        TeamItemResponseDto::getTeamName
+                )
+                .containsExactly(
+                        "Arsenal",
+                        "Chelsea"
+                );
+
+
         then(footballRestClient)
                 .should(times(2))
                 .callExternalLeagueTeamsApi(
@@ -427,27 +552,33 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 수정]
      *
-     * 나타내는 상황:
+     * 상황:
      *
-     * Arsenal Team은 이미 DB에 존재하지만
-     * 아직 leagueCode가 지정되지 않은 상태다.
+     * Arsenal이 이미 DB에 존재한다.
      *
-     * 이후 EPL Team Sync를 실행한다.
+     * 하지만 아직 leagueCode가 없다.
+     *
+     *
+     * API-Football에서 EPL Team 목록을 다시 받는다.
      *
      *
      * 기대 결과:
      *
-     * 새로운 Arsenal을 생성하지 않고
-     * 기존 Team을 재사용해야 한다.
+     * 기존 Arsenal 재사용
      *
-     * 그리고 기존 Team에
-     * leagueCode = EPL이 Dirty Checking으로 반영되어야 한다.
+     * leagueCode = EPL 반영
+     *
+     * Chelsea 신규 생성
+     *
+     * +
+     *
+     * 두 Team의 DTO 반환
      */
     @Test
     @DisplayName(
-            "이미 존재하는 Team은 재사용하고 leagueCode만 반영한다."
+            "이미 존재하는 Team은 재사용하고 leagueCode를 반영해 응답한다."
     )
     void syncLeagueTeams_existingTeam_reuseAndAssignLeague() {
 
@@ -485,18 +616,14 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         // when
-        footballSyncService
-                .syncLeagueTeams(
-                        LeagueCode.EPL
-                );
+        LeagueTeamsResponseDto response =
+                footballSyncService
+                        .syncLeagueTeams(
+                                LeagueCode.EPL
+                        );
 
 
         // then
-        /*
-         * 기존 Arsenal 1건
-         * +
-         * API 응답에서 새로 생성된 Chelsea 1건
-         */
         assertThat(teamRepository.count())
                 .isEqualTo(2);
 
@@ -511,7 +638,7 @@ class FootballSyncLeagueTeamsServiceTest {
 
         /*
          * 새로운 Arsenal이 아니라
-         * 기존 Team Entity가 재사용되었는지 확인한다.
+         * 기존 Entity를 재사용했는지 검증한다.
          */
         assertThat(foundArsenal.getId())
                 .isEqualTo(
@@ -520,36 +647,66 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         /*
-         * Transaction 안에서
-         * assignTeamLeague(EPL)이 실행되고
-         *
-         * Commit 시 Dirty Checking으로
-         * UPDATE가 발생했는지 확인한다.
+         * Transaction 안에서 assignTeamLeague()가 실행되고
+         * Commit 시 Dirty Checking으로 반영되어야 한다.
          */
         assertThat(foundArsenal.getLeagueCode())
                 .isEqualTo(
                         LeagueCode.EPL
                 );
+
+
+        /*
+         * 기존 Entity를 사용한 경우에도
+         * DTO 변환이 Tx 안에서 정상적으로 수행되어야 한다.
+         */
+        assertThat(response.getLeagueCode())
+                .isEqualTo(
+                        LeagueCode.EPL
+                );
+
+
+        assertThat(response.getTeams())
+                .hasSize(2);
+
+
+        assertThat(response.getTeams())
+                .extracting(
+                        TeamItemResponseDto::getTeamName
+                )
+                .containsExactly(
+                        "Arsenal",
+                        "Chelsea"
+                );
+
+
+        assertThat(response.getTeams().get(0).getTeamId())
+                .isEqualTo(
+                        existingTeamId
+                );
     }
 
 
     /*
-     * [신규 - 경계]
+     * [기존 수정 - 경계]
      *
-     * 나타내는 상황:
-     *
-     * API-Football 호출 자체는 성공했지만
+     * API 호출은 성공했지만
      * response 배열이 비어있는 상황.
      *
      *
-     * 기대 결과:
+     * Team을 처리하는 반복문 자체가 실행되지 않으므로
+     * DB 변경은 없다.
      *
-     * 처리할 Team이 없으므로
-     * DB에는 Team이 생성되지 않아야 한다.
+     * 하지만 syncLeagueTeams() 자체는 정상 종료되고
+     *
+     * leagueCode = EPL
+     * teams = []
+     *
+     * 인 DTO를 반환한다.
      */
     @Test
     @DisplayName(
-            "리그 팀 응답이 비어있으면 Team을 생성하지 않는다."
+            "리그 팀 응답이 비어있으면 빈 Team 목록을 반환하고 DB는 변경하지 않는다."
     )
     void syncLeagueTeams_emptyResponse_noDatabaseChange() {
 
@@ -574,7 +731,7 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         // when
-        String response =
+        LeagueTeamsResponseDto response =
                 footballSyncService
                         .syncLeagueTeams(
                                 leagueCode
@@ -582,10 +739,14 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         // then
-        assertThat(response)
+        assertThat(response.getLeagueCode())
                 .isEqualTo(
-                        "FootballSyncService.syncLeagueTeams"
+                        LeagueCode.EPL
                 );
+
+
+        assertThat(response.getTeams())
+                .isEmpty();
 
 
         assertThat(teamRepository.count())
@@ -599,17 +760,12 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 유지]
      *
-     * 나타내는 상황:
+     * API-Football 호출 자체에서 예외가 발생한다.
      *
-     * API-Football의 리그 Team API 호출 자체가 실패한다.
-     *
-     *
-     * 기대 결과:
-     *
-     * 아직 FootballSyncTxService에 진입하기 전이므로
-     * DB에는 Team 데이터가 생성되지 않아야 한다.
+     * 아직 FootballSyncTxService에 진입하지 않았으므로
+     * DB 변경은 없어야 한다.
      */
     @Test
     @DisplayName(
@@ -663,40 +819,54 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 수정 - 중요]
      *
-     * 나타내는 상황:
+     * 현재 syncLeagueTeams()의 Transaction 단위를 검증한다.
      *
-     * API-Football에서 세 Team을 순서대로 반환한다.
      *
-     * 1. Arsenal
-     *      → 정상 데이터
-     *      → Transaction 성공
-     *      → COMMIT
+     * 현재 구조:
      *
-     * 2. Chelsea
-     *      → name 필드가 없는 잘못된 데이터
-     *      → Transaction 실패
-     *      → ROLLBACK
+     * Arsenal
      *
-     * 3. Liverpool
-     *      → 정상 데이터
-     *      → 하지만 Chelsea 처리 중 발생한 예외가
-     *        밖으로 전파되므로 현재 구현에서는 처리되지 않는다.
+     *      ↓
+     *
+     * getOrCreateTeamAndAssignLeagueResponse()
+     *
+     *      ↓
+     *
+     * Transaction #1
+     *
+     * Team 생성
+     * leagueCode 지정
+     * DTO 생성
+     *
+     *      ↓
+     *
+     * COMMIT
+     *
+     *
+     * Chelsea
+     *
+     *      ↓
+     *
+     * Transaction #2
+     *
+     * 잘못된 Team 데이터 처리
+     *
+     *      ↓
+     *
+     * ROLLBACK
+     *
+     *
+     * Liverpool은 Chelsea 예외가
+     * Service까지 전파되므로 실행되지 않는다.
      *
      *
      * 기대 결과:
      *
-     * Arsenal은 DB에 남는다.
-     *
-     * Chelsea는 Rollback된다.
-     *
-     * Liverpool은 처리되지 않는다.
-     *
-     *
-     * saveTeamTransfers()와 동일하게
-     * 현재 syncLeagueTeams()가 Team 단위의
-     * Partial Commit 구조라는 것을 확인한다.
+     * Arsenal   = 유지
+     * Chelsea   = 없음
+     * Liverpool = 처리 안 됨
      */
     @Test
     @DisplayName(
@@ -737,8 +907,10 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
         /*
-         * 첫 번째 Arsenal Transaction은
-         * 이미 성공하여 COMMIT되었다.
+         * 첫 번째 Team Transaction은 이미 Commit됐다.
+         *
+         * DTO 생성까지 정상적으로 완료된 뒤
+         * 다음 Team으로 넘어간 상태다.
          */
         Team arsenal =
                 teamRepository
@@ -762,8 +934,8 @@ class FootballSyncLeagueTeamsServiceTest {
 
         /*
          * 두 번째 Chelsea는
-         * name 필드가 없는 상태에서 신규 Team 생성 중
-         * 예외가 발생했으므로 저장되지 않아야 한다.
+         * getOrCreateTeam()의 신규 Team 생성 과정에서
+         * 예외가 발생하므로 해당 Transaction이 Rollback된다.
          */
         assertThat(
                 teamRepository
@@ -776,9 +948,8 @@ class FootballSyncLeagueTeamsServiceTest {
 
         /*
          * 세 번째 Liverpool은
-         * Chelsea의 예외가 syncLeagueTeams() 밖으로
-         * 전파되면서 forEach가 중단됐기 때문에
-         * 처리 자체가 시작되지 않는다.
+         * 두 번째 Team의 예외 때문에
+         * 반복이 중단되어 처리되지 않는다.
          */
         assertThat(
                 teamRepository
@@ -789,9 +960,6 @@ class FootballSyncLeagueTeamsServiceTest {
                 .isEmpty();
 
 
-        /*
-         * 최종 DB에는 첫 번째 Arsenal만 남는다.
-         */
         assertThat(teamRepository.count())
                 .isEqualTo(1);
     }
@@ -805,40 +973,10 @@ class FootballSyncLeagueTeamsServiceTest {
     /*
      * [Fixture - 정상 EPL Team 목록]
      *
-     * 사용 대상:
-     *
-     * FootballSyncService.syncLeagueTeams()
-     *
-     *
-     * 나타내는 상황:
-     *
-     * API-Football의
-     *
-     * GET /teams?league={leagueId}&season=2024
-     *
-     * 요청에서
-     *
      * Arsenal
      * Chelsea
      *
-     * 두 Team을 정상적으로 반환한 상황.
-     *
-     *
-     * 실제 syncLeagueTeams()에서는
-     *
-     * response
-     *   └ team
-     *
-     * 데이터를 꺼내
-     * FootballSyncTxService에 전달한다.
-     *
-     *
-     * 사용되는 테스트:
-     *
-     * 1. Team 정상 저장 + leagueCode 할당
-     * 2. 외부 API 호출 시 Transaction 비활성
-     * 3. 동일 데이터 반복 Sync / 멱등성
-     * 4. 기존 Team 재사용 + leagueCode 반영
+     * 두 Team을 반환한다.
      */
     private JsonNode leagueTeamsResponse() {
 
@@ -866,20 +1004,7 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
     /*
-     * [Fixture - Team이 없는 리그 응답]
-     *
-     * 사용 대상:
-     *
-     * syncLeagueTeams_emptyResponse_noDatabaseChange()
-     *
-     *
-     * 나타내는 상황:
-     *
-     * API-Football 요청 자체는 성공했지만
-     * response 배열이 비어있는 상황.
-     *
-     * 따라서 syncLeagueTeams()의 forEach는
-     * 한 번도 실행되지 않는다.
+     * [Fixture - 빈 리그 Team 목록]
      */
     private JsonNode leagueTeamsEmptyResponse() {
 
@@ -894,37 +1019,17 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
     /*
-     * [Fixture - 두 번째 Team 데이터가 잘못된 리그 응답]
+     * [Fixture - 두 번째 Team 데이터 오류]
      *
-     * 사용 대상:
+     * Arsenal
+     *      → 정상
      *
-     * syncLeagueTeams_secondTeamFail_partialCommitAndStop()
+     * Chelsea
+     *      → id만 있고 name 없음
+     *      → 예외
      *
-     *
-     * 나타내는 상황:
-     *
-     * 첫 번째 Arsenal은 정상 데이터라
-     * Team 저장과 leagueCode 할당이 Commit된다.
-     *
-     * 두 번째 Chelsea는 id만 존재하고 name이 없다.
-     *
-     * 현재 getOrCreateTeam()은 신규 Team 생성 시
-     *
-     * teamData.get("name").asString()
-     *
-     * 을 호출하므로 여기서 예외가 발생한다.
-     *
-     * 세 번째 Liverpool은 정상 데이터지만
-     * 두 번째 Team의 예외로 인해 처리되지 않는다.
-     *
-     *
-     * 이 Fixture를 통해
-     *
-     * - Team 단위 Transaction
-     * - 이전 Team Partial Commit
-     * - 예외 이후 forEach 중단
-     *
-     * 을 검증한다.
+     * Liverpool
+     *      → 정상 데이터지만 처리되지 않음
      */
     private JsonNode leagueTeamsSecondTeamInvalidResponse() {
 
@@ -957,10 +1062,7 @@ class FootballSyncLeagueTeamsServiceTest {
 
 
     /*
-     * [Fixture Helper - JSON 변환]
-     *
-     * 문자열로 작성한 API-Football Fixture를
-     * JsonNode로 변환한다.
+     * [Fixture Helper]
      */
     private JsonNode readJson(
             String json

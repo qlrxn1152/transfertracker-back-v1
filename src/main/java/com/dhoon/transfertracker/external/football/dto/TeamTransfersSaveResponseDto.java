@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.external.football.dto;
 
+import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,9 +14,10 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TeamTransfersSaveResponseDto {
 
-    private List<TeamTransferSaveResponseDto> teamTransfers = new ArrayList<>();
+    private String teamName;
+    private List<PlayerTransfersResponseDto> playersTransfers = new ArrayList<>();
 
-    public static TeamTransfersSaveResponseDto of(List<TeamTransferSaveResponseDto> teamTransfers) {
-        return new TeamTransfersSaveResponseDto(teamTransfers);
+    public static TeamTransfersSaveResponseDto of(String teamName, List<PlayerTransfersResponseDto> teamTransfers) {
+        return new TeamTransfersSaveResponseDto(teamName, teamTransfers);
     }
 }

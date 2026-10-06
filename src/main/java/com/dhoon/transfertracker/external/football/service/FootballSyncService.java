@@ -92,6 +92,7 @@ public class FootballSyncService {
         JsonNode node = footballRestClient.callExternalLeagueTeamsApi(leagueCode);
 
         List<TeamItemResponseDto> teams = new ArrayList<>();
+
         // 2024 년 기준으로 설정합니다. 리그 처음 만들때에만 설정하고, 이후에는 실행하지않는것을 권장합니다.
         node.get("response")
                 .forEach(responseData -> {
@@ -109,25 +110,34 @@ public class FootballSyncService {
 
 
 
-    // 수정대상
 
+
+
+    // 수정대상
     /**
      * 외부 API 를 호출해서, 해당 팀의 선수들을 DB 에 저장하는 작업. ( 2020 년 이상의 이적정보만 저장합니다.)
      * @param teamApiId -> 외부 API ID
      */
-    public String saveTeamTransfers(Long teamApiId) {
+    public TeamTransfersSaveResponseDto saveTeamTransfers(Long teamApiId) {
         JsonNode node = footballRestClient.callExternalTeamTransfersApi(teamApiId);
+
+        JsonNode teamData = node.get("parameters");
+        String teamName = footballSyncTxService.getOrCreateTeamResponse(teamData).getTeamName();
 
         JsonNode responses = node.get("response");
 
+        List<PlayerTransfersResponseDto> playerTransfers = new ArrayList<>();
+
+        // response -> 1명의 선수의 이적 데이터.
         for (JsonNode response : responses) {
             JsonNode playerData = response.get("player");
             JsonNode transferData = response.get("transfers");
 
-            footballSyncTxService.getOrCreatePlayerTransfersResponse(playerData, transferData);
+            playerTransfers.add(footballSyncTxService.getOrCreatePlayerTransfersResponse(playerData, transferData));
         }
 
-        return "FootballSyncService.saveTeamTransfers";
+
+        return TeamTransfersSaveResponseDto.of(teamName, playerTransfers);
     }
 
 
