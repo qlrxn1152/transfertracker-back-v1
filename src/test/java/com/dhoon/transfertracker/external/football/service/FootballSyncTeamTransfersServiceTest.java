@@ -1,12 +1,15 @@
 package com.dhoon.transfertracker.external.football.service;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
+import com.dhoon.transfertracker.external.football.dto.TeamTransfersSaveResponseDto;
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
+import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 
@@ -41,27 +45,51 @@ import static org.mockito.Mockito.times;
 @ActiveProfiles("test")
 
 /*
- * [신규 - 중요]
+ * [기존 수정 - 중요]
  *
- * @DataJpaTest의 기본 Test Transaction을 비활성화한다.
+ * @DataJpaTest는 기본적으로 각각의 테스트를
+ * Transaction으로 감싼다.
  *
- * 실제 구조:
+ * 하지만 실제 saveTeamTransfers() 구조는:
  *
  * FootballSyncService
- *      → API-Football 호출
+ *
+ *      ↓
+ *
+ * FootballSyncTxService.getDisplayTeamName()
+ *      → Team 존재 확인
+ *      → readOnly Transaction
+ *
+ *      ↓
+ *
+ * Transaction 종료
+ *
+ *      ↓
+ *
+ * API-Football Team Transfers 호출
  *      → Transaction X
  *
+ *      ↓
+ *
+ * response 하나 = Player 한 명
+ *
+ *      ↓
+ *
  * FootballSyncTxService
- *      → 선수 한 명의 Player / Team / Transfer 저장
+ * .getOrCreatePlayerTransfersResponse()
+ *
+ *      → Player 한 명의 전체 Transfer 처리
  *      → Transaction O
  *
- * saveTeamTransfers()는 여러 선수를 순회하면서
- * FootballSyncTxService.getOrCreatePlayerTransfers()를
- * 선수마다 한 번씩 호출한다.
  *
- * 따라서 실제 Transaction 경계와
- * 선수 단위 Partial Commit을 검증하기 위해
- * 테스트 자체의 Transaction은 사용하지 않는다.
+ * 따라서:
+ *
+ * Player #1 = Tx #1
+ * Player #2 = Tx #2
+ * Player #3 = Tx #3
+ *
+ * 구조를 실제와 동일하게 검증하기 위해
+ * Test 자체 Transaction을 비활성화한다.
  */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class FootballSyncTeamTransfersServiceTest {
@@ -88,14 +116,14 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * 실제 API-Football 서버는 호출하지 않는다.
+     * 실제 API-Football은 호출하지 않는다.
      *
-     * 테스트에서
+     * 테스트에서:
      *
      * - 정상 응답
      * - 빈 응답
-     * - 외부 API 실패
-     * - 특정 선수 데이터 실패
+     * - API 실패
+     * - 중간 Player 실패
      *
      * 상황을 직접 만든다.
      */
@@ -111,10 +139,10 @@ class FootballSyncTeamTransfersServiceTest {
     void clearDatabase() {
 
         /*
-         * 테스트 자체가 Transaction으로 감싸져 있지 않으므로
-         * 테스트 사이 데이터 격리를 위해 직접 삭제한다.
+         * Test Transaction을 꺼두었기 때문에
+         * 테스트 종료 후 자동 Rollback되지 않는다.
          *
-         * FK를 참조하는 Entity부터 삭제한다.
+         * 따라서 FK 자식 Entity부터 직접 삭제한다.
          */
         transferRepository.deleteAll();
         teamPlayerRepository.deleteAll();
@@ -130,33 +158,51 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 수정 - 중요]
      *
-     * 나타내는 상황:
+     * 상황:
      *
-     * Arsenal 팀의 이적 데이터 API에서
+     * Arsenal은 이미 우리 DB에 존재한다.
+     *
+     * 이후 Arsenal Team Transfers Sync를 실행한다.
+     *
+     * API-Football에서는:
      *
      * Bukayo Saka
      * Martin Odegaard
      *
-     * 두 선수의 이적 정보를 정상적으로 반환한다.
+     * 두 선수의 이적정보를 반환한다.
+     *
      *
      * 기대 결과:
      *
-     * Player   2건
-     * Team     2건
-     * Transfer 2건
+     * 기존 Arsenal 재사용
+     * Chelsea 신규 생성
      *
-     * 이 저장되어야 한다.
+     * Player   = 2
+     * Team     = 2
+     * Transfer = 2
+     *
+     * 그리고 TeamTransfersSaveResponseDto가
+     * 정상적으로 반환되어야 한다.
      */
     @Test
     @DisplayName(
-            "팀 이적 정보를 동기화하면 여러 선수의 Player, Team, Transfer가 저장된다."
+            "팀 이적 정보를 동기화하면 여러 선수의 이적정보를 저장하고 DTO를 반환한다."
     )
     void saveTeamTransfers_success() {
 
         // given
         Long teamApiId = 42L;
+
+
+        Team arsenal =
+                teamRepository.save(
+                        Team.of(
+                                "Arsenal",
+                                teamApiId
+                        )
+                );
 
 
         JsonNode apiResponse =
@@ -175,7 +221,7 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         // when
-        String response =
+        TeamTransfersSaveResponseDto response =
                 footballSyncService
                         .saveTeamTransfers(
                                 teamApiId
@@ -183,20 +229,111 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         // then
-        assertThat(response)
+
+        /*
+         * Team 이름은 외부 Team API를 추가 호출해서 얻는 것이 아니라
+         * 기존 DB Team에서 가져온다.
+         */
+        assertThat(response.getTeamName())
                 .isEqualTo(
-                        "FootballSyncService.saveTeamTransfers"
+                        "Arsenal"
                 );
 
 
+        assertThat(response.getPlayersTransfers())
+                .hasSize(2);
+
+
+        assertThat(response.getPlayersTransfers())
+                .extracting(
+                        PlayerTransfersResponseDto::getPlayerName
+                )
+                .containsExactly(
+                        "Bukayo Saka",
+                        "Martin Odegaard"
+                );
+
+
+        /*
+         * Saka 응답 확인.
+         */
+        PlayerTransfersResponseDto sakaResponse =
+                response
+                        .getPlayersTransfers()
+                        .get(0);
+
+
+        assertThat(sakaResponse.getPlayerTransfers())
+                .hasSize(1);
+
+
+        assertThat(
+                sakaResponse
+                        .getPlayerTransfers()
+                        .get(0)
+                        .getInTeamName()
+        )
+                .isEqualTo(
+                        "Arsenal"
+                );
+
+
+        assertThat(
+                sakaResponse
+                        .getPlayerTransfers()
+                        .get(0)
+                        .getOutTeamName()
+        )
+                .isEqualTo(
+                        "Chelsea"
+                );
+
+
+        assertThat(
+                sakaResponse
+                        .getPlayerTransfers()
+                        .get(0)
+                        .getDate()
+        )
+                .isEqualTo(
+                        LocalDate.of(
+                                2026,
+                                7,
+                                1
+                        )
+                );
+
+
+        /*
+         * 실제 DB 검증.
+         */
         assertThat(playerRepository.count())
                 .isEqualTo(2);
+
 
         assertThat(teamRepository.count())
                 .isEqualTo(2);
 
+
         assertThat(transferRepository.count())
                 .isEqualTo(2);
+
+
+        /*
+         * 기존 Arsenal Entity가 재사용됐는지도 확인한다.
+         */
+        Team foundArsenal =
+                teamRepository
+                        .findByApiFootballId(
+                                42L
+                        )
+                        .orElseThrow();
+
+
+        assertThat(foundArsenal.getId())
+                .isEqualTo(
+                        arsenal.getId()
+                );
 
 
         Player saka =
@@ -220,6 +357,7 @@ class FootballSyncTeamTransfersServiceTest {
                         "Bukayo Saka"
                 );
 
+
         assertThat(odegaard.getPlayerName())
                 .isEqualTo(
                         "Martin Odegaard"
@@ -242,6 +380,7 @@ class FootballSyncTeamTransfersServiceTest {
 
         assertThat(sakaTransfers)
                 .hasSize(1);
+
 
         assertThat(odegaardTransfers)
                 .hasSize(1);
@@ -277,17 +416,18 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 수정 - 중요]
      *
-     * 나타내는 상황:
+     * 흐름:
      *
-     * FootballSyncService가
-     * 팀의 이적 정보를 API-Football에 요청하는 순간.
+     * DB Team 조회
+     *      ↓
+     * readOnly Tx 종료
+     *      ↓
+     * 외부 API 호출
      *
-     * 기대 결과:
-     *
-     * 외부 HTTP 호출을 기다리는 동안에는
-     * DB Transaction이 활성화되어 있지 않아야 한다.
+     * 따라서 외부 API 호출 시점에는
+     * Transaction이 없어야 한다.
      */
     @Test
     @DisplayName(
@@ -297,6 +437,14 @@ class FootballSyncTeamTransfersServiceTest {
 
         // given
         Long teamApiId = 42L;
+
+
+        teamRepository.save(
+                Team.of(
+                        "Arsenal",
+                        teamApiId
+                )
+        );
 
 
         JsonNode apiResponse =
@@ -311,6 +459,10 @@ class FootballSyncTeamTransfersServiceTest {
         )
                 .willAnswer(invocation -> {
 
+                    /*
+                     * getDisplayTeamName()의 readOnly Transaction은
+                     * 이미 끝난 상태여야 한다.
+                     */
                     assertThat(
                             TransactionSynchronizationManager
                                     .isActualTransactionActive()
@@ -323,10 +475,11 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         // when
-        footballSyncService
-                .saveTeamTransfers(
-                        teamApiId
-                );
+        TeamTransfersSaveResponseDto response =
+                footballSyncService
+                        .saveTeamTransfers(
+                                teamApiId
+                        );
 
 
         // then
@@ -337,8 +490,19 @@ class FootballSyncTeamTransfersServiceTest {
                 );
 
 
+        assertThat(response.getTeamName())
+                .isEqualTo(
+                        "Arsenal"
+                );
+
+
+        assertThat(response.getPlayersTransfers())
+                .hasSize(2);
+
+
         assertThat(playerRepository.count())
                 .isEqualTo(2);
+
 
         assertThat(transferRepository.count())
                 .isEqualTo(2);
@@ -346,24 +510,17 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 수정 - 중요]
      *
-     * 나타내는 상황:
+     * 동일한 Team Transfers Sync를 두 번 실행한다.
      *
-     * 동일한 팀 이적 API 응답을 가지고
-     * saveTeamTransfers()를 두 번 실행한다.
      *
      * 기대 결과:
      *
-     * 두 번째 동기화에서도
+     * 기존 Player / Team / Transfer를 재사용한다.
      *
-     * 기존 Player
-     * 기존 Team
-     * 기존 Transfer
-     *
-     * 를 재사용해야 한다.
-     *
-     * 따라서 데이터 건수는 증가하지 않아야 한다.
+     * API 호출은 두 번 발생하지만
+     * 데이터 건수는 증가하지 않는다.
      */
     @Test
     @DisplayName(
@@ -373,6 +530,14 @@ class FootballSyncTeamTransfersServiceTest {
 
         // given
         Long teamApiId = 42L;
+
+
+        teamRepository.save(
+                Team.of(
+                        "Arsenal",
+                        teamApiId
+                )
+        );
 
 
         JsonNode apiResponse =
@@ -391,27 +556,45 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         // when
-        footballSyncService
-                .saveTeamTransfers(
-                        teamApiId
-                );
+        TeamTransfersSaveResponseDto firstResponse =
+                footballSyncService
+                        .saveTeamTransfers(
+                                teamApiId
+                        );
 
 
-        footballSyncService
-                .saveTeamTransfers(
-                        teamApiId
-                );
+        TeamTransfersSaveResponseDto secondResponse =
+                footballSyncService
+                        .saveTeamTransfers(
+                                teamApiId
+                        );
 
 
         // then
         assertThat(playerRepository.count())
                 .isEqualTo(2);
 
+
         assertThat(teamRepository.count())
                 .isEqualTo(2);
 
+
         assertThat(transferRepository.count())
                 .isEqualTo(2);
+
+
+        assertThat(firstResponse.getPlayersTransfers())
+                .hasSize(2);
+
+
+        assertThat(secondResponse.getPlayersTransfers())
+                .hasSize(2);
+
+
+        assertThat(secondResponse.getTeamName())
+                .isEqualTo(
+                        "Arsenal"
+                );
 
 
         then(footballRestClient)
@@ -423,31 +606,41 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 수정 - 경계]
      *
-     * 나타내는 상황:
+     * Team은 DB에 존재한다.
      *
-     * API-Football에서 팀에 대한 이적 데이터 요청은 성공했지만
-     * response 배열이 비어있는 상황.
+     * 하지만 API-Football의 response 배열은 비어있다.
+     *
      *
      * 기대 결과:
      *
-     * 반복문에서 처리할 선수가 없으므로
+     * 기존 Team은 그대로 존재한다.
      *
-     * Player
-     * Team
-     * Transfer
+     * Player / Transfer는 생성되지 않는다.
      *
-     * 어느 것도 생성되지 않아야 한다.
+     * DTO:
+     *
+     * teamName        = Arsenal
+     * playersTransfers = []
      */
     @Test
     @DisplayName(
-            "팀 이적 응답이 비어있으면 DB 데이터를 생성하지 않는다."
+            "팀 이적 응답이 비어있으면 빈 선수 이적 목록을 반환하고 새로운 데이터를 생성하지 않는다."
     )
-    void saveTeamTransfers_emptyResponse_noDatabaseChange() {
+    void saveTeamTransfers_emptyResponse_noNewDatabaseData() {
 
         // given
         Long teamApiId = 42L;
+
+
+        Team arsenal =
+                teamRepository.save(
+                        Team.of(
+                                "Arsenal",
+                                teamApiId
+                        )
+                );
 
 
         JsonNode apiResponse =
@@ -466,7 +659,7 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         // when
-        String response =
+        TeamTransfersSaveResponseDto response =
                 footballSyncService
                         .saveTeamTransfers(
                                 teamApiId
@@ -474,17 +667,40 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         // then
-        assertThat(response)
+        assertThat(response.getTeamName())
                 .isEqualTo(
-                        "FootballSyncService.saveTeamTransfers"
+                        "Arsenal"
                 );
+
+
+        assertThat(response.getPlayersTransfers())
+                .isEmpty();
 
 
         assertThat(playerRepository.count())
                 .isZero();
 
+
+        /*
+         * Arsenal은 Sync 이전부터 존재했다.
+         */
         assertThat(teamRepository.count())
-                .isZero();
+                .isEqualTo(1);
+
+
+        Team foundArsenal =
+                teamRepository
+                        .findByApiFootballId(
+                                teamApiId
+                        )
+                        .orElseThrow();
+
+
+        assertThat(foundArsenal.getId())
+                .isEqualTo(
+                        arsenal.getId()
+                );
+
 
         assertThat(transferRepository.count())
                 .isZero();
@@ -492,20 +708,10 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 수정]
      *
-     * 나타내는 상황:
-     *
-     * 첫 번째 선수 Bukayo Saka와
-     * 관련 Team이 이미 DB에 존재한다.
-     *
-     * API에서는 동일한 Saka와
-     * 새로운 선수 Odegaard를 반환한다.
-     *
-     * 기대 결과:
-     *
-     * 기존 Player / Team을 중복 생성하지 않고
-     * 필요한 Transfer와 새로운 선수만 저장해야 한다.
+     * 기존 Player / Team이 존재할 때
+     * 실제 Entity를 재사용하는지 확인한다.
      */
     @Test
     @DisplayName(
@@ -557,18 +763,31 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         // when
-        footballSyncService
-                .saveTeamTransfers(
-                        42L
-                );
+        TeamTransfersSaveResponseDto response =
+                footballSyncService
+                        .saveTeamTransfers(
+                                42L
+                        );
 
 
         // then
+        assertThat(response.getTeamName())
+                .isEqualTo(
+                        "Arsenal"
+                );
+
+
+        assertThat(response.getPlayersTransfers())
+                .hasSize(2);
+
+
         assertThat(playerRepository.count())
                 .isEqualTo(2);
 
+
         assertThat(teamRepository.count())
                 .isEqualTo(2);
+
 
         assertThat(transferRepository.count())
                 .isEqualTo(2);
@@ -603,10 +822,12 @@ class FootballSyncTeamTransfersServiceTest {
                         existingPlayer.getId()
                 );
 
+
         assertThat(foundArsenal.getId())
                 .isEqualTo(
                         arsenal.getId()
                 );
+
 
         assertThat(foundChelsea.getId())
                 .isEqualTo(
@@ -621,25 +842,103 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [신규]
+     * [신규 - 중요]
      *
-     * 나타내는 상황:
+     * TeamTransfers의 현재 전제:
      *
-     * API-Football의 팀 이적 API 호출 자체가 실패한다.
+     * 요청 대상 Team은 이미 DB에 존재해야 한다.
      *
-     * 기대 결과:
      *
-     * 아직 어떤 FootballSyncTxService도 호출되지 않았으므로
-     * DB에는 아무런 변경도 발생하지 않아야 한다.
+     * 따라서 Team이 존재하지 않으면:
+     *
+     * getDisplayTeamName()
+     *
+     * 에서 바로 NotFoundTeamException이 발생한다.
+     *
+     * 중요한 점:
+     *
+     * Team 존재 확인이 외부 API 호출보다 먼저이므로
+     * 불필요한 API-Football 호출도 발생하지 않는다.
      */
     @Test
     @DisplayName(
-            "팀 이적 API 호출에 실패하면 DB 데이터는 변경되지 않는다."
+            "DB에 Team이 존재하지 않으면 외부 API를 호출하지 않고 예외가 발생한다."
     )
-    void saveTeamTransfers_externalApiFail_noDatabaseChange() {
+    void saveTeamTransfers_notFoundTeam_noExternalApiCall() {
 
         // given
         Long teamApiId = 42L;
+
+
+        // when & then
+        assertThatThrownBy(() ->
+                footballSyncService
+                        .saveTeamTransfers(
+                                teamApiId
+                        )
+        )
+                .isInstanceOf(
+                        NotFoundTeamException.class
+                )
+                .hasMessage(
+                        "존재하지 않는 팀 입니다."
+                );
+
+
+        /*
+         * Team 존재 확인 단계에서 실패했으므로
+         * 외부 API는 호출되면 안 된다.
+         */
+        then(footballRestClient)
+                .should(never())
+                .callExternalTeamTransfersApi(
+                        teamApiId
+                );
+
+
+        assertThat(playerRepository.count())
+                .isZero();
+
+
+        assertThat(teamRepository.count())
+                .isZero();
+
+
+        assertThat(transferRepository.count())
+                .isZero();
+    }
+
+
+    /*
+     * [기존 수정]
+     *
+     * Team은 DB에 정상적으로 존재하지만
+     * 그 다음 외부 API 호출에서 실패하는 상황.
+     *
+     *
+     * 기대 결과:
+     *
+     * 기존 Team은 그대로 유지된다.
+     *
+     * Player / Transfer 데이터는 생성되지 않는다.
+     */
+    @Test
+    @DisplayName(
+            "팀 이적 API 호출에 실패하면 새로운 DB 데이터는 생성되지 않는다."
+    )
+    void saveTeamTransfers_externalApiFail_noNewDatabaseData() {
+
+        // given
+        Long teamApiId = 42L;
+
+
+        Team arsenal =
+                teamRepository.save(
+                        Team.of(
+                                "Arsenal",
+                                teamApiId
+                        )
+                );
 
 
         given(
@@ -670,11 +969,37 @@ class FootballSyncTeamTransfersServiceTest {
                 );
 
 
+        then(footballRestClient)
+                .should(times(1))
+                .callExternalTeamTransfersApi(
+                        teamApiId
+                );
+
+
         assertThat(playerRepository.count())
                 .isZero();
 
+
+        /*
+         * 기존 Arsenal만 유지된다.
+         */
         assertThat(teamRepository.count())
-                .isZero();
+                .isEqualTo(1);
+
+
+        Team foundArsenal =
+                teamRepository
+                        .findByApiFootballId(
+                                teamApiId
+                        )
+                        .orElseThrow();
+
+
+        assertThat(foundArsenal.getId())
+                .isEqualTo(
+                        arsenal.getId()
+                );
+
 
         assertThat(transferRepository.count())
                 .isZero();
@@ -682,40 +1007,35 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 수정 - 중요]
      *
-     * 나타내는 상황:
+     * TeamTransfers의 핵심 Transaction 정책을 검증한다.
      *
-     * 팀 이적 API가 세 선수의 데이터를 반환한다.
      *
-     * 1. Bukayo Saka
-     *      → 정상 데이터
-     *      → Transaction 성공 / COMMIT
+     * API 응답:
      *
-     * 2. Martin Odegaard
+     * Player #1 - Bukayo Saka
+     *      → 정상
+     *      → Tx #1 COMMIT
+     *
+     * Player #2 - Martin Odegaard
      *      → invalid-date
-     *      → Transaction 실패 / ROLLBACK
+     *      → Tx #2 ROLLBACK
      *
-     * 3. Declan Rice
+     * Player #3 - Declan Rice
      *      → 정상 데이터
-     *      → 하지만 두 번째 선수에서 예외가 밖으로 전파되므로
-     *        현재 구현에서는 처리 자체가 시작되지 않는다.
+     *      → 하지만 #2 예외로 반복문 중단
+     *      → 실행되지 않음
      *
-     * 기대 결과:
      *
-     * 첫 번째 선수의 데이터는 유지된다.
+     * 최종 상태:
      *
-     * 두 번째 선수의 Player / Transfer는
-     * 해당 Transaction과 함께 Rollback된다.
-     *
-     * 세 번째 선수는 처리되지 않는다.
-     *
-     * 이 테스트는 향후
-     *
-     * "실패한 선수만 기록하고 다음 선수는 계속 처리"
-     *
-     * 구조로 리팩토링할 때
-     * 현재 동작과 변경된 정책을 비교할 기준이 된다.
+     * Arsenal        = 기존 Team 유지
+     * Chelsea        = #1 Transaction에서 저장
+     * Saka           = 저장
+     * Saka Transfer  = 저장
+     * Odegaard       = Rollback
+     * Rice           = 처리되지 않음
      */
     @Test
     @DisplayName(
@@ -725,6 +1045,14 @@ class FootballSyncTeamTransfersServiceTest {
 
         // given
         Long teamApiId = 42L;
+
+
+        teamRepository.save(
+                Team.of(
+                        "Arsenal",
+                        teamApiId
+                )
+        );
 
 
         JsonNode apiResponse =
@@ -755,8 +1083,9 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         /*
-         * 첫 번째 선수 Bukayo Saka의 Transaction은
-         * 이미 COMMIT되었다.
+         * Player #1
+         *
+         * 이미 자신의 Transaction을 성공적으로 Commit했다.
          */
         assertThat(
                 playerRepository
@@ -768,10 +1097,10 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         /*
-         * 두 번째 선수 Odegaard는
-         * getOrCreatePlayer()까지 실행되더라도
-         * 같은 Transaction 안에서 날짜 Parsing 실패가 발생하므로
-         * Player 저장까지 Rollback되어야 한다.
+         * Player #2
+         *
+         * Player 저장 이후 날짜 Parsing에서 실패하지만
+         * 하나의 Transaction 안이므로 Player 저장도 Rollback된다.
          */
         assertThat(
                 playerRepository
@@ -783,9 +1112,10 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         /*
-         * 세 번째 선수 Rice는
-         * 두 번째 선수의 예외로 for문이 중단되었기 때문에
-         * 처리 자체가 시작되지 않는다.
+         * Player #3
+         *
+         * #2의 예외가 FootballSyncService까지 전파되어
+         * for문이 종료되므로 처리되지 않는다.
          */
         assertThat(
                 playerRepository
@@ -801,15 +1131,18 @@ class FootballSyncTeamTransfersServiceTest {
 
 
         /*
-         * 첫 번째 선수의 Arsenal / Chelsea는
-         * 이미 함께 COMMIT되었다.
+         * Arsenal:
+         * Sync 실행 전부터 존재.
+         *
+         * Chelsea:
+         * Saka Transaction에서 생성되어 Commit.
          */
         assertThat(teamRepository.count())
                 .isEqualTo(2);
 
 
         /*
-         * 첫 번째 선수의 Transfer만 남는다.
+         * Saka의 Transfer 한 건만 Commit되어 있다.
          */
         assertThat(transferRepository.count())
                 .isEqualTo(1);
@@ -855,35 +1188,25 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [Fixture - 정상 팀 이적 목록]
+     * [Fixture - 정상 Team Transfers]
      *
-     * 사용 대상:
+     * 대상 Team:
      *
-     * FootballSyncService.saveTeamTransfers()
+     * Arsenal
      *
-     * 나타내는 상황:
      *
-     * API-Football의 팀 이적 조회 결과에서
-     * 두 선수의 이적 정보를 정상적으로 반환한 상황.
-     *
-     * 선수 1:
+     * Player #1
      *
      * Bukayo Saka
      * Chelsea -> Arsenal
      * 2026-07-01
      *
-     * 선수 2:
+     *
+     * Player #2
      *
      * Martin Odegaard
      * Chelsea -> Arsenal
      * 2025-07-01
-     *
-     * 이 Fixture는 다음 상황을 검증한다.
-     *
-     * - 정상 저장
-     * - 외부 API 호출 시 Transaction 비활성
-     * - 동일 데이터 반복 Sync / 멱등성
-     * - 기존 Player / Team 재사용
      */
     private JsonNode teamTransfersResponse() {
 
@@ -943,21 +1266,7 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [Fixture - 이적 데이터가 없는 팀 응답]
-     *
-     * 사용 대상:
-     *
-     * saveTeamTransfers_emptyResponse_noDatabaseChange()
-     *
-     * 나타내는 상황:
-     *
-     * API-Football 호출 자체는 성공했지만
-     * response 배열에 처리할 선수 데이터가 없는 상황.
-     *
-     * 기대되는 동작:
-     *
-     * for문이 한 번도 실행되지 않으므로
-     * Player / Team / Transfer가 생성되지 않는다.
+     * [Fixture - 선수 이적정보 없음]
      */
     private JsonNode teamTransfersEmptyResponse() {
 
@@ -972,31 +1281,16 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [Fixture - 두 번째 선수의 이적 날짜가 잘못된 팀 이적 응답]
+     * [Fixture - 두 번째 Player 실패]
      *
-     * 사용 대상:
+     * Saka
+     *      → 정상
      *
-     * saveTeamTransfers_secondPlayerFail_partialCommitAndStop()
+     * Odegaard
+     *      → invalid-date
      *
-     * 나타내는 상황:
-     *
-     * 첫 번째 선수 Bukayo Saka는 정상적으로 저장된다.
-     *
-     * 두 번째 선수 Martin Odegaard는
-     * 이적 날짜가 "invalid-date"이므로
-     * LocalDate.parse()에서 실패한다.
-     *
-     * 세 번째 선수 Declan Rice는 정상 데이터지만
-     * 두 번째 선수의 예외 때문에
-     * 현재 구현에서는 처리되지 않는다.
-     *
-     * 이 Fixture를 통해
-     *
-     * - 선수 단위 Transaction
-     * - 이전 선수 Partial Commit
-     * - 현재 for문 예외 전파 정책
-     *
-     * 을 동시에 검증한다.
+     * Rice
+     *      → 정상 데이터지만 처리되지 않음
      */
     private JsonNode teamTransfersSecondPlayerInvalidResponse() {
 
@@ -1078,10 +1372,7 @@ class FootballSyncTeamTransfersServiceTest {
 
 
     /*
-     * [Fixture Helper - JSON 변환]
-     *
-     * 문자열로 작성한 API-Football Fixture를
-     * JsonNode로 변환한다.
+     * [Fixture Helper]
      */
     private JsonNode readJson(
             String json

@@ -53,8 +53,8 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     @Transactional(readOnly = true)
-    public TeamsResponseDto getLeagueTeams(String leagueCode) {
-        List<TeamItemResponseDto> leagueTeams = teamRepository.findAllByLeagueCode(LeagueCode.valueOf(leagueCode.toUpperCase())).stream()
+    public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
+        List<TeamItemResponseDto> leagueTeams = teamRepository.findAllByLeagueCode(leagueCode).stream()
                 .map(TeamItemResponseDto::of)
                 .toList();
 
