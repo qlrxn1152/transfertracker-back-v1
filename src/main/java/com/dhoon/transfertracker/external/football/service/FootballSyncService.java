@@ -121,9 +121,7 @@ public class FootballSyncService {
     public TeamTransfersSaveResponseDto saveTeamTransfers(Long teamApiId) {
         JsonNode node = footballRestClient.callExternalTeamTransfersApi(teamApiId);
 
-        JsonNode teamData = node.get("parameters");
-        String teamName = footballSyncTxService.getOrCreateTeamResponse(teamData).getTeamName();
-
+        String teamName = footballSyncTxService.getDisplayTeamName(teamApiId);
         JsonNode responses = node.get("response");
 
         List<PlayerTransfersResponseDto> playerTransfers = new ArrayList<>();

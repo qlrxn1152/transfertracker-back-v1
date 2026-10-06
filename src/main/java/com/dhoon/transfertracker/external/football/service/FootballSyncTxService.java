@@ -138,4 +138,11 @@ public class FootballSyncTxService {
         return TeamItemResponseDto.of(team);
     }
 
+    public String getDisplayTeamName(Long teamApiId) {
+        Team team = teamRepository.findByApiFootballId(teamApiId)
+                .orElseThrow();
+
+        return team.getDisplayName();
+    }
+
 }
