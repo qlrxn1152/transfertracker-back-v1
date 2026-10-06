@@ -6,6 +6,7 @@ import com.dhoon.transfertracker.external.football.dto.playertransfer.PlayerTran
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransferItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
@@ -83,8 +84,23 @@ public class FootballSyncService {
         return footballSyncTxService.getOrCreatePlayerTransfersResponse(playerData, transferDatas);
     }
 
+    /**
+     * 외부 API를 호출해서, 해당 리그에 해당 시즌에 속했던 팀들을 가지고 오고, 해당 팀들을 리그에 배치합니다.
+     * @param leagueCode -> ENUM
+     */
+    public LeagueTeamsResponseDto syncLeagueTeams(LeagueCode leagueCode) {
+        JsonNode node = footballRestClient.callExternalLeagueTeamsApi(leagueCode);
 
+        List<TeamItemResponseDto> teams = new ArrayList<>();
+        // 2024 년 기준으로 설정합니다. 리그 처음 만들때에만 설정하고, 이후에는 실행하지않는것을 권장합니다.
+        node.get("response")
+                .forEach(responseData -> {
+                    JsonNode teamData = responseData.get("team");
+                    teams.add(footballSyncTxService.getOrCreateTeamAndAssignLeagueResponse(teamData, leagueCode));
+                });
 
+        return LeagueTeamsResponseDto.of(leagueCode, teams);
+    }
 
 
 
@@ -114,21 +130,6 @@ public class FootballSyncService {
         return "FootballSyncService.saveTeamTransfers";
     }
 
-    /**
-     * 외부 API를 호출해서, 해당 리그에 해당 시즌에 속했던 팀들을 가지고 오고, 해당 팀들을 리그에 배치합니다.
-     * @param leagueCode -> ENUM
-     */
-    public String syncLeagueTeams(LeagueCode leagueCode) {
-        JsonNode node = footballRestClient.callExternalLeagueTeamsApi(leagueCode);
 
-        // 2024 년 기준으로 설정합니다. 리그 처음 만들때에만 설정하고, 이후에는 실행하지않는것을 권장합니다.
-        node.get("response")
-                .forEach(responseData -> {
-                    JsonNode teamData = responseData.get("team");
-                    footballSyncTxService.getOrCreateTeamAndAssignLeague(teamData, leagueCode);
-                });
-
-        return "FootballSyncService.syncLeagueTeams";
-    }
 
 }

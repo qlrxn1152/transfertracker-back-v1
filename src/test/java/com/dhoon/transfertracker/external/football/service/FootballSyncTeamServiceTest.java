@@ -33,9 +33,10 @@ import static org.mockito.Mockito.times;
 @ActiveProfiles("test")
 
 /*
- * [신규 - 중요]
+ * [기존 유지 - 중요]
  *
- * @DataJpaTest는 기본적으로 Test를 Transaction으로 감싼다.
+ * @DataJpaTest는 기본적으로 각각의 테스트를
+ * Transaction으로 감싼다.
  *
  * 하지만 실제 Football Sync 구조에서는
  *
@@ -44,13 +45,13 @@ import static org.mockito.Mockito.times;
  *      → Transaction X
  *
  * FootballSyncTxService
- *      → DB 작업
+ *      → Team 조회 / 저장
+ *      → DTO 생성
  *      → Transaction O
  *
- * 구조이기 때문에,
+ * 라는 실제 Transaction 경계를 검증해야 한다.
  *
- * 외부 API 호출 시 실제 Transaction이 열려 있지 않은지
- * 확인하기 위해 테스트 자체의 Transaction을 비활성화한다.
+ * 따라서 Test 자체 Transaction은 비활성화한다.
  */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class FootballSyncTeamServiceTest {
@@ -67,8 +68,12 @@ class FootballSyncTeamServiceTest {
     /*
      * 실제 API-Football 서버는 호출하지 않는다.
      *
-     * 테스트에서는 원하는 Team 응답과
-     * 실패 상황을 직접 만들어서 검증한다.
+     * 테스트에서
+     *
+     * - 정상 응답
+     * - 외부 API 실패
+     *
+     * 상황을 직접 만들기 위해 Mock 처리한다.
      */
     @MockitoBean
     ApiFootballHttpClient footballRestClient;
@@ -82,9 +87,11 @@ class FootballSyncTeamServiceTest {
     void clearDatabase() {
 
         /*
-         * Test 자체 Transaction을 사용하지 않으므로
-         * 각각의 테스트 사이에 DB 데이터가 남지 않도록
-         * 직접 삭제한다.
+         * Test Transaction을 비활성화했으므로
+         * 각 테스트가 끝난 뒤 자동 Rollback되지 않는다.
+         *
+         * 테스트 간 데이터 간섭을 막기 위해
+         * Team 데이터를 직접 삭제한다.
          */
         teamRepository.deleteAll();
     }
@@ -96,19 +103,56 @@ class FootballSyncTeamServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 유지]
      *
      * syncTeam()의 가장 기본적인 정상 동작.
      *
-     * 나타내는 상황:
      *
-     * DB에 Arsenal이 아직 존재하지 않고,
-     * API-Football에서는 정상적으로 Arsenal 정보를 반환한다.
+     * 상황:
+     *
+     * DB에는 Arsenal이 존재하지 않는다.
+     *
+     * API-Football에서는
+     *
+     * id   = 42
+     * name = Arsenal
+     *
+     * 을 반환한다.
+     *
+     *
+     * 현재 리팩토링 이후 흐름:
+     *
+     * FootballSyncService.syncTeam()
+     *
+     *      ↓
+     *
+     * 외부 Team API 호출
+     *
+     *      ↓
+     *
+     * FootballSyncTxService.getOrCreateTeamResponse()
+     *
+     *      ↓
+     *
+     * getOrCreateTeam()
+     *
+     *      ↓
+     *
+     * Team 조회 / 저장
+     *
+     *      ↓
+     *
+     * Transaction 내부에서
+     * TeamSaveResponseDto 생성
+     *
      *
      * 기대 결과:
      *
-     * 새로운 Team이 DB에 저장되고,
-     * TeamSaveResponseDto에도 동일한 정보가 반환되어야 한다.
+     * Team 1건 저장
+     *
+     * +
+     *
+     * 정상적인 TeamSaveResponseDto 반환
      */
     @Test
     @DisplayName(
@@ -147,6 +191,14 @@ class FootballSyncTeamServiceTest {
 
 
         // then
+
+        /*
+         * [리팩토링 확인]
+         *
+         * Team Entity가 FootballSyncService로 반환되는 것이 아니라
+         * FootballSyncTxService 내부에서
+         * TeamSaveResponseDto로 변환된 결과가 반환된다.
+         */
         assertThat(response.getTeamName())
                 .isEqualTo(
                         "Arsenal"
@@ -159,6 +211,9 @@ class FootballSyncTeamServiceTest {
                 );
 
 
+        /*
+         * 실제 DB에도 Team이 저장되어야 한다.
+         */
         assertThat(teamRepository.count())
                 .isEqualTo(1);
 
@@ -185,18 +240,25 @@ class FootballSyncTeamServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 유지 - 중요]
      *
-     * FootballSyncService가 API-Football을 호출하는 동안
-     * DB Transaction이 활성화되어 있지 않은지 검증한다.
+     * 이번 리팩토링에서도 유지되어야 하는
+     * Transaction 경계를 검증한다.
      *
-     * 나타내는 상황:
      *
-     * syncTeam()이 외부 Team API를 호출하는 순간.
+     * 상황:
+     *
+     * FootballSyncService가
+     * API-Football Team API를 호출한다.
+     *
      *
      * 기대 결과:
      *
-     * HTTP 요청 중에는 Transaction이 없어야 한다.
+     * 외부 HTTP 요청 동안에는
+     * DB Transaction이 활성화되어 있지 않아야 한다.
+     *
+     * Transaction은 API 응답을 받은 뒤
+     * FootballSyncTxService에 진입하면서 시작된다.
      */
     @Test
     @DisplayName(
@@ -226,8 +288,10 @@ class FootballSyncTeamServiceTest {
                     /*
                      * true가 나오면
                      *
-                     * 외부 API 응답을 기다리는 동안에도
-                     * DB Transaction이 열려 있다는 의미다.
+                     * API-Football 응답을 기다리는 동안에도
+                     * DB Transaction을 유지하고 있다는 의미다.
+                     *
+                     * 현재 구조에서는 false가 정상이다.
                      */
                     assertThat(
                             TransactionSynchronizationManager
@@ -255,25 +319,37 @@ class FootballSyncTeamServiceTest {
                 );
 
 
+        /*
+         * API 호출이 끝난 뒤
+         * TxService를 통한 저장은 정상적으로 수행되어야 한다.
+         */
         assertThat(teamRepository.count())
                 .isEqualTo(1);
     }
 
 
     /*
-     * [신규 - 중요]
+     * [기존 유지 - 중요]
      *
-     * 같은 Team Sync 요청은 여러 번 발생할 수 있다.
+     * 동일한 Team Sync는 여러 번 발생할 수 있다.
      *
-     * 나타내는 상황:
+     * 특히 향후 Scheduler를 사용하면
+     * 같은 Team을 다시 동기화할 가능성이 높다.
      *
-     * 동일한 API-Football Team ID로
+     *
+     * 상황:
+     *
+     * 같은 API-Football team ID로
      * syncTeam()을 두 번 실행한다.
+     *
      *
      * 기대 결과:
      *
-     * API 호출은 두 번 발생하지만
-     * DB의 Team은 한 건만 존재해야 한다.
+     * 외부 API 호출 = 2번
+     *
+     * DB Team = 1건
+     *
+     * 즉 같은 Team을 중복 INSERT하면 안 된다.
      */
     @Test
     @DisplayName(
@@ -342,8 +418,14 @@ class FootballSyncTeamServiceTest {
 
 
         /*
-         * Sync 자체는 두 번 실행했으므로
-         * 외부 API 호출도 두 번 발생한다.
+         * Sync 요청 자체는 두 번이므로
+         * 외부 API도 두 번 호출되는 것이 정상이다.
+         *
+         * 중복 저장 방지는
+         *
+         * getOrCreateTeam()
+         *
+         * 이 담당한다.
          */
         then(footballRestClient)
                 .should(times(2))
@@ -354,15 +436,27 @@ class FootballSyncTeamServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 유지]
      *
-     * DB에 이미 동일한 apiFootballId를 가진
-     * Team이 존재하는 상황.
+     * 상황:
+     *
+     * DB에 이미
+     *
+     * apiFootballId = 42
+     *
+     * 인 Arsenal이 존재한다.
+     *
+     * API-Football에서도
+     * 동일한 Arsenal을 반환한다.
+     *
      *
      * 기대 결과:
      *
      * 새로운 Team을 생성하지 않고
-     * 기존 Team Entity를 그대로 재사용해야 한다.
+     * 기존 Team을 재사용해야 한다.
+     *
+     * 단순히 count == 1만 확인하는 것이 아니라
+     * PK까지 비교한다.
      */
     @Test
     @DisplayName(
@@ -420,8 +514,8 @@ class FootballSyncTeamServiceTest {
 
 
         /*
-         * 단순히 count == 1만 보는 것이 아니라
-         * 실제 기존 Entity가 재사용되었는지 PK까지 비교한다.
+         * 새로운 Team Entity가 만들어진 것이 아니라
+         * 기존 Team이 실제로 재사용됐는지 확인한다.
          */
         assertThat(foundTeam.getId())
                 .isEqualTo(
@@ -435,6 +529,10 @@ class FootballSyncTeamServiceTest {
                 );
 
 
+        /*
+         * 기존 Team을 재사용한 상황에서도
+         * TxService 내부 DTO 변환은 정상적으로 수행되어야 한다.
+         */
         assertThat(response.getTeamName())
                 .isEqualTo(
                         "Arsenal"
@@ -454,18 +552,22 @@ class FootballSyncTeamServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 유지]
      *
-     * API-Football Team API 호출 자체가 실패한 상황.
+     * 상황:
      *
-     * 나타내는 상황:
+     * API-Football Team API 호출 자체에서
+     * RuntimeException이 발생한다.
      *
-     * 외부 API 호출 단계에서 RuntimeException이 발생한다.
+     *
+     * 아직 FootballSyncTxService에
+     * 진입하기 전이기 때문에
+     * DB Transaction도 시작되지 않는다.
+     *
      *
      * 기대 결과:
      *
-     * FootballSyncTxService에 진입하기 전이므로
-     * DB에는 Team이 저장되지 않아야 한다.
+     * Team 데이터는 아무것도 저장되지 않아야 한다.
      */
     @Test
     @DisplayName(
@@ -505,6 +607,10 @@ class FootballSyncTeamServiceTest {
                 );
 
 
+        /*
+         * TxService에 진입하지 않았으므로
+         * DB 상태는 그대로여야 한다.
+         */
         assertThat(teamRepository.count())
                 .isZero();
 
@@ -530,44 +636,32 @@ class FootballSyncTeamServiceTest {
      * FootballSyncService.syncTeam()
      *
      *
-     * 나타내는 상황:
+     * 현재 ApiFootballHttpClient는
+     * API-Football 전체 응답을 그대로 반환하지 않는다.
      *
-     * API-Football의
-     *
-     * GET /teams?id={teamApiId}
-     *
-     * 요청이 성공하여 특정 팀 정보를 반환한 상황을 표현한다.
-     *
-     *
-     * 실제 API-Football 원본 응답은 대략
-     *
-     * response
-     *   └ team
-     *
-     * 구조다.
-     *
-     * 하지만 현재
-     *
-     * ApiFootballHttpClient.callExternalTeamApi()
-     *
-     * 내부에서 이미
+     * 내부에서
      *
      * response[0].team
      *
-     * 부분만 추출해서 FootballSyncService로 반환한다.
+     * 부분을 추출해서 FootballSyncService에 반환한다.
      *
      *
-     * 따라서 이 Fixture는 API-Football 전체 JSON이 아니라,
-     * FootballSyncService가 실제로 전달받는
-     * Team JsonNode 자체를 나타낸다.
+     * 따라서 이 Fixture는:
+     *
+     * {
+     *   "id": 42,
+     *   "name": "Arsenal"
+     * }
+     *
+     * 형태가 맞다.
      *
      *
-     * 사용되는 테스트 상황:
+     * 사용되는 테스트:
      *
      * 1. 새로운 Team 정상 저장
-     * 2. HTTP 호출 시 Transaction 비활성 검증
-     * 3. 동일 Team 반복 Sync / 멱등성 검증
-     * 4. 기존 Team 재사용 검증
+     * 2. 외부 API 호출 중 Transaction 비활성
+     * 3. 동일 Team 반복 Sync / 멱등성
+     * 4. 기존 Team 재사용
      */
     private JsonNode teamResponse(
             Long teamApiId,
@@ -590,10 +684,10 @@ class FootballSyncTeamServiceTest {
 
 
     /*
-     * [Fixture Helper - JSON 변환]
+     * [Fixture Helper]
      *
-     * 문자열 형태의 테스트 JSON을
-     * JsonNode로 변환하는 공통 Helper.
+     * 문자열 형태의 Fixture를
+     * JsonNode로 변환한다.
      */
     private JsonNode readJson(
             String json

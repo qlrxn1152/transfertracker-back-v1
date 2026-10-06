@@ -1,10 +1,7 @@
 package com.dhoon.transfertracker.external.football.controller;
 
-import com.dhoon.transfertracker.external.football.dto.TeamPlayersSaveResponseDto;
+import com.dhoon.transfertracker.external.football.dto.*;
 import com.dhoon.transfertracker.external.football.service.FootballSyncService;
-import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
-import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
-import com.dhoon.transfertracker.external.football.dto.TransferSaveResponseDto;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +48,13 @@ public class ApiFootballController {
     }
 
 
+    @PostMapping("/external/api/teams/league/{leagueCode}")
+    public ResponseEntity<LeagueTeamsResponseDto> syncLeagueTeams(@PathVariable LeagueCode leagueCode) {
+        LeagueTeamsResponseDto response = footballSyncService.syncLeagueTeams(leagueCode);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
 
 
 
@@ -61,13 +65,6 @@ public class ApiFootballController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
-    @PostMapping("/external/api/teams/league/{leagueCode}")
-    public ResponseEntity<String> syncLeagueTeams(@PathVariable LeagueCode leagueCode) {
-        String response = footballSyncService.syncLeagueTeams(leagueCode);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
 
 
 

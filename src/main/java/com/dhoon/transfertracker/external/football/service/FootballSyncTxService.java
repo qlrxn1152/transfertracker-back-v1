@@ -8,6 +8,7 @@ import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
@@ -128,16 +129,18 @@ public class FootballSyncTxService {
         return playerTransfers;
     }
 
-
-
-
-
-
-
-
     // 실행하지 않기를 권장합니다. ( 2024 년 기준 데이터이므로, 새로만든 리그가 아니라, 기존에 있던 리그면 팀 데이터가 왜곡됨.)
-    public void getOrCreateTeamAndAssignLeague(JsonNode teamData, LeagueCode leagueCode) {
-        getOrCreateTeam(teamData).assignTeamLeague(leagueCode);
+    public TeamItemResponseDto getOrCreateTeamAndAssignLeagueResponse(JsonNode teamData, LeagueCode leagueCode) {
+        TeamItemResponseDto responseDto = getOrCreateTeamAndAssignLeague(teamData, leagueCode);
+
+        return responseDto;
+    }
+
+    private TeamItemResponseDto getOrCreateTeamAndAssignLeague(JsonNode teamData, LeagueCode leagueCode) {
+        Team team = getOrCreateTeam(teamData);
+        team.assignTeamLeague(leagueCode);
+
+        return TeamItemResponseDto.of(team);
     }
 
 

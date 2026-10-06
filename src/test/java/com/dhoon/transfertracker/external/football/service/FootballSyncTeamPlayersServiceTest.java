@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.external.football.service;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
+import com.dhoon.transfertracker.external.football.dto.TeamPlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TeamPlayersSaveResponseDto;
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
@@ -22,8 +23,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -39,17 +38,18 @@ import static org.mockito.Mockito.times;
 @ActiveProfiles("test")
 
 /*
- * [신규 - 중요]
+ * [기존 유지 - 중요]
  *
  * 실제 Football Sync 구조의 Transaction 경계를 검증하기 위해
  * @DataJpaTest가 기본으로 제공하는 Test Transaction을 비활성화한다.
  *
  * FootballSyncService
- *      → 외부 API
+ *      → 외부 API 호출
  *      → Transaction X
  *
  * FootballSyncTxService
- *      → DB 작업
+ *      → 선수 1명 단위 DB 작업
+ *      → DTO 생성
  *      → Transaction O
  */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -72,10 +72,6 @@ class FootballSyncTeamPlayersServiceTest {
     TeamPlayerRepository teamPlayerRepository;
 
 
-    /*
-     * 실제 API-Football 서버를 호출하지 않고
-     * 테스트에서 원하는 응답과 실패 상황을 직접 만든다.
-     */
     @MockitoBean
     ApiFootballHttpClient footballRestClient;
 
@@ -104,25 +100,51 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 수정]
      *
-     * 나타내는 상황:
+     * 상황:
      *
-     * Arsenal 팀과
+     * API-Football이 Arsenal과
      *
      * - Bukayo Saka
      * - Martin Odegaard
      *
-     * 두 선수가 아직 DB에 존재하지 않는 상태에서
-     * API-Football이 정상적으로 선수 목록을 반환한다.
+     * 를 반환한다.
+     *
+     *
+     * 현재 구조에서는 players 반복마다
+     *
+     * FootballSyncTxService.getOrCreateTeamPlayerResponse()
+     *
+     * 가 호출된다.
+     *
+     *
+     * 선수 1명 처리 흐름:
+     *
+     * Player 조회 / 생성
+     *
+     *      ↓
+     *
+     * Team 조회 / 생성
+     *
+     *      ↓
+     *
+     * TeamPlayer 조회 / 생성
+     *
+     *      ↓
+     *
+     * DTO 생성
+     *
+     *      ↓
+     *
+     * Commit
+     *
      *
      * 기대 결과:
      *
-     * Team 1건
-     * Player 2건
+     * Team       1건
+     * Player     2건
      * TeamPlayer 2건
-     *
-     * 이 저장되어야 한다.
      */
     @Test
     @DisplayName(
@@ -161,8 +183,10 @@ class FootballSyncTeamPlayersServiceTest {
         assertThat(teamRepository.count())
                 .isEqualTo(1);
 
+
         assertThat(playerRepository.count())
                 .isEqualTo(2);
+
 
         assertThat(teamPlayerRepository.count())
                 .isEqualTo(2);
@@ -201,35 +225,47 @@ class FootballSyncTeamPlayersServiceTest {
 
 
         /*
-         * API 응답 DTO에도
-         * 두 선수 정보가 들어있는지 확인한다.
+         * [리팩토링 확인 - 중요]
+         *
+         * Entity를 FootballSyncService까지 반환해서
+         * DTO를 만드는 구조가 아니다.
+         *
+         * TxService 안에서 DTO 변환이 끝난 뒤
+         * DTO만 Service로 반환된다.
          */
         assertThat(response.getPlayers())
                 .hasSize(2);
 
+
         assertThat(response.getPlayers())
                 .extracting(
-                        player -> player.getPlayerName()
+                        TeamPlayerSaveResponseDto::getPlayerName
                 )
                 .containsExactly(
                         "Bukayo Saka",
                         "Martin Odegaard"
                 );
+
+
+        /*
+         * Team 관계의 Lazy Entity 접근도
+         * TxService 내부 DTO 생성 시점에 끝났는지 확인한다.
+         */
+        assertThat(response.getPlayers())
+                .extracting(
+                        TeamPlayerSaveResponseDto::getTeamName
+                )
+                .containsOnly(
+                        "Arsenal"
+                );
     }
 
 
     /*
-     * [신규 - 중요]
+     * [기존 유지 - 중요]
      *
-     * 나타내는 상황:
-     *
-     * FootballSyncService가
-     * API-Football에서 팀 선수 목록을 가져오는 순간.
-     *
-     * 기대 결과:
-     *
-     * 외부 HTTP 요청을 기다리는 동안에는
-     * DB Transaction이 열려 있으면 안 된다.
+     * FootballSyncService가 외부 API를 호출하는 동안에는
+     * DB Transaction이 활성화되어 있으면 안 된다.
      */
     @Test
     @DisplayName(
@@ -282,8 +318,10 @@ class FootballSyncTeamPlayersServiceTest {
         assertThat(teamRepository.count())
                 .isEqualTo(1);
 
+
         assertThat(playerRepository.count())
                 .isEqualTo(2);
+
 
         assertThat(teamPlayerRepository.count())
                 .isEqualTo(2);
@@ -291,20 +329,15 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 유지 - 중요]
      *
-     * 나타내는 상황:
-     *
-     * 같은 Arsenal 선수 목록을
-     * 두 번 연속 동기화한다.
-     *
-     * 기대 결과:
+     * 같은 팀의 선수 목록을 여러 번 Sync해도
      *
      * Team
      * Player
      * TeamPlayer
      *
-     * 어느 것도 중복 저장되면 안 된다.
+     * 가 중복 저장되지 않아야 한다.
      */
     @Test
     @DisplayName(
@@ -348,8 +381,10 @@ class FootballSyncTeamPlayersServiceTest {
         assertThat(teamRepository.count())
                 .isEqualTo(1);
 
+
         assertThat(playerRepository.count())
                 .isEqualTo(2);
+
 
         assertThat(teamPlayerRepository.count())
                 .isEqualTo(2);
@@ -364,19 +399,21 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 유지]
      *
-     * 나타내는 상황:
+     * 상황:
      *
-     * Arsenal과 Bukayo Saka가 이미 DB에 존재한다.
+     * Arsenal과 Bukayo Saka는 이미 DB에 존재한다.
      *
-     * Martin Odegaard만 새로운 선수다.
+     * Martin Odegaard만 새 데이터다.
+     *
      *
      * 기대 결과:
      *
-     * 기존 Arsenal과 Saka를 재사용하고,
-     * Odegaard만 새로 생성한 뒤
-     * 각각의 TeamPlayer 관계를 만들어야 한다.
+     * 기존 Arsenal 재사용
+     * 기존 Saka 재사용
+     * Odegaard 생성
+     * TeamPlayer 2건 생성
      */
     @Test
     @DisplayName(
@@ -429,8 +466,10 @@ class FootballSyncTeamPlayersServiceTest {
         assertThat(teamRepository.count())
                 .isEqualTo(1);
 
+
         assertThat(playerRepository.count())
                 .isEqualTo(2);
+
 
         assertThat(teamPlayerRepository.count())
                 .isEqualTo(2);
@@ -466,25 +505,39 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 수정 - 경계]
      *
-     * 나타내는 상황:
+     * 이 테스트는 이번 리팩토링으로
+     * 동작이 실제로 변경된 부분이다.
      *
-     * API-Football에서 Team 정보는 정상적으로 반환했지만
-     * 현재 소속 선수 목록이 비어있는 경우.
      *
-     * 기대 결과:
+     * 현재 syncTeamPlayers()는:
      *
-     * Team은 저장되지만
-     * Player와 TeamPlayer는 생성되지 않는다.
+     * playersData.forEach(...)
      *
-     * 현재 syncTeamPlayers() 구현의 경계 상황을 검증한다.
+     * 안에서만 TxService를 호출한다.
+     *
+     *
+     * 따라서 players 배열이 비어있다면
+     *
+     * getOrCreateTeamPlayerResponse()
+     *
+     * 자체가 한 번도 호출되지 않는다.
+     *
+     *
+     * 즉 현재 구현 기준:
+     *
+     * Team       0
+     * Player     0
+     * TeamPlayer 0
+     *
+     * 이다.
      */
     @Test
     @DisplayName(
-            "선수 목록이 비어있으면 Team만 저장되고 Player 관계는 생성되지 않는다."
+            "선수 목록이 비어있으면 Team, Player, TeamPlayer를 저장하지 않는다."
     )
-    void syncTeamPlayers_emptyPlayers_saveTeamOnly() {
+    void syncTeamPlayers_emptyPlayers_noDatabaseChange() {
 
         // given
         Long teamApiId = 42L;
@@ -515,10 +568,12 @@ class FootballSyncTeamPlayersServiceTest {
 
         // then
         assertThat(teamRepository.count())
-                .isEqualTo(1);
+                .isZero();
+
 
         assertThat(playerRepository.count())
                 .isZero();
+
 
         assertThat(teamPlayerRepository.count())
                 .isZero();
@@ -535,17 +590,12 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 유지]
      *
-     * 나타내는 상황:
+     * 외부 API 호출 자체가 실패한다.
      *
-     * API-Football 팀 선수 API 자체가 실패한다.
-     *
-     * 기대 결과:
-     *
-     * 아직 DB 작업을 시작하기 전이므로
-     * Team / Player / TeamPlayer 어느 것도
-     * 저장되어서는 안 된다.
+     * 아직 TxService에 진입하기 전이므로
+     * DB 변경은 없어야 한다.
      */
     @Test
     @DisplayName(
@@ -588,8 +638,10 @@ class FootballSyncTeamPlayersServiceTest {
         assertThat(teamRepository.count())
                 .isZero();
 
+
         assertThat(playerRepository.count())
                 .isZero();
+
 
         assertThat(teamPlayerRepository.count())
                 .isZero();
@@ -597,33 +649,54 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 수정 - 중요]
      *
-     * 이 테스트는 "원하는 최종 정책"을 검증하는 것이 아니라
-     * 현재 구현의 Transaction 범위를 확인하기 위한 테스트다.
-     *
-     *
-     * 나타내는 상황:
-     *
-     * 1. Arsenal 저장 성공
-     *
-     * 2. 첫 번째 선수 Bukayo Saka 저장 성공
-     *
-     * 3. 첫 번째 TeamPlayer 저장 성공
-     *
-     * 4. 두 번째 선수는 name 필드가 없어서 처리 실패
+     * 현재 Transaction 단위를 검증하는 테스트.
      *
      *
-     * 현재 구현에서는 각각의
-     * FootballSyncTxService 메서드 호출마다
-     * 별도의 Transaction이 실행된다.
+     * 현재 구조:
      *
-     * 따라서 두 번째 선수 처리에서 실패해도
-     * 앞에서 이미 Commit된 데이터는 남는다.
+     * playersData.forEach(...)
+     *
+     *      ↓
+     *
+     * 선수 #1
+     * FootballSyncTxService.getOrCreateTeamPlayerResponse()
+     *
+     *      ↓
+     *
+     * Tx #1
+     *
+     * Player
+     * Team
+     * TeamPlayer
+     * DTO 생성
+     *
+     *      ↓
+     *
+     * COMMIT
+     *
+     *
+     * 선수 #2
+     * FootballSyncTxService.getOrCreateTeamPlayerResponse()
+     *
+     *      ↓
+     *
+     * Tx #2
+     *
+     * 처리 중 실패
+     *
+     *      ↓
+     *
+     * ROLLBACK
+     *
+     *
+     * 따라서 두 번째 선수 처리에 실패해도
+     * 첫 번째 선수 Transaction은 이미 Commit되어 있다.
      */
     @Test
     @DisplayName(
-            "여러 선수 중 뒤의 선수 처리에 실패하면 앞에서 완료된 데이터는 현재 구조상 유지된다."
+            "여러 선수 중 뒤의 선수 처리에 실패하면 앞에서 완료된 데이터는 유지된다."
     )
     void syncTeamPlayers_secondPlayerFail_partialCommit() {
 
@@ -659,22 +732,20 @@ class FootballSyncTeamPlayersServiceTest {
 
 
         /*
-         * Team 저장 Transaction은 이미 Commit됐다.
+         * 첫 번째 선수 처리 Transaction에서
+         *
+         * Player + Team + TeamPlayer
+         *
+         * 가 함께 Commit됐다.
          */
         assertThat(teamRepository.count())
                 .isEqualTo(1);
 
 
-        /*
-         * 첫 번째 Player 저장 Transaction도 Commit됐다.
-         */
         assertThat(playerRepository.count())
                 .isEqualTo(1);
 
 
-        /*
-         * 첫 번째 TeamPlayer 관계도 이미 Commit됐다.
-         */
         assertThat(teamPlayerRepository.count())
                 .isEqualTo(1);
 
@@ -709,6 +780,7 @@ class FootballSyncTeamPlayersServiceTest {
                         saka.getId()
                 );
 
+
         assertThat(teamPlayer.getTeam().getId())
                 .isEqualTo(
                         arsenal.getId()
@@ -724,31 +796,10 @@ class FootballSyncTeamPlayersServiceTest {
     /*
      * [Fixture - 정상 팀 선수 목록]
      *
-     * 사용 대상:
-     *
-     * FootballSyncService.syncTeamPlayers()
-     *
-     *
-     * 나타내는 상황:
-     *
-     * API-Football의 팀 선수 API에서
-     *
      * Arsenal
-     *
-     * 소속 선수로
      *
      * - Bukayo Saka
      * - Martin Odegaard
-     *
-     * 두 명을 정상적으로 반환한 상황.
-     *
-     *
-     * 이 Fixture는 다음 상황을 검증할 때 사용한다.
-     *
-     * 1. Team / Player / TeamPlayer 정상 저장
-     * 2. 외부 API 호출 시 Transaction 비활성
-     * 3. 동일 데이터 반복 Sync / 멱등성
-     * 4. 기존 Team / Player 재사용
      */
     private JsonNode teamPlayersResponse() {
 
@@ -780,20 +831,10 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [Fixture - 선수 목록이 비어있는 팀]
+     * [Fixture - 빈 선수 목록]
      *
-     * 사용 대상:
-     *
-     * FootballSyncService.syncTeamPlayers()
-     *
-     *
-     * 나타내는 상황:
-     *
-     * Arsenal Team 정보는 정상적으로 존재하지만
-     * API 응답의 players 배열이 비어있는 상황.
-     *
-     * Team만 저장되고 Player / TeamPlayer는
-     * 생성되지 않는 경계 상황을 검증하기 위해 사용한다.
+     * Team 정보는 있지만
+     * players 배열은 비어있다.
      */
     private JsonNode teamPlayersEmptyResponse() {
 
@@ -816,31 +857,12 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [Fixture - 두 번째 선수 데이터가 잘못된 응답]
+     * [Fixture - 두 번째 선수 데이터 오류]
      *
-     * 사용 대상:
+     * 첫 번째 선수는 정상.
      *
-     * syncTeamPlayers_secondPlayerFail_partialCommit()
-     *
-     *
-     * 나타내는 상황:
-     *
-     * 첫 번째 선수 Bukayo Saka는 정상 데이터라서
-     * Player와 TeamPlayer 저장까지 완료된다.
-     *
-     * 하지만 두 번째 Player에는 name 필드가 없다.
-     *
-     * 현재 getOrCreatePlayer()는
-     *
-     * playerData.get("name").asString()
-     *
-     * 을 사용하므로 두 번째 Player 처리 과정에서
-     * 예외가 발생한다.
-     *
-     *
-     * 이를 이용해서 한 선수 처리 실패 시
-     * 앞에서 Commit된 데이터가 어떻게 되는지
-     * 현재 Transaction 범위를 확인한다.
+     * 두 번째 선수에는 name 필드가 없어서
+     * getOrCreatePlayer() 처리 중 예외가 발생한다.
      */
     private JsonNode teamPlayersSecondPlayerInvalidResponse() {
 
@@ -871,10 +893,7 @@ class FootballSyncTeamPlayersServiceTest {
 
 
     /*
-     * [Fixture Helper - JSON 변환]
-     *
-     * 문자열로 작성한 Fixture를
-     * JsonNode로 변환한다.
+     * [Fixture Helper]
      */
     private JsonNode readJson(
             String json
