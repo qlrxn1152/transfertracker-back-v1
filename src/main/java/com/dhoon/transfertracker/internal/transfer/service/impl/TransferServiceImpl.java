@@ -35,8 +35,6 @@ public class TransferServiceImpl implements TransferService {
     private final PlayerService playerService;
     private final TeamService teamService;
 
-    private final PlayerRepository playerRepository;
-
 
 
 

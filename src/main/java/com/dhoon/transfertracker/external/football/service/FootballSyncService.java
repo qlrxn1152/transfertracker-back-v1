@@ -85,6 +85,16 @@ public class FootballSyncService {
 
 
 
+
+
+
+
+
+
+
+
+    // 수정대상
+
     /**
      * 외부 API 를 호출해서, 해당 팀의 선수들을 DB 에 저장하는 작업. ( 2020 년 이상의 이적정보만 저장합니다.)
      * @param teamApiId -> 외부 API ID

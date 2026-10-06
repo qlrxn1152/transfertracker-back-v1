@@ -128,6 +128,13 @@ public class FootballSyncTxService {
         return playerTransfers;
     }
 
+
+
+
+
+
+
+
     // 실행하지 않기를 권장합니다. ( 2024 년 기준 데이터이므로, 새로만든 리그가 아니라, 기존에 있던 리그면 팀 데이터가 왜곡됨.)
     public void getOrCreateTeamAndAssignLeague(JsonNode teamData, LeagueCode leagueCode) {
         getOrCreateTeam(teamData).assignTeamLeague(leagueCode);

@@ -33,12 +33,12 @@ import static org.mockito.Mockito.times;
 @ActiveProfiles("test")
 
 /*
- * [신규 - 중요]
+ * [기존 유지 - 중요]
  *
  * @DataJpaTest는 기본적으로 각각의 테스트 메서드를
  * Transaction으로 감싼다.
  *
- * 하지만 현재 Football Sync 구조에서는
+ * 하지만 실제 Football Sync 구조에서는
  *
  * FootballSyncService
  *      → 외부 API 호출
@@ -103,19 +103,48 @@ class FootballSyncPlayerServiceTest {
 
 
     /*
-     * [신규]
-     *
-     * syncPlayer()의 가장 기본적인 정상 동작.
+     * [기존 유지]
      *
      * 나타내는 상황:
      *
-     * DB에는 아직 Bukayo Saka가 존재하지 않고,
-     * API-Football에서는 정상적으로 선수 정보를 반환한다.
+     * DB에는 아직 Bukayo Saka가 존재하지 않는다.
+     *
+     * API-Football에서
+     *
+     * id   = 10
+     * name = Bukayo Saka
+     *
+     * 를 반환한다.
+     *
+     *
+     * 현재 리팩토링 이후 흐름:
+     *
+     * FootballSyncService.syncPlayer()
+     *
+     *      ↓
+     *
+     * 외부 API 호출
+     *
+     *      ↓
+     *
+     * FootballSyncTxService.getOrCreatePlayerResponse()
+     *
+     *      ↓
+     *
+     * Player 조회 / 생성
+     *
+     *      ↓
+     *
+     * Transaction 안에서 PlayerSaveResponseDto 생성
+     *
      *
      * 기대 결과:
      *
-     * 새로운 Player가 DB에 저장되고
-     * API 응답 DTO에도 동일한 선수 정보가 반환되어야 한다.
+     * Player 1건 저장
+     *
+     * +
+     *
+     * 정상적인 PlayerSaveResponseDto 반환
      */
     @Test
     @DisplayName(
@@ -154,6 +183,13 @@ class FootballSyncPlayerServiceTest {
 
 
         // then
+
+        /*
+         * [리팩토링 확인]
+         *
+         * Player Entity가 FootballSyncService까지 반환되는 것이 아니라
+         * FootballSyncTxService 내부에서 DTO로 변환된 결과가 반환된다.
+         */
         assertThat(response.getPlayerName())
                 .isEqualTo(
                         "Bukayo Saka"
@@ -166,6 +202,9 @@ class FootballSyncPlayerServiceTest {
                 );
 
 
+        /*
+         * 실제 DB에도 Player가 한 건 저장되어야 한다.
+         */
         assertThat(playerRepository.count())
                 .isEqualTo(1);
 
@@ -192,22 +231,28 @@ class FootballSyncPlayerServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 유지 - 중요]
      *
-     * 이번 Football Sync 리팩토링의 핵심 검증.
+     * 이번 리팩토링에서도 반드시 유지되어야 하는 Transaction 경계.
+     *
      *
      * 나타내는 상황:
      *
-     * FootballSyncService가 API-Football에
-     * 선수 정보를 요청하는 순간.
+     * FootballSyncService가
+     * API-Football에 선수 정보를 요청한다.
+     *
      *
      * 기대 결과:
      *
-     * 외부 HTTP 요청이 진행되는 동안에는
+     * 외부 HTTP 요청을 수행하고 있는 동안에는
      * DB Transaction이 활성화되어 있지 않아야 한다.
      *
-     * DB Transaction은 외부 응답을 받은 뒤
-     * FootballSyncTxService에 진입하면서 시작되어야 한다.
+     *
+     * Transaction은 API 응답을 모두 받은 뒤
+     *
+     * FootballSyncTxService
+     *
+     * 에 진입하면서 시작되어야 한다.
      */
     @Test
     @DisplayName(
@@ -235,10 +280,12 @@ class FootballSyncPlayerServiceTest {
                 .willAnswer(invocation -> {
 
                     /*
-                     * 이 값이 true라면
+                     * 여기에서 true가 나오면
                      *
                      * API-Football 응답을 기다리는 동안에도
-                     * DB Transaction이 열려 있다는 뜻이다.
+                     * DB Transaction을 잡고 있다는 의미다.
+                     *
+                     * 현재 설계에서는 false가 정상.
                      */
                     assertThat(
                             TransactionSynchronizationManager
@@ -272,22 +319,27 @@ class FootballSyncPlayerServiceTest {
 
 
     /*
-     * [신규 - 중요]
+     * [기존 유지 - 중요]
      *
-     * 동일한 선수에 대한 Sync 요청은
-     * 여러 번 발생할 수 있다.
+     * 동일한 Player Sync는 여러 번 발생할 수 있다.
+     *
+     * 특히 향후 Scheduler를 사용하면
+     * 동일 선수를 다시 조회할 가능성이 높다.
+     *
      *
      * 나타내는 상황:
      *
-     * 동일한 API-Football 선수 ID를 가지고
+     * 같은 API-Football player ID로
      * syncPlayer()를 두 번 실행한다.
+     *
      *
      * 기대 결과:
      *
-     * 외부 API는 두 번 호출되지만
-     * DB의 Player는 한 명만 존재해야 한다.
+     * API 호출은 2번
      *
-     * 즉 syncPlayer()가 멱등성을 가지는지 검증한다.
+     * 하지만
+     *
+     * Player는 DB에 1건만 존재해야 한다.
      */
     @Test
     @DisplayName(
@@ -356,11 +408,14 @@ class FootballSyncPlayerServiceTest {
 
 
         /*
-         * Sync 요청 자체는 두 번 발생했으므로
-         * 외부 API도 두 번 호출되는 것이 정상이다.
+         * API 호출 자체는 두 번 발생한다.
          *
-         * 중복을 방지하는 책임은
-         * HTTP Client가 아니라 DB 저장 로직에 있다.
+         * 중복 저장을 막는 책임은
+         * 외부 API Client가 아니라
+         *
+         * getOrCreatePlayer()
+         *
+         * 에 있다.
          */
         then(footballRestClient)
                 .should(times(2))
@@ -371,18 +426,32 @@ class FootballSyncPlayerServiceTest {
 
 
     /*
-     * [신규]
+     * [기존 유지]
      *
-     * DB에 이미 같은 API-Football ID를 가진
-     * Player가 존재하는 상황.
+     * 나타내는 상황:
+     *
+     * DB에 이미
+     *
+     * apiFootballId = 10
+     *
+     * 인 Bukayo Saka가 존재한다.
+     *
+     *
+     * API-Football에서 같은 선수를 다시 반환한다.
+     *
      *
      * 기대 결과:
      *
-     * 새로운 Player Entity를 생성하지 않고
-     * 기존 Player를 그대로 재사용해야 한다.
+     * 새로운 Player를 생성하지 않고
+     * 기존 Player를 재사용해야 한다.
      *
-     * 단순 count뿐 아니라 PK까지 비교하여
-     * 기존 Entity를 실제로 재사용했는지 검증한다.
+     *
+     * 단순히 count == 1만 보는 것이 아니라
+     * 기존 PK까지 비교해서
+     *
+     * "진짜 기존 Entity를 사용했는가?"
+     *
+     * 를 검증한다.
      */
     @Test
     @DisplayName(
@@ -440,8 +509,8 @@ class FootballSyncPlayerServiceTest {
 
 
         /*
-         * 새로운 Player가 만들어진 것이 아니라
-         * 기존 Player가 재사용되었는지 PK로 확인한다.
+         * 새로운 Player가 INSERT된 것이 아니라
+         * 기존 Player가 재사용되었는지 PK까지 비교한다.
          */
         assertThat(foundPlayer.getId())
                 .isEqualTo(
@@ -455,6 +524,10 @@ class FootballSyncPlayerServiceTest {
                 );
 
 
+        /*
+         * 기존 Player를 사용했더라도
+         * 응답 DTO는 정상적으로 생성되어야 한다.
+         */
         assertThat(response.getPlayerName())
                 .isEqualTo(
                         "Bukayo Saka"
@@ -474,19 +547,24 @@ class FootballSyncPlayerServiceTest {
 
 
     /*
-     * [신규]
-     *
-     * API-Football 호출 자체가 실패한 상황.
+     * [기존 유지]
      *
      * 나타내는 상황:
      *
-     * FootballSyncService에서 외부 API를 호출했지만
-     * RuntimeException이 발생하여 응답을 받지 못했다.
+     * API-Football 호출 자체가 실패한다.
+     *
+     *
+     * 아직
+     *
+     * FootballSyncTxService
+     *
+     * 에 진입하기 전이므로
+     * DB Transaction 자체가 시작되지 않는다.
+     *
      *
      * 기대 결과:
      *
-     * 아직 FootballSyncTxService에 진입하기 전이므로
-     * Player 데이터는 DB에 아무것도 저장되지 않아야 한다.
+     * Player 데이터는 아무것도 저장되지 않아야 한다.
      */
     @Test
     @DisplayName(
@@ -551,46 +629,28 @@ class FootballSyncPlayerServiceTest {
      * FootballSyncService.syncPlayer()
      *
      *
-     * 나타내는 상황:
-     *
-     * API-Football의
-     *
-     * GET /players/profiles?player={playerApiId}
-     *
-     * 요청이 성공하여 특정 선수 정보를 반환한 상황을 표현한다.
-     *
-     *
-     * 실제 API-Football 원본 응답은 대략
-     *
-     * response
-     *   └ player
-     *
-     * 구조를 가지고 있다.
-     *
-     * 하지만 현재
-     *
-     * ApiFootballHttpClient.callExternalPlayerApi()
-     *
-     * 내부에서 이미
+     * 현재 ApiFootballHttpClient는
+     * API-Football 전체 응답을 그대로 반환하는 것이 아니라
      *
      * response[0].player
      *
-     * 부분만 추출해서 FootballSyncService로 반환한다.
+     * 부분을 추출해서 Service에 반환한다.
      *
      *
-     * 따라서 이 Fixture는
-     * API-Football 전체 JSON 응답이 아니라,
+     * 따라서 이 Fixture는 전체 API 응답이 아니라
      *
      * FootballSyncService가 실제로 전달받는
-     * Player JsonNode 자체를 표현한다.
+     * Player JsonNode
+     *
+     * 를 표현한다.
      *
      *
-     * 사용되는 테스트 상황:
+     * 사용 테스트:
      *
      * 1. 새로운 Player 정상 저장
-     * 2. HTTP 호출 시 Transaction 비활성 검증
-     * 3. 동일 Player 반복 Sync / 멱등성 검증
-     * 4. 기존 Player 재사용 검증
+     * 2. 외부 API 호출 중 Transaction 비활성
+     * 3. 동일 Player 반복 Sync / 멱등성
+     * 4. 기존 Player 재사용
      */
     private JsonNode playerResponse(
             Long playerApiId,
@@ -615,12 +675,8 @@ class FootballSyncPlayerServiceTest {
     /*
      * [Fixture Helper - JSON 변환]
      *
-     * 문자열로 작성한 테스트 JSON을
-     * JsonNode로 변환하기 위한 공통 Helper.
-     *
-     * Fixture JSON 자체에 문제가 있다면
-     * 테스트 실패 원인을 명확하게 확인할 수 있도록
-     * IllegalStateException으로 변환한다.
+     * 문자열로 만든 테스트 Fixture를
+     * JsonNode로 변환한다.
      */
     private JsonNode readJson(
             String json
