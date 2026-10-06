@@ -15,6 +15,6 @@ public class PlayerSaveResponseDto {
     private Long playerAPIId;
 
     public static PlayerSaveResponseDto of(Player player) {
-        return new PlayerSaveResponseDto(player.getPlayerName(), player.getApiFootballId());
+        return new PlayerSaveResponseDto(player.getDisplayName(), player.getApiFootballId());
     }
 }

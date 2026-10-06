@@ -107,7 +107,7 @@ public class FootballSyncTxService {
         String transferType = transferData.get("type").asString();
         LocalDate transferDate = LocalDate.parse(transferData.get("date").asString());
 
-        Player player = getOrCreatePlayer(playerData);
+        Player player = getOrCreatePlayer(playerData); // 어차피 플레이어가 같은데 ..
         Team inTeam = getOrCreateTeam(teamData.get("in"));
         Team outTeam = getOrCreateTeam(teamData.get("out"));
 

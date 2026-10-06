@@ -15,6 +15,6 @@ public class TeamSaveResponseDto {
     private Long teamAPIId;
 
     public static TeamSaveResponseDto of(Team team) {
-        return new TeamSaveResponseDto(team.getTeamName(), team.getApiFootballId());
+        return new TeamSaveResponseDto(team.getDisplayName(), team.getApiFootballId());
     }
 }

@@ -21,7 +21,7 @@ public class TeamPlayerSaveResponseDto {
                 teamPlayer.getPlayer().getId(),
                 teamPlayer.getPlayer().getDisplayName(),
                 teamPlayer.getTeam().getId(),
-                teamPlayer.getTeam().getTeamName()
+                teamPlayer.getTeam().getDisplayName()
         );
     }
 }
