@@ -9,6 +9,7 @@ import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
@@ -138,9 +139,10 @@ public class FootballSyncTxService {
         return TeamItemResponseDto.of(team);
     }
 
+    @Transactional(readOnly = true)
     public String getDisplayTeamName(Long teamApiId) {
         Team team = teamRepository.findByApiFootballId(teamApiId)
-                .orElseThrow();
+                .orElseThrow(NotFoundTeamException::new);
 
         return team.getDisplayName();
     }

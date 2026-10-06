@@ -28,7 +28,6 @@ public class FootballSyncService {
     private final FootballSyncTxService footballSyncTxService;
 
 
-
     /**
      * 외부 API 를 호출해서, 해당 선수 데이터를 DB 에 저장하는 작업.
      * @param playerApiId -> 외부 API ID
@@ -103,25 +102,15 @@ public class FootballSyncService {
         return LeagueTeamsResponseDto.of(leagueCode, teams);
     }
 
-
-
-
-
-
-
-
-
-
-
-    // 수정대상
     /**
      * 외부 API 를 호출해서, 해당 팀의 선수들을 DB 에 저장하는 작업. ( 2020 년 이상의 이적정보만 저장합니다.)
      * @param teamApiId -> 외부 API ID
      */
     public TeamTransfersSaveResponseDto saveTeamTransfers(Long teamApiId) {
+        String teamName = footballSyncTxService.getDisplayTeamName(teamApiId);
+
         JsonNode node = footballRestClient.callExternalTeamTransfersApi(teamApiId);
 
-        String teamName = footballSyncTxService.getDisplayTeamName(teamApiId);
         JsonNode responses = node.get("response");
 
         List<PlayerTransfersResponseDto> playerTransfers = new ArrayList<>();
