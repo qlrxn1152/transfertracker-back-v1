@@ -20,6 +20,7 @@ public class TeamPlayerTxService implements TeamPlayerService {
     private final TeamPlayerRepository teamPlayerRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public TeamPlayersResponseDto getTeamPlayers(Long teamId) {
 
         List<TeamPlayerItemResponseDto> teamPlayers = teamPlayerRepository.findAllByTeamIdWithLazyEntity(teamId)
