@@ -32,7 +32,6 @@ public class TeamTxService implements TeamService {
     private final TeamPlayerRepository teamPlayerRepository;
     private final TransferPostRepository transferPostRepository;
 
-
     @Override
     @Transactional(readOnly = true)
     public TeamItemResponseDto getTeam(Long teamId) {
@@ -40,7 +39,6 @@ public class TeamTxService implements TeamService {
 
         return TeamItemResponseDto.of(team);
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -64,10 +62,6 @@ public class TeamTxService implements TeamService {
         return TeamsResponseDto.of(teams);
     }
 
-
-
-
-    // 3개의 작업이 하나의 트랜잭션내에 같이 묶이는게 맞을까?
     @Override
     @Transactional(readOnly = true)
     public TeamPageInfosResponseDto getTeamInfo(Long teamId) {

@@ -43,13 +43,13 @@ public class TeamOrchestrationService {
 
 
 
-    public void validateTeamId(Long teamId) {
+    private void validateTeamId(Long teamId) {
         if (teamId == null) {
             throw new InvalidTeamIdException();
         }
     }
 
-    public void validateLeagueCode(LeagueCode leagueCode) {
+    private void validateLeagueCode(LeagueCode leagueCode) {
         if (leagueCode == null) {
             throw new InvalidLeagueCodeValueException();
         }
