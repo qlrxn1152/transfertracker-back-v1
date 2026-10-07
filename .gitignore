@@ -45,3 +45,6 @@ transfer_v1_data_complete.sql
 
 # env
 .env
+
+# k6 performance test results
+load-test/results/
