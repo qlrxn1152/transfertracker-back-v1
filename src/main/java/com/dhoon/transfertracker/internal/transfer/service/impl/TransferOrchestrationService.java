@@ -33,8 +33,6 @@ public class TransferOrchestrationService {
 
     public AllTransfersResponseDto getTransfers(int page, String keyWord, LeagueCode leagueCode, Long teamId) {
         validatePageValue(page);
-        validateTeamId(teamId);
-        validateLeagueCode(leagueCode);
         String normalizedKeyWord = getNormalizedKeyWord(keyWord);
 
         PageRequest pageable = PageRequest.of(
@@ -65,11 +63,6 @@ public class TransferOrchestrationService {
 
 
 
-
-
-
-
-
     private void validatePlayerId(Long playerId) {
         if (playerId == null) {
             throw new InvalidPlayerIdException();
@@ -88,11 +81,6 @@ public class TransferOrchestrationService {
         }
     }
 
-    private void validateLeagueCode(LeagueCode leagueCode) {
-        if (leagueCode == null) {
-            throw new InvalidLeagueCodeValueException();
-        }
-    }
 
     private String getNormalizedKeyWord(String keyWord) {
         return keyWord == null ? "" : keyWord.trim();

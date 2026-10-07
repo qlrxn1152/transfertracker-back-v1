@@ -17,8 +17,8 @@ public class PlayerTransfersResponseDto {
     private String playerName;
     private List<PlayerTransferItemResponseDto> playerTransfers = new ArrayList<>();
 
-    public static PlayerTransfersResponseDto of(String playerName, List<PlayerTransferItemResponseDto> playerTransfers) {
-        return new PlayerTransfersResponseDto(playerName, playerTransfers);
+    public static PlayerTransfersResponseDto of(Player player, List<PlayerTransferItemResponseDto> playerTransfers) {
+        return new PlayerTransfersResponseDto(player.getDisplayName(), playerTransfers);
     }
 
 }

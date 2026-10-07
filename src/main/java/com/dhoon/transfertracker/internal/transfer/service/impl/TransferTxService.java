@@ -47,10 +47,11 @@ public class TransferTxService implements TransferService {
                 .map(PlayerTransferItemResponseDto::of)
                 .toList();
 
-        return PlayerTransfersResponseDto.of(player.getPlayerName(), playerTransfers);
+        return PlayerTransfersResponseDto.of(player, playerTransfers);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
         teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
@@ -66,6 +67,7 @@ public class TransferTxService implements TransferService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AllTransfersResponseDto getTeamTransfers(Long teamId, Pageable pageable, String keyWord) {
         teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);

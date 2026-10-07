@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TransferController {
 
-    private final TransferOrchestrationService TransferOrchestrationService;
+    private final TransferOrchestrationService transferOrchestrationService;
 
     @GetMapping("/api/player/transfer/{playerId}")
     public ResponseEntity<PlayerTransfersResponseDto> getPlayerTransfers(@PathVariable Long playerId) {
-        PlayerTransfersResponseDto response = TransferOrchestrationService.getPlayerTransfers(playerId);
+        PlayerTransfersResponseDto response = transferOrchestrationService.getPlayerTransfers(playerId);
 
         return ResponseEntity.ok(response);
     }
@@ -32,14 +32,14 @@ public class TransferController {
     public ResponseEntity<AllTransfersResponseDto> getTransfers(
             @Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord, @RequestParam(required = false) LeagueCode leagueCode, @RequestParam(required = false) Long teamId
     ) {
-        AllTransfersResponseDto response = TransferOrchestrationService.getTransfers(page, keyWord, leagueCode, teamId);
+        AllTransfersResponseDto response = transferOrchestrationService.getTransfers(page, keyWord, leagueCode, teamId);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/transfers/team/{teamId}")
     public ResponseEntity<AllTransfersResponseDto> getTeamTransfers(@PathVariable Long teamId, @Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord) {
-        AllTransfersResponseDto response = TransferOrchestrationService.getTeamTransfers(teamId, page, keyWord);
+        AllTransfersResponseDto response = transferOrchestrationService.getTeamTransfers(teamId, page, keyWord);
 
         return ResponseEntity.ok(response);
     }
