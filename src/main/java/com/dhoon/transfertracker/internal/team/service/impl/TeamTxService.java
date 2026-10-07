@@ -67,11 +67,13 @@ public class TeamTxService implements TeamService {
 
 
 
+    // 3개의 작업이 하나의 트랜잭션내에 같이 묶이는게 맞을까?
     @Override
     @Transactional(readOnly = true)
     public TeamPageInfosResponseDto getTeamInfo(Long teamId) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow();
+                .orElseThrow(NotFoundTeamException::new);
+
         long teamPlayerCount = teamPlayerRepository.countByTeamId(teamId);
 
         List<TeamPlayerItemResponseDto> playersData = teamPlayerRepository.findAllByTeamIdWithLazyEntity(teamId)

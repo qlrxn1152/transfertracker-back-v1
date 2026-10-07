@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.transfer.exception;
+package com.dhoon.transfertracker.internal.team.exception;
 
 public class InvalidTeamIdException extends RuntimeException {
     public InvalidTeamIdException() {
