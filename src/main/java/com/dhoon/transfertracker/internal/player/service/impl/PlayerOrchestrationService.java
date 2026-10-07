@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.player.service.impl;
 import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.dto.response.PlayersResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPageValueException;
+import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PlayerOrchestrationService {
 
-    private final PlayerTxService playerTxService;
+    private final PlayerService playerTxService;
 
     public PlayerItemResponseDto getPlayer(Long playerId) {
         return playerTxService.getPlayerResponse(playerId);
