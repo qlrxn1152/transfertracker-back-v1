@@ -78,8 +78,6 @@ public class TeamServiceImpl implements TeamService {
                 .map(TransferPostItemResponseDto::of)
                 .toList();
 
-
-
         // 팀 관련 게시물 소식들 , 팀에 속한 선수들, 팀에 대한 정보..
 
         TeamPageInfoForTeamResponseDto teams = TeamPageInfoForTeamResponseDto.of(team, teamPlayerCount);// 팀에 대한 정보 ... ( teamId, name, 속해있는 선수 숫자, 엠블렘 ... )

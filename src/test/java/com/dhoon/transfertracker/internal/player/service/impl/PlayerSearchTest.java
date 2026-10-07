@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 @DataJpaTest
-@Import(PlayerServiceImpl.class)
+@Import(PlayerOrchestrationService.class)
 @ActiveProfiles("test")
 class PlayersSearchTest {
 

@@ -49,7 +49,7 @@ public class TransferServiceImpl implements TransferService {
         }
 
 
-        PlayerItemResponseDto player = playerService.getPlayer(playerId);
+        PlayerItemResponseDto player = playerService.getPlayerResponse(playerId);
 
 
         List<PlayerTransferItemResponseDto> playerTransfers = transferRepository.findAllByPlayerId(playerId)
