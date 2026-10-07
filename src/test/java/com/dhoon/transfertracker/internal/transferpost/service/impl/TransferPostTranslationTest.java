@@ -8,6 +8,8 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.domain.TranslateStatus;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
+import com.dhoon.transfertracker.internal.transferpost.service.translation.TransferPostTranslationServiceImpl;
+import com.dhoon.transfertracker.internal.transferpost.service.translation.TransferPostTranslationTxService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

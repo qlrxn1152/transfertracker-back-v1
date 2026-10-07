@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.transferpost.service.impl;
+package com.dhoon.transfertracker.internal.transferpost.service.translation;
 
 import com.dhoon.transfertracker.external.openai.client.OpenAiClient;
 import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;
@@ -28,7 +28,7 @@ public class TransferPostTranslationServiceImpl {
             return TranslationBatchResult.empty();
         }
 
-        TranslationBatchResult result = openAiClient.translate(targets);
+        TranslationBatchResult result = openAiClient.translate(targets); // 외부 API 호출.
 
         Set<Long> requestedIds = targets.stream()
                 .map(TranslationTarget::getPostId)
@@ -55,7 +55,8 @@ public class TransferPostTranslationServiceImpl {
             throw new IllegalStateException("번역 결과에 비어있는 translatedContent 가 존재합니다.");
         }
 
-        txService.applyTranslations(result);
+
+        txService.applyTranslations(result); // tx 필요.
 
         return result;
     }

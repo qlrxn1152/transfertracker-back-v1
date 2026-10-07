@@ -17,5 +17,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     Optional<Team> findByTeamName(String teamName);
 
+    List<Team> findAllByLeagueCodeIsNotNull();
+
 
 }

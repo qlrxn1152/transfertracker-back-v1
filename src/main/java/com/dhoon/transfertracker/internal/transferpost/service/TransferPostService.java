@@ -8,15 +8,12 @@ public interface TransferPostService {
 
     TransferPostsResponseDto getSourcerAllPosts(TransferPostSource sourcer);
 
-    String test();
+    String postAssignTeam();
 
     // 외부 API ID 가 아닌, 사용중인 DB 안에있는 team_id
     TransferPostsResponseDto getTeamTransferPosts(Long teamId);
 
     TransferPostsResponseDto getAllTransferPosts();
-
-    TranslationBatchResult translate();
-
 
 
 }
