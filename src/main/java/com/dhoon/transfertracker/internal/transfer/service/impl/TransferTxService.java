@@ -53,9 +53,6 @@ public class TransferTxService implements TransferService {
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
-        teamRepository.findById(teamId)
-                .orElseThrow(NotFoundTeamException::new);
-
         Slice<Transfer> transferSlice = transferRepository.findTransfers(keyWord, pageable, leagueCode, teamId);
 
         List<TransferResponseDto> transfers = transferSlice.getContent()
