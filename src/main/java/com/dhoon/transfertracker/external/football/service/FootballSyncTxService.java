@@ -98,7 +98,7 @@ public class FootballSyncTxService {
         Player player = getOrCreatePlayer(playerData);
         List<PlayerTransferItemResponseDto> transfers = getOrCreatePlayerTransfers(player, transferDatas);
 
-        return PlayerTransfersResponseDto.of(player.getDisplayName(), transfers);
+        return PlayerTransfersResponseDto.of(player, transfers);
     }
 
     private List<PlayerTransferItemResponseDto> getOrCreatePlayerTransfers(Player player, JsonNode transferDatas) {

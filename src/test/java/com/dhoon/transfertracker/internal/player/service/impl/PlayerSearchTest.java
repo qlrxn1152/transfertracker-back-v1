@@ -542,13 +542,10 @@ class PlayerSearchTest {
 
         assertThat(player.getTeamName())
                 .isEqualTo(
-                        "Arsenal"
-                );
-
-        assertThat(player.getTeamNameKo())
-                .isEqualTo(
                         "아스널"
                 );
+
+
 
         assertThat(player.getPhotoUrl())
                 .isEqualTo(

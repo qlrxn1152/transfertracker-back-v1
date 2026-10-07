@@ -151,12 +151,8 @@ class PlayerDetailTest {
                         "Bukayo Saka"
                 );
 
-        assertThat(response.getTeamName())
-                .isEqualTo(
-                        "Arsenal"
-                );
 
-        assertThat(response.getTeamNameKo())
+        assertThat(response.getTeamName())
                 .isEqualTo(
                         "아스널"
                 );
@@ -211,9 +207,6 @@ class PlayerDetailTest {
                 );
 
         assertThat(response.getTeamName())
-                .isNull();
-
-        assertThat(response.getTeamNameKo())
                 .isNull();
 
         assertThat(response.getPhotoUrl())

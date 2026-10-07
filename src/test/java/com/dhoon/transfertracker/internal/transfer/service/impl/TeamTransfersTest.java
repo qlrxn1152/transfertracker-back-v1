@@ -2,48 +2,95 @@ package com.dhoon.transfertracker.internal.transfer.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
-import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferResponseDto;
-import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
-import com.dhoon.transfertracker.internal.transfer.service.TransferService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
 
 
 @DataJpaTest
-@Import(TransferServiceImpl.class)
+@Import({
+        TransferOrchestrationService.class,
+        TransferTxService.class
+})
 @ActiveProfiles("test")
+
+/*
+ * 실제 요청 구조:
+ *
+ * Client
+ *      ↓
+ * Controller
+ *      ↓
+ * TransferOrchestrationService
+ *      → Transaction X
+ *      → page validation
+ *      → teamId validation
+ *      → keyword normalization
+ *      → Pageable 생성
+ *      ↓
+ * TransferTxService
+ *      → @Transactional(readOnly = true)
+ *      → Team 존재 확인
+ *      → Transfer 조회
+ *      → Lazy 연관 Entity 접근
+ *      → DTO 변환
+ *      ↓
+ * Transaction 종료
+ *      ↓
+ * DTO 반환
+ *
+ *
+ * 실제 Transaction 경계를 검증하기 위해
+ * Test Transaction은 사용하지 않는다.
+ */
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
 class TeamTransfersTest {
 
-    @Autowired TransferService transferService;
-    @Autowired TransferRepository transferRepository;
-    @Autowired PlayerRepository playerRepository;
-    @Autowired TeamRepository teamRepository;
+    @Autowired
+    TransferOrchestrationService transferOrchestrationService;
+
+    @Autowired
+    TransferRepository transferRepository;
+
+    @Autowired
+    PlayerRepository playerRepository;
+
+    @Autowired
+    TeamRepository teamRepository;
 
 
-    @MockitoBean PlayerService playerService;
-    @MockitoBean TeamService teamService;
+    /*
+     * Test Transaction이 없으므로
+     * FK 자식부터 직접 삭제한다.
+     */
+    @AfterEach
+    void clearDatabase() {
 
+        transferRepository.deleteAll();
+        playerRepository.deleteAll();
+        teamRepository.deleteAll();
+    }
 
 
     // ==================================================
@@ -55,27 +102,43 @@ class TeamTransfersTest {
     void getTeamTransfers_inTeam() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
+
+        // Chelsea -> Arsenal
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
                 "Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
                 );
+
 
         // then
         assertThat(response.getTransfers())
@@ -85,13 +148,19 @@ class TeamTransfersTest {
                 response.getTransfers().get(0);
 
         assertThat(transfer.getPlayerName())
-                .isEqualTo("Bukayo Saka");
+                .isEqualTo(
+                        "Bukayo Saka"
+                );
 
         assertThat(transfer.getInTeamName())
-                .isEqualTo("Arsenal");
+                .isEqualTo(
+                        "Arsenal"
+                );
 
         assertThat(transfer.getOutTeamName())
-                .isEqualTo("Chelsea");
+                .isEqualTo(
+                        "Chelsea"
+                );
     }
 
 
@@ -100,27 +169,43 @@ class TeamTransfersTest {
     void getTeamTransfers_outTeam() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team barcelona = saveTeam("Barcelona", 2L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team barcelona =
+                saveTeam(
+                        "Barcelona",
+                        2L
+                );
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
+
+        // Arsenal -> Barcelona
         saveTransfer(
                 saka,
-                arsenal,
                 barcelona,
+                arsenal,
                 "Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
                 );
+
 
         // then
         assertThat(response.getTransfers())
@@ -130,33 +215,68 @@ class TeamTransfersTest {
                 response.getTransfers().get(0);
 
         assertThat(transfer.getOutTeamName())
-                .isEqualTo("Arsenal");
+                .isEqualTo(
+                        "Arsenal"
+                );
 
         assertThat(transfer.getInTeamName())
-                .isEqualTo("Barcelona");
+                .isEqualTo(
+                        "Barcelona"
+                );
     }
 
 
+    /*
+     * Team 기준 조회는
+     *
+     * inTeam.id = teamId
+     * OR
+     * outTeam.id = teamId
+     *
+     * 를 모두 포함해야 한다.
+     */
     @Test
     @DisplayName("팀의 영입과 방출 이적을 모두 조회한다.")
     void getTeamTransfers_inAndOut() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
-        Team barcelona = saveTeam("Barcelona", 3L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
+
+        Team barcelona =
+                saveTeam(
+                        "Barcelona",
+                        3L
+                );
+
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
         Player son =
-                savePlayer("Son Heung-min", 20L);
+                savePlayer(
+                        "Son Heung-min",
+                        20L
+                );
+
 
         // Chelsea -> Arsenal
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
                 "Transfer",
                 LocalDate.of(2026, 7, 1)
         );
@@ -164,26 +284,30 @@ class TeamTransfersTest {
         // Arsenal -> Barcelona
         saveTransfer(
                 son,
-                arsenal,
                 barcelona,
+                arsenal,
                 "Transfer",
                 LocalDate.of(2026, 6, 1)
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
                 );
+
 
         // then
         assertThat(response.getTransfers())
                 .hasSize(2);
 
         assertThat(response.getTransfers())
-                .extracting(TransferResponseDto::getPlayerName)
+                .extracting(
+                        TransferResponseDto::getPlayerName
+                )
                 .containsExactly(
                         "Bukayo Saka",
                         "Son Heung-min"
@@ -196,94 +320,235 @@ class TeamTransfersTest {
     void getTeamTransfers_excludeOtherTeams() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
-        Team barcelona = saveTeam("Barcelona", 3L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
+
+        Team barcelona =
+                saveTeam(
+                        "Barcelona",
+                        3L
+                );
+
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
         Player son =
-                savePlayer("Son Heung-min", 20L);
+                savePlayer(
+                        "Son Heung-min",
+                        20L
+                );
+
 
         // Arsenal 관련
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
                 "Arsenal Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
-        // Arsenal과 관계없음
+        // Arsenal과 관계 없음
         saveTransfer(
                 son,
-                chelsea,
                 barcelona,
+                chelsea,
                 "Other Transfer",
                 LocalDate.of(2026, 8, 1)
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
                 );
+
 
         // then
         assertThat(response.getTransfers())
                 .hasSize(1);
 
         assertThat(response.getTransfers())
-                .extracting(TransferResponseDto::getType)
-                .containsExactly("Arsenal Transfer");
+                .extracting(
+                        TransferResponseDto::getType
+                )
+                .containsExactly(
+                        "Arsenal Transfer"
+                );
     }
 
 
+    /*
+     * Transfer.player / inTeam / outTeam 모두 LAZY.
+     *
+     * Test Transaction이 없기 때문에
+     * TxService Transaction 안에서 DTO 변환이 끝나야 한다.
+     */
     @Test
-    @DisplayName("팀 이적 정보에서 선수 이름의 일부로 검색할 수 있다.")
-    void getTeamTransfers_searchByPlayerName() {
+    @DisplayName("팀 이적 정보의 연관 Entity는 Transaction 내부에서 DTO로 변환된다.")
+    void getTeamTransfers_dtoMapping() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
-
-        Player son =
-                savePlayer("Son Heung-min", 20L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
+                "Permanent",
+                LocalDate.of(2026, 7, 1)
+        );
+
+
+        // when
+        AllTransfersResponseDto response =
+                transferOrchestrationService.getTeamTransfers(
+                        arsenal.getId(),
+                        0,
+                        ""
+                );
+
+
+        // then
+        TransferResponseDto transfer =
+                response.getTransfers().get(0);
+
+        assertThat(transfer.getPlayerId())
+                .isEqualTo(
+                        saka.getId()
+                );
+
+        assertThat(transfer.getPlayerName())
+                .isEqualTo(
+                        "Bukayo Saka"
+                );
+
+        assertThat(transfer.getPhotoUrl())
+                .isEqualTo(
+                        "https://media.api-sports.io/football/players/10.png"
+                );
+
+        assertThat(transfer.getInTeamName())
+                .isEqualTo(
+                        "Arsenal"
+                );
+
+        assertThat(transfer.getOutTeamName())
+                .isEqualTo(
+                        "Chelsea"
+                );
+
+        assertThat(transfer.getType())
+                .isEqualTo(
+                        "Permanent"
+                );
+    }
+
+
+    // ==================================================
+    // Keyword 검색
+    // ==================================================
+
+    @Test
+    @DisplayName("팀 이적 정보에서 선수 이름 일부로 검색할 수 있다.")
+    void getTeamTransfers_searchByPlayerName() {
+
+        // given
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
+
+
+        Player saka =
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
+
+        Player son =
+                savePlayer(
+                        "Son Heung-min",
+                        20L
+                );
+
+
+        saveTransfer(
+                saka,
+                arsenal,
+                chelsea,
                 "Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
         saveTransfer(
                 son,
-                arsenal,
                 chelsea,
+                arsenal,
                 "Transfer",
                 LocalDate.of(2026, 6, 1)
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         "Saka"
                 );
 
+
         // then
+
+        assertThat(response.getTransfers()).hasSize(1);
+
         assertThat(response.getTransfers())
-                .extracting(TransferResponseDto::getPlayerName)
-                .containsExactly("Bukayo Saka");
+                .extracting(
+                        TransferResponseDto::getPlayerName
+                )
+                .containsExactly(
+                        "Bukayo Saka"
+                );
     }
 
 
@@ -292,88 +557,191 @@ class TeamTransfersTest {
     void getTeamTransfers_ignoreCase() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
                 "Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         "sAkA"
                 );
 
+
         // then
         assertThat(response.getTransfers())
-                .extracting(TransferResponseDto::getPlayerName)
-                .containsExactly("Bukayo Saka");
+                .extracting(
+                        TransferResponseDto::getPlayerName
+                )
+                .containsExactly(
+                        "Bukayo Saka"
+                );
     }
 
 
     @Test
-    @DisplayName("팀 이적 정보는 이적 날짜의 내림차순으로 조회된다.")
-    void getTeamTransfers_sortByTransferDateDesc() {
+    @DisplayName("검색어 앞뒤 공백을 제거하고 팀 이적 정보를 검색한다.")
+    void getTeamTransfers_trimKeyword() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
-        Team barcelona = saveTeam("Barcelona", 3L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
-
-        Player son =
-                savePlayer("Son Heung-min", 20L);
-
-        Player bruno =
-                savePlayer("Bruno Fernandes", 30L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
+                "Transfer",
+                LocalDate.of(2026, 7, 1)
+        );
+
+
+        // when
+        AllTransfersResponseDto response =
+                transferOrchestrationService.getTeamTransfers(
+                        arsenal.getId(),
+                        0,
+                        "   Saka   "
+                );
+
+
+        // then
+        assertThat(response.getTransfers())
+                .extracting(
+                        TransferResponseDto::getPlayerName
+                )
+                .containsExactly(
+                        "Bukayo Saka"
+                );
+    }
+
+
+    // ==================================================
+    // 정렬
+    // ==================================================
+
+    @Test
+    @DisplayName("팀 이적 정보는 이적 날짜 내림차순으로 조회된다.")
+    void getTeamTransfers_sortByTransferDateDesc() {
+
+        // given
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
+
+        Team barcelona =
+                saveTeam(
+                        "Barcelona",
+                        3L
+                );
+
+
+        Player saka =
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
+
+        Player son =
+                savePlayer(
+                        "Son Heung-min",
+                        20L
+                );
+
+        Player bruno =
+                savePlayer(
+                        "Bruno Fernandes",
+                        30L
+                );
+
+
+        saveTransfer(
+                saka,
+                arsenal,
+                chelsea,
                 "Transfer",
                 LocalDate.of(2024, 7, 1)
         );
 
         saveTransfer(
                 son,
-                arsenal,
                 barcelona,
+                arsenal,
                 "Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
         saveTransfer(
                 bruno,
-                chelsea,
                 arsenal,
+                chelsea,
                 "Transfer",
                 LocalDate.of(2025, 7, 1)
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
                 );
 
+
         // then
         assertThat(response.getTransfers())
-                .extracting(TransferResponseDto::getPlayerName)
+                .extracting(
+                        TransferResponseDto::getPlayerName
+                )
                 .containsExactly(
                         "Son Heung-min",
                         "Bruno Fernandes",
@@ -383,51 +751,70 @@ class TeamTransfersTest {
 
 
     @Test
-    @DisplayName("이적 날짜가 같으면 나중에 저장된 팀 이적 정보가 먼저 조회된다.")
+    @DisplayName("이적 날짜가 같으면 ID 내림차순으로 조회된다.")
     void getTeamTransfers_sameDate_sortByIdDesc() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
+
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
         Player son =
-                savePlayer("Son Heung-min", 20L);
+                savePlayer(
+                        "Son Heung-min",
+                        20L
+                );
 
         LocalDate sameDate =
                 LocalDate.of(2026, 7, 1);
 
-        // 먼저 저장 → 작은 ID
+
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
                 "First Transfer",
                 sameDate
         );
 
-        // 나중 저장 → 큰 ID
         saveTransfer(
                 son,
-                arsenal,
                 chelsea,
+                arsenal,
                 "Second Transfer",
                 sameDate
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
                 );
 
+
         // then
         assertThat(response.getTransfers())
-                .extracting(TransferResponseDto::getType)
+                .extracting(
+                        TransferResponseDto::getType
+                )
                 .containsExactly(
                         "Second Transfer",
                         "First Transfer"
@@ -435,54 +822,65 @@ class TeamTransfersTest {
     }
 
 
+    // ==================================================
+    // Paging
+    // ==================================================
+
     @Test
     @DisplayName("팀 이적 검색 결과가 50개를 초과하면 다음 페이지가 존재한다.")
     void getTeamTransfers_paging() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
 
-        /*
-         * Transfer UNIQUE 제약:
-         *
-         * player_id + in_team_id + out_team_id + transfer_date
-         *
-         * 따라서 같은 Transfer를 51번 만들지 않고
-         * Player를 각각 다르게 만든다.
-         */
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
+
+
         IntStream.rangeClosed(1, 51)
                 .forEach(i -> {
 
                     Player player =
                             savePlayer(
-                                    String.format("Player%02d", i),
-                                    (long) (1000 + i)
+                                    String.format(
+                                            "Player%02d",
+                                            i
+                                    ),
+                                    1000L + i
                             );
 
                     saveTransfer(
                             player,
-                            chelsea,
                             arsenal,
+                            chelsea,
                             "Transfer",
                             LocalDate.of(2026, 7, 1)
                     );
                 });
 
+
         // when
         AllTransfersResponseDto firstPage =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         "Player"
                 );
 
         AllTransfersResponseDto secondPage =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         1,
                         "Player"
                 );
+
 
         // then
         assertThat(firstPage.getTransfers())
@@ -506,275 +904,54 @@ class TeamTransfersTest {
     }
 
 
-    // ==================================================
-    // 예외 상황
-    // ==================================================
-
-    @Test
-    @DisplayName("페이지 번호가 음수이면 팀 이적 정보를 조회할 수 없다.")
-    void getTeamTransfers_negativePage_fail() {
-
-        // given
-        Long teamId = 1L;
-        int page = -1;
-
-        // when & then
-        assertThatThrownBy(() ->
-                transferService.getTeamTransfers(
-                        teamId,
-                        page,
-                        ""
-                )
-        )
-                .isInstanceOf(
-                        InvalidTransferSearchPageValueException.class
-                )
-                .hasMessage(
-                        "페이지 번호는 0 이상이어야 합니다."
-                );
-    }
-
-    @Test
-    @DisplayName("teamId 가 null 인 경우 예외가 발샐한다.")
-    void getTeamTransfers_teamId_null_fail() {
-
-        // given
-        Long teamId = null;
-        int page = 1;
-
-        // when & then
-        assertThatThrownBy(() ->
-                transferService.getTeamTransfers(
-                        teamId,
-                        page,
-                        ""
-                )
-        )
-                .isInstanceOf(
-                        InvalidTeamIdException.class
-                )
-                .hasMessage(
-                        "잘못된 TeamId 값입니다."
-                );
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 팀의 이적정보를 조회 시 예외가 발생한다.")
-    void getTeamTransfers_not_found_team_fail() {
-
-        // given
-        Long teamId = 99999123L;
-        int page = 1;
-
-        given(teamService.getTeam(teamId))
-                .willThrow(
-                        new NotFoundTeamException()
-                );
-
-        // when & then
-        assertThatThrownBy(() ->
-                transferService.getTeamTransfers(
-                        teamId,
-                        page,
-                        ""
-                )
-        )
-                .isInstanceOf(
-                        NotFoundTeamException.class
-                )
-                .hasMessage(
-                        "존재하지 않는 팀 입니다."
-                );
-    }
-
-
-    // ==================================================
-    // 경계 상황
-    // ==================================================
-
-    @Test
-    @DisplayName("검색어 앞뒤의 공백을 제거하고 팀 이적 정보를 검색한다.")
-    void getTeamTransfers_trimKeyword() {
-
-        // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
-
-        Player saka =
-                savePlayer("Bukayo Saka", 10L);
-
-        saveTransfer(
-                saka,
-                chelsea,
-                arsenal,
-                "Transfer",
-                LocalDate.of(2026, 7, 1)
-        );
-
-        // when
-        AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
-                        arsenal.getId(),
-                        0,
-                        "   Saka   "
-                );
-
-        // then
-        assertThat(response.getTransfers())
-                .extracting(TransferResponseDto::getPlayerName)
-                .containsExactly("Bukayo Saka");
-    }
-
-
-    @Test
-    @DisplayName("검색 조건에 맞는 팀 이적 정보가 없으면 빈 리스트를 반환한다.")
-    void getTeamTransfers_notFound() {
-
-        // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
-
-        Player saka =
-                savePlayer("Bukayo Saka", 10L);
-
-        saveTransfer(
-                saka,
-                chelsea,
-                arsenal,
-                "Transfer",
-                LocalDate.of(2026, 7, 1)
-        );
-
-        // when
-        AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
-                        arsenal.getId(),
-                        0,
-                        "Messi"
-                );
-
-        // then
-        assertThat(response.getTransfers())
-                .isEmpty();
-
-        assertThat(response.isHasNext())
-                .isFalse();
-
-        assertThat(response.isHasPrevious())
-                .isFalse();
-    }
-
-
-    @Test
-    @DisplayName("검색어가 공백이면 해당 팀의 모든 이적 정보를 조회한다.")
-    void getTeamTransfers_blankKeyword_findAll() {
-
-        // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
-
-        Player saka =
-                savePlayer("Bukayo Saka", 10L);
-
-        Player son =
-                savePlayer("Son Heung-min", 20L);
-
-        saveTransfer(
-                saka,
-                chelsea,
-                arsenal,
-                "Transfer",
-                LocalDate.of(2026, 7, 1)
-        );
-
-        saveTransfer(
-                son,
-                arsenal,
-                chelsea,
-                "Transfer",
-                LocalDate.of(2026, 6, 1)
-        );
-
-        // when
-        AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
-                        arsenal.getId(),
-                        0,
-                        "   "
-                );
-
-        // then
-        assertThat(response.getTransfers())
-                .hasSize(2);
-    }
-
-
-    @Test
-    @DisplayName("검색어가 null이면 해당 팀의 모든 이적 정보를 조회한다.")
-    void getTeamTransfers_nullKeyword_findAll() {
-
-        // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
-
-        Player saka =
-                savePlayer("Bukayo Saka", 10L);
-
-        saveTransfer(
-                saka,
-                chelsea,
-                arsenal,
-                "Transfer",
-                LocalDate.of(2026, 7, 1)
-        );
-
-        // when
-        AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
-                        arsenal.getId(),
-                        0,
-                        null
-                );
-
-        // then
-        assertThat(response.getTransfers())
-                .hasSize(1);
-    }
-
-
     @Test
     @DisplayName("팀 이적 정보가 정확히 50개이면 다음 페이지가 존재하지 않는다.")
     void getTeamTransfers_exactPageSize() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
+
 
         IntStream.rangeClosed(1, 50)
                 .forEach(i -> {
 
                     Player player =
                             savePlayer(
-                                    String.format("Player%02d", i),
-                                    (long) (1000 + i)
+                                    String.format(
+                                            "Player%02d",
+                                            i
+                                    ),
+                                    1000L + i
                             );
 
                     saveTransfer(
                             player,
-                            chelsea,
                             arsenal,
+                            chelsea,
                             "Transfer",
                             LocalDate.of(2026, 7, 1)
                     );
                 });
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
                 );
+
 
         // then
         assertThat(response.getTransfers())
@@ -789,31 +966,45 @@ class TeamTransfersTest {
 
 
     @Test
-    @DisplayName("존재하지 않는 페이지를 조회하면 빈 리스트를 반환한다.")
+    @DisplayName("존재하지 않는 페이지는 빈 리스트를 반환한다.")
     void getTeamTransfers_pageOutOfRange() {
 
         // given
-        Team arsenal = saveTeam("Arsenal", 1L);
-        Team chelsea = saveTeam("Chelsea", 2L);
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
 
         Player saka =
-                savePlayer("Bukayo Saka", 10L);
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
 
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
                 "Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
+
         // when
         AllTransfersResponseDto response =
-                transferService.getTeamTransfers(
+                transferOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         100,
                         ""
                 );
+
 
         // then
         assertThat(response.getTransfers())
@@ -824,6 +1015,167 @@ class TeamTransfersTest {
 
         assertThat(response.isHasPrevious())
                 .isTrue();
+    }
+
+
+    // ==================================================
+    // 경계 상황
+    // ==================================================
+
+    @Test
+    @DisplayName("팀은 존재하지만 이적 기록이 없으면 빈 리스트를 반환한다.")
+    void getTeamTransfers_empty() {
+
+        // given
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+
+        // when
+        AllTransfersResponseDto response =
+                transferOrchestrationService.getTeamTransfers(
+                        arsenal.getId(),
+                        0,
+                        ""
+                );
+
+
+        // then
+        assertThat(response.getTransfers())
+                .isEmpty();
+
+        assertThat(response.isHasNext())
+                .isFalse();
+
+        assertThat(response.isHasPrevious())
+                .isFalse();
+    }
+
+
+    @Test
+    @DisplayName("검색어가 null이면 해당 팀의 전체 이적 정보를 조회한다.")
+    void getTeamTransfers_nullKeyword_findAll() {
+
+        // given
+        Team arsenal =
+                saveTeam(
+                        "Arsenal",
+                        1L
+                );
+
+        Team chelsea =
+                saveTeam(
+                        "Chelsea",
+                        2L
+                );
+
+        Player saka =
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
+
+        saveTransfer(
+                saka,
+                arsenal,
+                chelsea,
+                "Transfer",
+                LocalDate.of(2026, 7, 1)
+        );
+
+
+        // when
+        AllTransfersResponseDto response =
+                transferOrchestrationService.getTeamTransfers(
+                        arsenal.getId(),
+                        0,
+                        null
+                );
+
+
+        // then
+        assertThat(response.getTransfers())
+                .hasSize(1);
+    }
+
+
+    // ==================================================
+    // 실패 상황
+    // ==================================================
+
+    /*
+     * page는 DB 접근 필요 없음.
+     *
+     * Orchestration에서 차단된다.
+     */
+    @Test
+    @DisplayName("페이지 번호가 음수이면 예외가 발생한다.")
+    void getTeamTransfers_negativePage() {
+
+        // when & then
+        assertThatThrownBy(() ->
+                transferOrchestrationService.getTeamTransfers(
+                        1L,
+                        -1,
+                        ""
+                )
+        )
+                .isInstanceOf(
+                        InvalidTransferSearchPageValueException.class
+                );
+    }
+
+
+    /*
+     * null teamId 역시
+     * Orchestration에서 차단된다.
+     */
+    @Test
+    @DisplayName("teamId가 null이면 예외가 발생한다.")
+    void getTeamTransfers_nullTeamId() {
+
+        // when & then
+        assertThatThrownBy(() ->
+                transferOrchestrationService.getTeamTransfers(
+                        null,
+                        0,
+                        ""
+                )
+        )
+                .isInstanceOf(
+                        InvalidTeamIdException.class
+                );
+    }
+
+
+    /*
+     * teamId 자체는 유효한 형태지만
+     * DB에 Team이 없다.
+     *
+     * TxService에서 TeamRepository를 통해 판단한다.
+     */
+    @Test
+    @DisplayName("존재하지 않는 팀의 이적 정보를 조회하면 예외가 발생한다.")
+    void getTeamTransfers_teamNotFound() {
+
+        // given
+        Long teamId = 999999L;
+
+
+        // when & then
+        assertThatThrownBy(() ->
+                transferOrchestrationService.getTeamTransfers(
+                        teamId,
+                        0,
+                        ""
+                )
+        )
+                .isInstanceOf(
+                        NotFoundTeamException.class
+                );
     }
 
 
@@ -859,10 +1211,17 @@ class TeamTransfersTest {
     }
 
 
+    /*
+     * Transfer.of() 순서와 맞춘다.
+     *
+     * Player
+     * inTeam
+     * outTeam
+     */
     private Transfer saveTransfer(
             Player player,
-            Team outTeam,
             Team inTeam,
+            Team outTeam,
             String transferType,
             LocalDate transferDate
     ) {
