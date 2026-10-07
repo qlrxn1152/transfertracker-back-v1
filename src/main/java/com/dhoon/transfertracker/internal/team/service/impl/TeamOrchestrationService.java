@@ -43,6 +43,8 @@ public class TeamOrchestrationService {
 
 
 
+
+
     private void validateTeamId(Long teamId) {
         if (teamId == null) {
             throw new InvalidTeamIdException();

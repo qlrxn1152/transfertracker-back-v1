@@ -15,7 +15,7 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 @Service
-public class TeamPlayerServiceImpl implements TeamPlayerService {
+public class TeamPlayerTxService implements TeamPlayerService {
 
     private final TeamPlayerRepository teamPlayerRepository;
 
@@ -28,6 +28,7 @@ public class TeamPlayerServiceImpl implements TeamPlayerService {
                 .toList();
 
         return TeamPlayersResponseDto.of(teamPlayers);
+
     }
 
 
