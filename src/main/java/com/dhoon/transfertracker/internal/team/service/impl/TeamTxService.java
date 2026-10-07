@@ -22,44 +22,50 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Service
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 @Transactional
-public class TeamServiceImpl implements TeamService {
+@Service
+public class TeamTxService implements TeamService {
 
     private final TeamRepository teamRepository;
     private final TeamPlayerRepository teamPlayerRepository;
     private final TransferPostRepository transferPostRepository;
 
+
     @Override
     @Transactional(readOnly = true)
     public TeamItemResponseDto getTeam(Long teamId) {
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(NotFoundTeamException::new);
+        Team team = teamRepository.findById(teamId).orElseThrow(NotFoundTeamException::new);
 
         return TeamItemResponseDto.of(team);
     }
 
+
     @Override
     @Transactional(readOnly = true)
     public TeamsResponseDto getTeams() {
-        List<TeamItemResponseDto> teamItems = teamRepository.findAll().stream()
+        List<TeamItemResponseDto> teams = teamRepository.findAll()
+                .stream()
                 .map(TeamItemResponseDto::of)
                 .toList();
 
-        return TeamsResponseDto.of(teamItems);
+        return TeamsResponseDto.of(teams);
     }
 
     @Override
     @Transactional(readOnly = true)
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
-        List<TeamItemResponseDto> leagueTeams = teamRepository.findAllByLeagueCode(leagueCode).stream()
+        List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCode(leagueCode)
+                .stream()
                 .map(TeamItemResponseDto::of)
                 .toList();
 
-        return TeamsResponseDto.of(leagueTeams);
+        return TeamsResponseDto.of(teams);
     }
+
+
+
 
     @Override
     @Transactional(readOnly = true)
@@ -78,7 +84,6 @@ public class TeamServiceImpl implements TeamService {
                 .map(TransferPostItemResponseDto::of)
                 .toList();
 
-        // 팀 관련 게시물 소식들 , 팀에 속한 선수들, 팀에 대한 정보..
 
         TeamPageInfoForTeamResponseDto teams = TeamPageInfoForTeamResponseDto.of(team, teamPlayerCount);// 팀에 대한 정보 ... ( teamId, name, 속해있는 선수 숫자, 엠블렘 ... )
 
@@ -88,6 +93,4 @@ public class TeamServiceImpl implements TeamService {
 
         return TeamPageInfosResponseDto.of(teams, players, posts);
     }
-
-
 }
