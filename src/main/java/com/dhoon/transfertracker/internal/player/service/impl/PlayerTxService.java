@@ -40,8 +40,6 @@ public class PlayerTxService implements PlayerService {
                 });
     }
 
-
-
     @Override
     @Transactional(readOnly = true)
     public PlayersResponseDto getPlayers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {

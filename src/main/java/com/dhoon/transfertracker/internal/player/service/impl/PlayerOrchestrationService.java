@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.player.service.impl;
 
 import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.dto.response.PlayersResponseDto;
+import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPageValueException;
 import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
@@ -19,6 +20,10 @@ public class PlayerOrchestrationService {
     private final PlayerService playerTxService;
 
     public PlayerItemResponseDto getPlayer(Long playerId) {
+        if (playerId == null) {
+            throw new InvalidPlayerIdException();
+        }
+
         return playerTxService.getPlayerResponse(playerId);
     }
 

@@ -16,10 +16,13 @@ public class TransferResponseDto {
     private Long playerId;
     private String playerName;
     private String photoUrl;
+
     private String inTeamName;
     private String inTeamNameKo;
+
     private String outTeamName;
     private String outTeamNameKo;
+
     private LocalDate date;
     private String type;
 

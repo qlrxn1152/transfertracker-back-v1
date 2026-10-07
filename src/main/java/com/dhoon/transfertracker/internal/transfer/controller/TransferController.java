@@ -4,6 +4,7 @@ import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.service.TransferService;
+import com.dhoon.transfertracker.internal.transfer.service.impl.TransferOrchestrationService;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TransferController {
 
-    private final TransferService transferService;
+    private final TransferOrchestrationService TransferOrchestrationService;
 
     @GetMapping("/api/player/transfer/{playerId}")
     public ResponseEntity<PlayerTransfersResponseDto> getPlayerTransfers(@PathVariable Long playerId) {
-        PlayerTransfersResponseDto response = transferService.getPlayerTransfers(playerId);
+        PlayerTransfersResponseDto response = TransferOrchestrationService.getPlayerTransfers(playerId);
 
         return ResponseEntity.ok(response);
     }
@@ -31,14 +32,14 @@ public class TransferController {
     public ResponseEntity<AllTransfersResponseDto> getTransfers(
             @Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord, @RequestParam(required = false) LeagueCode leagueCode, @RequestParam(required = false) Long teamId
     ) {
-        AllTransfersResponseDto response = transferService.getTransfers(page, keyWord, leagueCode, teamId);
+        AllTransfersResponseDto response = TransferOrchestrationService.getTransfers(page, keyWord, leagueCode, teamId);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/transfers/team/{teamId}")
     public ResponseEntity<AllTransfersResponseDto> getTeamTransfers(@PathVariable Long teamId, @Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord) {
-        AllTransfersResponseDto response = transferService.getTeamTransfers(teamId, page, keyWord);
+        AllTransfersResponseDto response = TransferOrchestrationService.getTeamTransfers(teamId, page, keyWord);
 
         return ResponseEntity.ok(response);
     }

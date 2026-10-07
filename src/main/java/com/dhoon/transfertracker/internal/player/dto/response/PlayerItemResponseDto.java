@@ -17,15 +17,13 @@ public class PlayerItemResponseDto {
     private String playerName;
     private String photoUrl;
     private String teamName;
-    private String teamNameKo;
 
     public static PlayerItemResponseDto of(Player player, Team team) {
         return new PlayerItemResponseDto(
                 player.getId(),
                 player.getDisplayName(),
                 "https://media.api-sports.io/football/players/" + player.getApiFootballId() + ".png",
-                team.getTeamName(),
-                team.getTeamNameKo()
+                team.getDisplayName()
                 );
     }
 
@@ -34,8 +32,7 @@ public class PlayerItemResponseDto {
                 teamPlayer.getPlayer().getId(),
                 teamPlayer.getPlayer().getDisplayName(),
                 "https://media.api-sports.io/football/players/" + teamPlayer.getPlayer().getApiFootballId() + ".png",
-                teamPlayer.getTeam().getTeamName(),
-                teamPlayer.getTeam().getTeamNameKo()
+                teamPlayer.getTeam().getDisplayName()
         );
     }
 
@@ -44,7 +41,6 @@ public class PlayerItemResponseDto {
                 player.getId(),
                 player.getDisplayName(),
                 "https://media.api-sports.io/football/players/" + player.getApiFootballId() + ".png",
-                null,
                 null
         );
     }

@@ -25,7 +25,6 @@ public class TeamPlayerTxService implements TeamPlayerService {
     @Override
     @Transactional(readOnly = true)
     public TeamPlayersResponseDto getTeamPlayers(Long teamId) {
-
         teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
 
@@ -35,7 +34,6 @@ public class TeamPlayerTxService implements TeamPlayerService {
                 .toList();
 
         return TeamPlayersResponseDto.of(teamPlayers);
-
     }
 
 
