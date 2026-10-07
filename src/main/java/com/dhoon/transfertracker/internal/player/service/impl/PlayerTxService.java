@@ -30,10 +30,14 @@ public class PlayerTxService implements PlayerService {
     @Override
     @Transactional(readOnly = true)
     public PlayerItemResponseDto getPlayerResponse(Long playerId) {
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(NotFoundPlayerException::new);
+        return teamPlayerRepository.findByPlayerId(playerId)
+                .map(PlayerItemResponseDto::of)
+                .orElseGet(() -> {
+                    Player player = playerRepository.findById(playerId)
+                            .orElseThrow(NotFoundPlayerException::new);
 
-        return PlayerItemResponseDto.of(player);
+                    return PlayerItemResponseDto.of(player);
+                });
     }
 
 
