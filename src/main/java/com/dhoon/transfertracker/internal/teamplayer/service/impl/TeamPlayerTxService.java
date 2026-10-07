@@ -1,5 +1,7 @@
 package com.dhoon.transfertracker.internal.teamplayer.service.impl;
 
+import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
+import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayersResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
@@ -18,10 +20,14 @@ import java.util.List;
 public class TeamPlayerTxService implements TeamPlayerService {
 
     private final TeamPlayerRepository teamPlayerRepository;
+    private final TeamRepository teamRepository;
 
     @Override
     @Transactional(readOnly = true)
     public TeamPlayersResponseDto getTeamPlayers(Long teamId) {
+
+        teamRepository.findById(teamId)
+                .orElseThrow(NotFoundTeamException::new);
 
         List<TeamPlayerItemResponseDto> teamPlayers = teamPlayerRepository.findAllByTeamIdWithLazyEntity(teamId)
                 .stream()
