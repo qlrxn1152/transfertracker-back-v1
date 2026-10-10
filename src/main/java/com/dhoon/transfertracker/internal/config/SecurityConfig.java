@@ -71,6 +71,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/api/member/favorite-teams")
                         .authenticated()
 
+                        .requestMatchers(HttpMethod.DELETE, "/api/member/favorite-teams/*")
+                        .authenticated()
+
 
                         // 일반 조회 API
                         .requestMatchers(

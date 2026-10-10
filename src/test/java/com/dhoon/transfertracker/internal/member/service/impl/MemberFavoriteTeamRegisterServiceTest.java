@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Import(MemberFavoriteTeamService.class)
 @ActiveProfiles("test")
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class MemberFavoriteTeamServiceTest {
+class MemberFavoriteTeamRegisterServiceTest {
 
     @Autowired
     MemberFavoriteTeamService memberFavoriteTeamService;
@@ -48,10 +48,7 @@ class MemberFavoriteTeamServiceTest {
 
     @AfterEach
     void clearDatabase() {
-
-        // FK 자식부터 삭제
         memberFavoriteTeamRepository.deleteAll();
-
         teamRepository.deleteAll();
         memberRepository.deleteAll();
     }
@@ -257,11 +254,6 @@ class MemberFavoriteTeamServiceTest {
                         NotFoundTeamException.class
                 );
 
-        /*
-         * Arsenal은 정상 Team이지만
-         * 요청 중 하나라도 존재하지 않으면
-         * 아무 팀도 등록하면 안 된다.
-         */
         assertThat(memberFavoriteTeamRepository.count())
                 .isZero();
     }
@@ -289,15 +281,12 @@ class MemberFavoriteTeamServiceTest {
                         49L
                 );
 
-
-        // Arsenal은 이미 관심 팀
         memberFavoriteTeamRepository.save(
                 MemberFavoriteTeam.of(
                         member,
                         arsenal
                 )
         );
-
 
         MemberFavoriteTeamRegisterRequestDto request =
                 new MemberFavoriteTeamRegisterRequestDto(
@@ -320,12 +309,6 @@ class MemberFavoriteTeamServiceTest {
                 );
 
 
-        /*
-         * 기존 Arsenal만 남아 있어야 한다.
-         *
-         * Chelsea가 새로 등록되면
-         * "전체 실패"라는 비즈니스 규칙이 깨진 것이다.
-         */
         List<MemberFavoriteTeam> favoriteTeams =
                 memberFavoriteTeamRepository.findAll();
 
