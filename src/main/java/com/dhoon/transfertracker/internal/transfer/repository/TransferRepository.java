@@ -42,6 +42,12 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             """)
     Slice<Transfer> findByPlayerNameContainingIgnoreCaseWithLazyEntities(String keyWord, Pageable pageable);
 
+    Optional<Transfer> findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(Long inTeamId, Long outTeamId, Long playerId, LocalDate transferDate);
+
+
+
+
+
     @Query("""
             select t from Transfer t 
                         join fetch t.player p
@@ -57,7 +63,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
                         join fetch t.player p
                         join fetch t.inTeam
                         join fetch t.outTeam
-            where ( (t.inTeam.id = :teamId) or (t.outTeam.id = :teamId) ) and (lower(p.playerName) like lower(concat('%', :keyWord, '%')))                        
+            where ( (t.inTeam.id = :teamId) or (t.outTeam.id = :teamId) ) and (lower(p.playerName) like lower(concat('%', :keyWord, '%')))                         
             """)
     Slice<Transfer> findAllByTeamIdWithLazyAndKeyWord(Long teamId, String keyWord, Pageable pageable);
 
@@ -84,6 +90,4 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
                    )                   
             """)
     Slice<Transfer> findTransfers(String keyWord, Pageable pageable, LeagueCode leagueCode, Long teamId);
-
-    Optional<Transfer> findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(Long inTeamId, Long outTeamId, Long playerId, LocalDate transferDate);
 }

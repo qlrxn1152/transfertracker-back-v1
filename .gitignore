@@ -48,3 +48,7 @@ transfer_v1_data_complete.sql
 
 # k6 performance test results
 load-test/results/
+
+# Local tool state
+.gradle-home/
+infra/pinpoint/logs/

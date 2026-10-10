@@ -6,6 +6,9 @@ import lombok.*;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(
+        indexes = @Index(name = "idx_team_league_api_code", columnList = "leagueApiCode")
+)
 public class Team {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,6 +66,7 @@ public class Team {
         }
 
         return teamNameKo;
+
     }
 
 

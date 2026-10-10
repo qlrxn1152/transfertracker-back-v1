@@ -3,7 +3,7 @@ package com.dhoon.transfertracker.internal.team.service.impl;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.LeagueTeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -78,7 +78,7 @@ class TeamListTest {
 
 
         // when
-        TeamsResponseDto response =
+        LeagueTeamsResponseDto response =
                 teamOrchestrationService.getTeams();
 
 
@@ -131,7 +131,7 @@ class TeamListTest {
 
 
         // when
-        TeamsResponseDto response =
+        LeagueTeamsResponseDto response =
                 teamOrchestrationService.getTeams();
 
 
@@ -189,7 +189,7 @@ class TeamListTest {
 
 
         // when
-        TeamsResponseDto response =
+        LeagueTeamsResponseDto response =
                 teamOrchestrationService.getTeams();
 
 
@@ -213,7 +213,7 @@ class TeamListTest {
     void getTeams_empty() {
 
         // when
-        TeamsResponseDto response =
+        LeagueTeamsResponseDto response =
                 teamOrchestrationService.getTeams();
 
 

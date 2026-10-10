@@ -85,4 +85,5 @@ public class TransferTxService implements TransferService {
 
         return AllTransfersResponseDto.of(transfers,transferSlice.hasNext(), transferSlice.hasPrevious());
     }
+
 }

@@ -17,8 +17,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-//@RequiredArgsConstructor
-
 @Slf4j
 @Component
 public class XClient {
@@ -37,7 +35,7 @@ public class XClient {
         String username = source.getXUsername();
         String userId = source.getXUserId();
 
-        JsonNode userPosts = getUserPosts(userId, 100).get("data");
+        JsonNode userPosts = getUserPosts(userId, 50).get("data");
 
         userPosts.forEach(post -> {
             String content = post.get("text").asString();

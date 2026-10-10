@@ -1,0 +1,40 @@
+services:
+  pinpoint-hbase:
+    platform: linux/amd64
+    volumes:
+      - /Users/dhoon/Desktop/transfer-tracker/infra/pinpoint/hbase-create-local.hbase:/tmp/hbase-create-local.hbase:ro
+    command: ["/bin/sh", "-c", "cp /tmp/hbase-create-local.hbase /opt/hbase/hbase-create.hbase && /usr/local/bin/initialize-hbase.sh && tail -f /dev/null"]
+
+  pinpoint-mysql:
+    entrypoint: >
+      sh -c "
+      curl -fSL https://raw.githubusercontent.com/pinpoint-apm/pinpoint/v3.1.1/web/src/main/resources/sql/CreateTableStatement-mysql.sql -o /docker-entrypoint-initdb.d/CreateTableStatement-mysql.sql &&
+      curl -fSL https://raw.githubusercontent.com/pinpoint-apm/pinpoint/v3.1.1/web/src/main/resources/sql/SpringBatchJobRepositorySchema-mysql.sql -o /docker-entrypoint-initdb.d/SpringBatchJobRepositorySchema-mysql.sql &&
+      sed -i '/^--/d' /docker-entrypoint-initdb.d/CreateTableStatement-mysql.sql &&
+      sed -i '/^--/d' /docker-entrypoint-initdb.d/SpringBatchJobRepositorySchema-mysql.sql &&
+      docker-entrypoint.sh mysqld
+      "
+    ports: !override
+      - "13306:3306"
+
+  redis:
+    ports: !override
+      - "16379:6379"
+
+  pinpoint-web:
+    environment:
+      - WEB_HBASE_SELECTSPANS_LIMIT=2000
+      - WEB_HBASE_SELECTALLSPANS_LIMIT=2000
+      - WEB_HBASE_TRACE_MAX_RESULTS_LIMIT=200000
+      - WEB_CALLSTACK_SELECTSPANS_LIMIT=20000
+    ports: !override
+      - "9997:9997"
+      - "18080:8080"
+
+  pinpoint-quickstart:
+    profiles:
+      - pinpoint-sample
+
+  pinpoint-agent:
+    profiles:
+      - pinpoint-sample

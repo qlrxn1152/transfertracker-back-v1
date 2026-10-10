@@ -2,10 +2,7 @@ package com.dhoon.transfertracker.internal.team.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfoForTeamResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfosResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.*;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.team.service.TeamService;
@@ -17,6 +14,8 @@ import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPost
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,10 +39,14 @@ public class TeamTxService implements TeamService {
         return TeamItemResponseDto.of(team);
     }
 
+    // 리그에 속해있지않은 기타 팀들 조회
+
+
+    // 리그에 속해있는 팀들 조회
     @Override
     @Transactional(readOnly = true)
     public TeamsResponseDto getTeams() {
-        List<TeamItemResponseDto> teams = teamRepository.findAll()
+        List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCodeIsNotNull()
                 .stream()
                 .map(TeamItemResponseDto::of)
                 .toList();
@@ -51,6 +54,7 @@ public class TeamTxService implements TeamService {
         return TeamsResponseDto.of(teams);
     }
 
+    // 특정 리그에 속한 팀들 조회
     @Override
     @Transactional(readOnly = true)
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
@@ -79,7 +83,6 @@ public class TeamTxService implements TeamService {
                 .stream()
                 .map(TransferPostItemResponseDto::of)
                 .toList();
-
 
         TeamPageInfoForTeamResponseDto teams = TeamPageInfoForTeamResponseDto.of(team, teamPlayerCount);// 팀에 대한 정보 ... ( teamId, name, 속해있는 선수 숫자, 엠블렘 ... )
 

@@ -3,12 +3,16 @@ package com.dhoon.transfertracker.internal.team.service.impl;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfosResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.LeagueTeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueException;
 import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
+import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -54,6 +58,12 @@ public class TeamOrchestrationService {
     private void validateLeagueCode(LeagueCode leagueCode) {
         if (leagueCode == null) {
             throw new InvalidLeagueCodeValueException();
+        }
+    }
+
+    private void validatePageValue(int page) {
+        if (page < 0) {
+            throw new InvalidTransferSearchPageValueException();
         }
     }
 

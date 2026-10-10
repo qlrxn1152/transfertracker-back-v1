@@ -3,7 +3,7 @@ package com.dhoon.transfertracker.internal.team.service.impl;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.LeagueTeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -79,7 +79,7 @@ class TeamLeagueTest {
 
 
         // when
-        TeamsResponseDto response =
+        LeagueTeamsResponseDto response =
                 teamOrchestrationService.getLeagueTeams(
                         LeagueCode.EPL
                 );
@@ -132,7 +132,7 @@ class TeamLeagueTest {
 
 
         // when
-        TeamsResponseDto response =
+        LeagueTeamsResponseDto response =
                 teamOrchestrationService.getLeagueTeams(
                         LeagueCode.EPL
                 );
@@ -189,7 +189,7 @@ class TeamLeagueTest {
 
 
         // when
-        TeamsResponseDto response =
+        LeagueTeamsResponseDto response =
                 teamOrchestrationService.getLeagueTeams(
                         LeagueCode.EPL
                 );
@@ -225,7 +225,7 @@ class TeamLeagueTest {
 
 
         // when
-        TeamsResponseDto response =
+        LeagueTeamsResponseDto response =
                 teamOrchestrationService.getLeagueTeams(
                         LeagueCode.LA_LIGA
                 );
