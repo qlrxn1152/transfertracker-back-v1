@@ -8,6 +8,7 @@ import com.dhoon.transfertracker.internal.member.dto.response.MemberSignUpRespon
 import com.dhoon.transfertracker.internal.member.service.MemberService;
 import com.dhoon.transfertracker.internal.member.service.impl.MemberFavoriteTeamService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,14 +29,14 @@ public class MemberController {
     private final MemberFavoriteTeamService memberFavoriteTeamService;
 
     @PostMapping("/api/member/signup")
-    public ResponseEntity<MemberSignUpResponseDto> signUp(@RequestBody MemberSignUpRequestDto request) {
+    public ResponseEntity<MemberSignUpResponseDto> signUp(@Valid @RequestBody MemberSignUpRequestDto request) {
         MemberSignUpResponseDto response = memberService.singUp(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/api/member/login")
-    public ResponseEntity<MemberLoginResponseDto> login(@RequestBody MemberLoginRequestDto request) {
+    public ResponseEntity<MemberLoginResponseDto> login(@Valid @RequestBody MemberLoginRequestDto request) {
         MemberLoginResponseDto response = memberService.login(request);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -49,7 +50,7 @@ public class MemberController {
     }
 
     @PostMapping("/api/member/favorite-teams")
-    public ResponseEntity<Void> registerFavoriteTeams(@AuthenticationPrincipal Jwt jwt, @RequestBody MemberFavoriteTeamRegisterRequestDto request) {
+    public ResponseEntity<Void> registerFavoriteTeams(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MemberFavoriteTeamRegisterRequestDto request) {
         memberFavoriteTeamService.registerFavoriteTeams(Long.valueOf(jwt.getSubject()), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
