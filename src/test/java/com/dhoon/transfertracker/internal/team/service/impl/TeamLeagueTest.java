@@ -3,7 +3,7 @@ package com.dhoon.transfertracker.internal.team.service.impl;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.LeagueTeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -79,7 +79,7 @@ class TeamLeagueTest {
 
 
         // when
-        LeagueTeamsResponseDto response =
+        TeamsResponseDto response =
                 teamOrchestrationService.getLeagueTeams(
                         LeagueCode.EPL
                 );
@@ -132,7 +132,7 @@ class TeamLeagueTest {
 
 
         // when
-        LeagueTeamsResponseDto response =
+        TeamsResponseDto response =
                 teamOrchestrationService.getLeagueTeams(
                         LeagueCode.EPL
                 );
@@ -152,21 +152,14 @@ class TeamLeagueTest {
 
         assertThat(response.getTeams())
                 .extracting(
-                        TeamItemResponseDto::getTeamName)
+                        TeamItemResponseDto::getTeamName
+                )
                 .doesNotContain(
                         "Barcelona"
                 );
     }
 
 
-    /*
-     * getLeagueTeams() 역시
-     * TeamItemResponseDto.of()
-     *      ↓
-     * Team.getDisplayName()
-     *
-     * 을 사용한다.
-     */
     @Test
     @DisplayName("리그별 팀 조회에서도 한글 팀명이 있으면 한글 이름을 반환한다.")
     void getLeagueTeams_withKoreanName() {
@@ -189,7 +182,7 @@ class TeamLeagueTest {
 
 
         // when
-        LeagueTeamsResponseDto response =
+        TeamsResponseDto response =
                 teamOrchestrationService.getLeagueTeams(
                         LeagueCode.EPL
                 );
@@ -199,7 +192,11 @@ class TeamLeagueTest {
         assertThat(response.getTeams())
                 .hasSize(1);
 
-        assertThat(response.getTeams().get(0).getTeamName())
+        assertThat(
+                response.getTeams()
+                        .get(0)
+                        .getTeamName()
+        )
                 .isEqualTo(
                         "아스널"
                 );
@@ -225,7 +222,7 @@ class TeamLeagueTest {
 
 
         // when
-        LeagueTeamsResponseDto response =
+        TeamsResponseDto response =
                 teamOrchestrationService.getLeagueTeams(
                         LeagueCode.LA_LIGA
                 );
@@ -241,10 +238,6 @@ class TeamLeagueTest {
     // 실패 상황
     // ==================================================
 
-    /*
-     * null LeagueCode는 DB까지 내려가지 않고
-     * OrchestrationService에서 차단된다.
-     */
     @Test
     @DisplayName("leagueCode가 null이면 예외가 발생한다.")
     void getLeagueTeams_nullLeagueCode() {

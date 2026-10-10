@@ -26,7 +26,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/external/**"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/external/**", "/api/admin/**"))
                 .authorizeHttpRequests(auth -> auth
 
                         // 현재 회원 기능 사용하지 않음
@@ -39,6 +39,10 @@ public class SecurityConfig {
                         .permitAll()
 
                         .requestMatchers("/actuator/**")
+                        .hasRole("ADMIN")
+
+                        // 관리자 운영 API는 조회/실행 모두 ADMIN만
+                        .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
                         // 외부 API 호출 / 데이터 동기화는 ADMIN만

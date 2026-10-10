@@ -3,7 +3,6 @@ package com.dhoon.transfertracker.internal.team.controller;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfosResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.LeagueTeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.service.impl.TeamOrchestrationService;
 import lombok.RequiredArgsConstructor;

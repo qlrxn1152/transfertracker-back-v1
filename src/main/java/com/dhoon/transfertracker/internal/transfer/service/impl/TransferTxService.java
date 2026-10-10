@@ -1,12 +1,8 @@
 package com.dhoon.transfertracker.internal.transfer.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
-import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
-import com.dhoon.transfertracker.internal.player.service.PlayerService;
-import com.dhoon.transfertracker.internal.player.service.impl.PlayerOrchestrationService;
-import com.dhoon.transfertracker.internal.player.service.impl.PlayerTxService;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;

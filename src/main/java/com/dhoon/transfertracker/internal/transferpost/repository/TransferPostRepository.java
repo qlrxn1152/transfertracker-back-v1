@@ -6,6 +6,7 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TranslateStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,4 +21,12 @@ public interface TransferPostRepository extends JpaRepository<TransferPost, Long
     List<TransferPost> findTop20ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus translateStatus);
 
     List<TransferPost> findAllByTeamIsNull();
+
+    long countByContentCreatedAtBetween(Instant startInclusive, Instant endExclusive);
+
+    long countByTranslateStatus(TranslateStatus translateStatus);
+
+    long countByTeamIsNull();
+
+    long countBySourcer(TransferPostSource sourcer);
 }

@@ -12,18 +12,9 @@ import java.util.Optional;
 
 public interface TeamRepository extends JpaRepository<Team, Long> {
 
-    boolean existsByApiFootballId(Long apiFootballId);
-
     Optional<Team> findByApiFootballId(Long apiFootballId);
 
     List<Team> findAllByLeagueCode(LeagueCode leagueCode);
 
-    Optional<Team> findByTeamName(String teamName);
-
-    @Query("select t from Team t where t.leagueCode is not null")
-    Slice<Team> findAllByLeagueCodeIsNotNullWithPage(Pageable pageable);
-
     List<Team> findAllByLeagueCodeIsNotNull();
-
-    List<Team> findAllByLeagueCodeIsNull();
 }

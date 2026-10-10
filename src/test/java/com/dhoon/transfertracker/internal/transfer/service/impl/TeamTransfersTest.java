@@ -147,9 +147,19 @@ class TeamTransfersTest {
         TransferResponseDto transfer =
                 response.getTransfers().get(0);
 
+        assertThat(transfer.getPlayerId())
+                .isEqualTo(
+                        saka.getId()
+                );
+
         assertThat(transfer.getPlayerName())
                 .isEqualTo(
                         "Bukayo Saka"
+                );
+
+        assertThat(transfer.getInTeamId())
+                .isEqualTo(
+                        arsenal.getId()
                 );
 
         assertThat(transfer.getInTeamName())
@@ -157,10 +167,16 @@ class TeamTransfersTest {
                         "Arsenal"
                 );
 
+        assertThat(transfer.getOutTeamId())
+                .isEqualTo(
+                        chelsea.getId()
+                );
+
         assertThat(transfer.getOutTeamName())
                 .isEqualTo(
                         "Chelsea"
                 );
+
     }
 
 
@@ -314,6 +330,100 @@ class TeamTransfersTest {
                 );
     }
 
+    @Test
+    @DisplayName("팀 이적 조회에서는 한글 팀명이 존재하면 displayName을 반환한다.")
+    void getTeamTransfers_withKoreanTeamName() {
+
+        // given
+        Team arsenal =
+                Team.of(
+                        "Arsenal",
+                        1L
+                );
+
+        arsenal.assignKoTeamName(
+                "아스널"
+        );
+
+        arsenal =
+                teamRepository.save(
+                        arsenal
+                );
+
+
+        Team chelsea =
+                Team.of(
+                        "Chelsea",
+                        2L
+                );
+
+        chelsea.assignKoTeamName(
+                "첼시"
+        );
+
+        chelsea =
+                teamRepository.save(
+                        chelsea
+                );
+
+
+        Player saka =
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
+
+
+        saveTransfer(
+                saka,
+                arsenal,
+                chelsea,
+                "Transfer",
+                LocalDate.of(
+                        2026,
+                        7,
+                        1
+                )
+        );
+
+
+        // when
+        AllTransfersResponseDto response =
+                transferOrchestrationService.getTeamTransfers(
+                        arsenal.getId(),
+                        0,
+                        ""
+                );
+
+
+        // then
+        assertThat(response.getTransfers())
+                .hasSize(1);
+
+        TransferResponseDto transfer =
+                response.getTransfers().get(0);
+
+
+        assertThat(transfer.getInTeamId())
+                .isEqualTo(
+                        arsenal.getId()
+                );
+
+        assertThat(transfer.getInTeamName())
+                .isEqualTo(
+                        "아스널"
+                );
+
+        assertThat(transfer.getOutTeamId())
+                .isEqualTo(
+                        chelsea.getId()
+                );
+
+        assertThat(transfer.getOutTeamName())
+                .isEqualTo(
+                        "첼시"
+                );
+    }
 
     @Test
     @DisplayName("해당 팀과 관계없는 이적 정보는 조회하지 않는다.")

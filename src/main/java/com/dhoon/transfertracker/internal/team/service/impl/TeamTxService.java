@@ -39,10 +39,6 @@ public class TeamTxService implements TeamService {
         return TeamItemResponseDto.of(team);
     }
 
-    // 리그에 속해있지않은 기타 팀들 조회
-
-
-    // 리그에 속해있는 팀들 조회
     @Override
     @Transactional(readOnly = true)
     public TeamsResponseDto getTeams() {

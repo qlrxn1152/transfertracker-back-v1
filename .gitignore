@@ -52,3 +52,7 @@ load-test/results/
 # Local tool state
 .gradle-home/
 infra/pinpoint/logs/
+
+# Admin local exports / snapshots
+admin-snapshots/
+*.admin-snapshot.json

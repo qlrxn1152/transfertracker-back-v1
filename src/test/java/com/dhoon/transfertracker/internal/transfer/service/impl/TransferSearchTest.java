@@ -120,6 +120,131 @@ class TransferSearchTest {
                 );
     }
 
+    @Test
+    @DisplayName("이적 검색 결과는 선수와 입출 팀 정보를 정상적으로 DTO로 변환한다.")
+    void searchTransfer_mapping() {
+
+        // given
+        Team arsenal =
+                Team.of(
+                        "Arsenal",
+                        1L,
+                        LeagueCode.EPL
+                );
+
+        arsenal.assignKoTeamName(
+                "아스널"
+        );
+
+        arsenal =
+                teamRepository.save(
+                        arsenal
+                );
+
+
+        Team chelsea =
+                Team.of(
+                        "Chelsea",
+                        2L,
+                        LeagueCode.EPL
+                );
+
+        chelsea.assignKoTeamName(
+                "첼시"
+        );
+
+        chelsea =
+                teamRepository.save(
+                        chelsea
+                );
+
+
+        Player saka =
+                savePlayer(
+                        "Bukayo Saka",
+                        10L
+                );
+
+
+        LocalDate transferDate =
+                LocalDate.of(
+                        2026,
+                        7,
+                        1
+                );
+
+
+        saveTransfer(
+                saka,
+                arsenal,
+                chelsea,
+                "Transfer",
+                transferDate
+        );
+
+
+        // when
+        AllTransfersResponseDto response =
+                transferOrchestrationService.getTransfers(
+                        0,
+                        "",
+                        null,
+                        null
+                );
+
+
+        // then
+        assertThat(response.getTransfers())
+                .hasSize(1);
+
+        TransferResponseDto transfer =
+                response.getTransfers().get(0);
+
+
+        assertThat(transfer.getPlayerId())
+                .isEqualTo(
+                        saka.getId()
+                );
+
+        assertThat(transfer.getPlayerName())
+                .isEqualTo(
+                        "Bukayo Saka"
+                );
+
+
+        assertThat(transfer.getInTeamId())
+                .isEqualTo(
+                        arsenal.getId()
+                );
+
+        assertThat(transfer.getInTeamName())
+                .isEqualTo(
+                        "아스널"
+                );
+
+
+        assertThat(transfer.getOutTeamId())
+                .isEqualTo(
+                        chelsea.getId()
+                );
+
+        assertThat(transfer.getOutTeamName())
+                .isEqualTo(
+                        "첼시"
+                );
+
+
+        assertThat(transfer.getDate())
+                .isEqualTo(
+                        transferDate
+                );
+
+        assertThat(transfer.getType())
+                .isEqualTo(
+                        "Transfer"
+                );
+    }
+
 
     @Test
     @DisplayName("선수 이름 검색은 대소문자를 구분하지 않는다.")

@@ -32,6 +32,14 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             """)
     Slice<Transfer> findAllTransferWithLazyEntities(Pageable pageable);
 
+    @Query("""
+            select t from Transfer t 
+                        join fetch t.player 
+                        join fetch t.inTeam
+                        join fetch t.outTeam
+            """)
+    List<Transfer> findAllWithLazyEntities();
+
 
     @Query("""
             select t from Transfer t 

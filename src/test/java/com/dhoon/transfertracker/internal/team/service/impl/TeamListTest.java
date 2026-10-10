@@ -3,7 +3,7 @@ package com.dhoon.transfertracker.internal.team.service.impl;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.LeagueTeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,7 +45,7 @@ class TeamListTest {
     // ==================================================
 
     @Test
-    @DisplayName("전체 팀 목록을 조회할 수 있다.")
+    @DisplayName("리그에 등록된 팀 목록을 조회할 수 있다.")
     void getTeams_success() {
 
         // given
@@ -78,7 +78,7 @@ class TeamListTest {
 
 
         // when
-        LeagueTeamsResponseDto response =
+        TeamsResponseDto response =
                 teamOrchestrationService.getTeams();
 
 
@@ -108,15 +108,8 @@ class TeamListTest {
     }
 
 
-    /*
-     * 단순 개수만 확인하면
-     * Team → DTO mapping 오류를 놓칠 수 있다.
-     *
-     * teamId / teamName / logoUrl이
-     * 정상적으로 변환되는지 확인한다.
-     */
     @Test
-    @DisplayName("전체 팀 조회 결과는 TeamItemResponseDto로 정상 변환된다.")
+    @DisplayName("팀 조회 결과는 TeamItemResponseDto로 정상 변환된다.")
     void getTeams_mapping() {
 
         // given
@@ -131,7 +124,7 @@ class TeamListTest {
 
 
         // when
-        LeagueTeamsResponseDto response =
+        TeamsResponseDto response =
                 teamOrchestrationService.getTeams();
 
 
@@ -159,16 +152,8 @@ class TeamListTest {
     }
 
 
-    /*
-     * TeamItemResponseDto.of()
-     *      ↓
-     * Team.getDisplayName()
-     *
-     * 전체 목록에서도 단건 조회와 동일하게
-     * 한글 displayName 정책이 적용되어야 한다.
-     */
     @Test
-    @DisplayName("전체 팀 조회에서도 한글 팀명이 존재하면 한글 이름을 반환한다.")
+    @DisplayName("팀 조회에서도 한글 팀명이 존재하면 한글 이름을 반환한다.")
     void getTeams_withKoreanName() {
 
         // given
@@ -189,7 +174,7 @@ class TeamListTest {
 
 
         // when
-        LeagueTeamsResponseDto response =
+        TeamsResponseDto response =
                 teamOrchestrationService.getTeams();
 
 
@@ -204,16 +189,75 @@ class TeamListTest {
     }
 
 
+    /*
+     * 현재 getTeams()의 비즈니스 규칙:
+     *
+     * findAll()
+     *      ↓
+     * findAllByLeagueCodeIsNotNull()
+     *
+     * 따라서 리그가 지정되지 않은 팀은
+     * 일반 팀 목록에서 제외되어야 한다.
+     */
+    @Test
+    @DisplayName("리그에 등록되지 않은 팀은 팀 목록에서 제외한다.")
+    void getTeams_excludeTeamWithoutLeague() {
+
+        // given
+        Team arsenal =
+                teamRepository.save(
+                        Team.of(
+                                "Arsenal",
+                                42L,
+                                LeagueCode.EPL
+                        )
+                );
+
+        teamRepository.save(
+                Team.of(
+                        "Unknown Team",
+                        999L
+                )
+        );
+
+
+        // when
+        TeamsResponseDto response =
+                teamOrchestrationService.getTeams();
+
+
+        // then
+        assertThat(response.getTeams())
+                .hasSize(1);
+
+        assertThat(response.getTeams())
+                .extracting(
+                        TeamItemResponseDto::getTeamId
+                )
+                .containsExactly(
+                        arsenal.getId()
+                );
+
+        assertThat(response.getTeams())
+                .extracting(
+                        TeamItemResponseDto::getTeamName
+                )
+                .containsExactly(
+                        "Arsenal"
+                );
+    }
+
+
     // ==================================================
     // 경계 상황
     // ==================================================
 
     @Test
-    @DisplayName("저장된 팀이 없으면 빈 목록을 반환한다.")
+    @DisplayName("리그에 등록된 팀이 없으면 빈 목록을 반환한다.")
     void getTeams_empty() {
 
         // when
-        LeagueTeamsResponseDto response =
+        TeamsResponseDto response =
                 teamOrchestrationService.getTeams();
 
 
