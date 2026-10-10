@@ -3,6 +3,8 @@ package com.dhoon.transfertracker.internal.member.service.impl;
 import com.dhoon.transfertracker.internal.member.domain.Member;
 import com.dhoon.transfertracker.internal.member.domain.MemberFavoriteTeam;
 import com.dhoon.transfertracker.internal.member.dto.request.MemberFavoriteTeamRegisterRequestDto;
+import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoriteTeamItemResponseDto;
+import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoriteTeamsResponseDto;
 import com.dhoon.transfertracker.internal.member.exception.AlreadyRegisteredFavoriteTeamException;
 import com.dhoon.transfertracker.internal.member.exception.InvalidFavoriteTeamRequestException;
 import com.dhoon.transfertracker.internal.member.exception.NotFoundMemberException;
@@ -56,6 +58,36 @@ public class MemberFavoriteTeamService {
         memberFavoriteTeamRepository.saveAll(favoriteTeams);
     }
 
+    public MemberFavoriteTeamsResponseDto getFavoriteTeams(Long memberId) {
+        memberRepository.findById(memberId)
+                .orElseThrow(NotFoundMemberException::new);
+
+        List<MemberFavoriteTeamItemResponseDto> favorites = memberFavoriteTeamRepository.findAllWithTeamByMemberId(memberId)
+                .stream()
+                .map(MemberFavoriteTeamItemResponseDto::of)
+                .toList();
+
+        return MemberFavoriteTeamsResponseDto.of(favorites);
+    }
+
+    public void deleteFavoriteTeams(Long memberId, Long teamId) {
+        memberRepository.findById(memberId)
+                .orElseThrow(NotFoundMemberException::new);
+
+        memberFavoriteTeamRepository.deleteByMemberIdAndTeamId(memberId, teamId);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     private void validateDuplicateTeamIds(List<Long> teamIds) {
         Set<Long> teamIdsSet = new HashSet<>(teamIds);
 
@@ -63,6 +95,5 @@ public class MemberFavoriteTeamService {
             throw new InvalidFavoriteTeamRequestException();
         }
     }
-
 
 }

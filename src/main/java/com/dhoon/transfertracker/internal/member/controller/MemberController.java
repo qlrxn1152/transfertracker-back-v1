@@ -3,11 +3,12 @@ package com.dhoon.transfertracker.internal.member.controller;
 import com.dhoon.transfertracker.internal.member.dto.request.MemberFavoriteTeamRegisterRequestDto;
 import com.dhoon.transfertracker.internal.member.dto.request.MemberLoginRequestDto;
 import com.dhoon.transfertracker.internal.member.dto.request.MemberSignUpRequestDto;
+import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoriteTeamItemResponseDto;
+import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoriteTeamsResponseDto;
 import com.dhoon.transfertracker.internal.member.dto.response.MemberLoginResponseDto;
 import com.dhoon.transfertracker.internal.member.dto.response.MemberSignUpResponseDto;
 import com.dhoon.transfertracker.internal.member.service.MemberService;
 import com.dhoon.transfertracker.internal.member.service.impl.MemberFavoriteTeamService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -54,5 +52,19 @@ public class MemberController {
         memberFavoriteTeamService.registerFavoriteTeams(Long.valueOf(jwt.getSubject()), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/api/member/favorite-teams")
+    public ResponseEntity<MemberFavoriteTeamsResponseDto> getFavoriteTeams(@AuthenticationPrincipal Jwt jwt) {
+        MemberFavoriteTeamsResponseDto response = memberFavoriteTeamService.getFavoriteTeams(Long.valueOf(jwt.getSubject()));
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping("/api/member/favorite-teams/{teamId}")
+    public ResponseEntity<Void> deleteFavoriteTeams(@AuthenticationPrincipal Jwt jwt, @PathVariable Long teamId) {
+        memberFavoriteTeamService.deleteFavoriteTeams(Long.valueOf(jwt.getSubject()), teamId);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

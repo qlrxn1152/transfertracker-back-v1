@@ -65,7 +65,7 @@ public class SecurityConfig {
                         )
                         .hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET,"/api/member/me")
+                        .requestMatchers(HttpMethod.GET,"/api/member/me", "/api/member/favorite-teams")
                         .authenticated()
 
                         .requestMatchers(HttpMethod.POST,"/api/member/favorite-teams")
