@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.member.service;
 
+import com.dhoon.transfertracker.internal.member.dto.request.MemberFavoriteTeamRegisterRequestDto;
 import com.dhoon.transfertracker.internal.member.dto.request.MemberLoginRequestDto;
 import com.dhoon.transfertracker.internal.member.dto.request.MemberSignUpRequestDto;
 import com.dhoon.transfertracker.internal.member.dto.response.MemberLoginResponseDto;
@@ -11,4 +12,5 @@ public interface MemberService {
     MemberSignUpResponseDto singUp(MemberSignUpRequestDto request);
 
     MemberLoginResponseDto login(MemberLoginRequestDto request);
+
 }

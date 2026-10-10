@@ -13,9 +13,10 @@ public class MemberLoginResponseDto {
 
     private Long memberId;
     private String loginId;
+    private String accessToken;
 
-    public static MemberLoginResponseDto of(Member member) {
-        return new MemberLoginResponseDto(member.getId(), member.getLoginId());
+    public static MemberLoginResponseDto of(Member member, String accessToken) {
+        return new MemberLoginResponseDto(member.getId(), member.getLoginId(), accessToken);
     }
 
 }
