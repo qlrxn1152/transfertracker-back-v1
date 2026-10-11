@@ -6,6 +6,7 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import com.dhoon.transfertracker.internal.transferpost.service.TransferPostService;
@@ -63,6 +64,15 @@ public class TransferPostTxService implements TransferPostService {
                 .toList();
 
         return TransferPostsResponseDto.of(allPosts);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TransferPostDetailResponseDto getTransferPost(Long postId) {
+        TransferPost transferPost = transferPostRepository.findByIdWithTeam(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
+
+        return TransferPostDetailResponseDto.of(TransferPostItemResponseDto.of(transferPost));
     }
 
 

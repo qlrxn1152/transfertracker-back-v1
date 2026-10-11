@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RestController
 public class PlayerNameTranslationController {
+
     private final PlayerNameTranslationService playerNameTranslationService;
 
     @PostMapping("/external/openai/player-names/translate")

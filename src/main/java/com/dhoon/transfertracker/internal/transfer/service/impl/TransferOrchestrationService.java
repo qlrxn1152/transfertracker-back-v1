@@ -9,6 +9,7 @@ import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueE
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.dto.response.TransferDetailResponseDto;
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.service.TransferService;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,13 @@ public class TransferOrchestrationService {
         return transferTxService.getTeamTransfers(teamId, pageable, normalizedKeyWord);
     }
 
+    public TransferDetailResponseDto getTransfer(Long transferId) {
+        if (transferId == null) {
+            throw new IllegalArgumentException("이적 ID를 확인해 주세요.");
+        }
+
+        return transferTxService.getTransfer(transferId);
+    }
 
 
 

@@ -11,6 +11,7 @@ import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -46,11 +47,15 @@ public class PlayerTxService implements PlayerService {
 
         Slice<TeamPlayer> playerSlice = teamPlayerRepository.findTeamPlayers(keyWord, pageable, leagueCode, teamId);
 
-        List<PlayerItemResponseDto> players = playerSlice.getContent()
+        List<PlayerItemResponseDto> players = contentToResponseDto(playerSlice);
+
+        return PlayersResponseDto.of(players, playerSlice.hasNext(), playerSlice.hasPrevious());
+    }
+
+    private List<PlayerItemResponseDto> contentToResponseDto(Slice<TeamPlayer> playerSlice) {
+        return playerSlice.getContent()
                 .stream()
                 .map(PlayerItemResponseDto::of)
                 .toList();
-
-        return PlayersResponseDto.of(players, playerSlice.hasNext(), playerSlice.hasPrevious());
     }
 }

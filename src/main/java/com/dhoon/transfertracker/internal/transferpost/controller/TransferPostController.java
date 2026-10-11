@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.transferpost.controller;
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostSourceItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostSourcesResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.service.impl.TransferPostOrchestrationService;
@@ -28,6 +29,13 @@ public class TransferPostController {
                 .toList();
 
         return ResponseEntity.ok(TransferPostSourcesResponseDto.of(sources));
+    }
+
+    @GetMapping("/api/transfer/post/{postId}")
+    public ResponseEntity<TransferPostDetailResponseDto> getTransferPost(@PathVariable Long postId) {
+        TransferPostDetailResponseDto response = transferPostOrchestrationService.getTransferPost(postId);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/transfer/posts/{sourcer}")

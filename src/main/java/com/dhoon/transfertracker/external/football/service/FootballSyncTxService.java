@@ -4,6 +4,7 @@ import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TeamPlayerSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
 import com.dhoon.transfertracker.external.football.dto.TransferSaveResponseDto;
+import com.dhoon.transfertracker.etc.notification.service.MemberNotificationService;
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
@@ -19,6 +20,7 @@ import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersR
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
@@ -37,6 +39,7 @@ public class FootballSyncTxService {
     private final TeamRepository teamRepository;
     private final TransferRepository transferRepository;
     private final TeamPlayerRepository teamPlayerRepository;
+    private final ObjectProvider<MemberNotificationService> memberNotificationServiceProvider;
 
 
     public PlayerSaveResponseDto getOrCreatePlayerResponse(JsonNode playerData) {
@@ -103,6 +106,7 @@ public class FootballSyncTxService {
 
     private List<PlayerTransferItemResponseDto> getOrCreatePlayerTransfers(Player player, JsonNode transferDatas) {
         List<PlayerTransferItemResponseDto> playerTransfers = new ArrayList<>();
+        boolean[] createdTransfer = {false};
 
         transferDatas.forEach(transferData -> {
 
@@ -115,12 +119,22 @@ public class FootballSyncTxService {
             Team outTeam = getOrCreateTeam(teamData.get("out"));
 
             Transfer transfer = transferRepository.findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(inTeam.getId(), outTeam.getId(), player.getId(), transferDate)
-                    .orElseGet(() -> transferRepository.save(Transfer.of(
-                            player, inTeam, outTeam, transferType, transferDate
-                    )));
+                    .orElseGet(() -> {
+                        createdTransfer[0] = true;
+                        return transferRepository.save(Transfer.of(
+                                player, inTeam, outTeam, transferType, transferDate
+                        ));
+                    });
 
             playerTransfers.add(PlayerTransferItemResponseDto.of(transfer));
         });
+
+        if (createdTransfer[0]) {
+            MemberNotificationService memberNotificationService = memberNotificationServiceProvider.getIfAvailable();
+            if (memberNotificationService != null) {
+                memberNotificationService.createFavoriteTeamNotificationsForAllMembers();
+            }
+        }
 
         return playerTransfers;
     }

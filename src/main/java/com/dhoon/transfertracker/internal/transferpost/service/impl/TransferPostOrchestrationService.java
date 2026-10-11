@@ -9,6 +9,7 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidSourcerException;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import com.dhoon.transfertracker.internal.transferpost.service.TransferPostService;
@@ -45,6 +46,14 @@ public class TransferPostOrchestrationService {
 
     public TransferPostsResponseDto getAllTransferPosts() {
         return transferPostTxService.getAllTransferPosts();
+    }
+
+    public TransferPostDetailResponseDto getTransferPost(Long postId) {
+        if (postId == null) {
+            throw new IllegalArgumentException("게시물 ID를 확인해 주세요.");
+        }
+
+        return transferPostTxService.getTransferPost(postId);
     }
 
     public String postAssignTeam() {

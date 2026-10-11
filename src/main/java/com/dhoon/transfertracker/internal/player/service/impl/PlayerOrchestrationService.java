@@ -8,6 +8,7 @@ import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -20,17 +21,14 @@ public class PlayerOrchestrationService {
     private final PlayerService playerTxService;
 
     public PlayerItemResponseDto getPlayer(Long playerId) {
-        if (playerId == null) {
-            throw new InvalidPlayerIdException();
-        }
-
+        validatePlayerIdIsNotNull(playerId);
         return playerTxService.getPlayerResponse(playerId);
     }
 
+
+
     public PlayersResponseDto getPlayers(int page, String keyWord, LeagueCode leagueCode, Long teamId) {
-        if (page < 0) {
-            throw new InvalidPlayerSearchPageValueException();
-        }
+        validatePageValue(page);
 
         PageRequest pageable = PageRequest.of(
                 page,
@@ -38,12 +36,29 @@ public class PlayerOrchestrationService {
                 Sort.by(Sort.Order.asc("player.playerName"), Sort.Order.asc("player.id"))
         );
 
-        String normalizedKeyWord = keyWord == null ? "" : keyWord.trim();
+        String normalizedKeyWord = getNormalizedKeyWord(keyWord);
 
         return playerTxService.getPlayers(pageable, normalizedKeyWord, leagueCode, teamId);
     }
 
 
+
+
+    private String getNormalizedKeyWord(String keyWord) {
+        return keyWord == null ? "" : keyWord.trim();
+    }
+
+    private void validatePlayerIdIsNotNull(Long playerId) {
+        if (playerId == null) {
+            throw new InvalidPlayerIdException();
+        }
+    }
+
+    private void validatePageValue(int page) {
+        if (page < 0) {
+            throw new InvalidPlayerSearchPageValueException();
+        }
+    }
 
 
 }

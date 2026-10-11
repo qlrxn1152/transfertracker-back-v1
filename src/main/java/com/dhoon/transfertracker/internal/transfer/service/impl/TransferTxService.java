@@ -10,6 +10,7 @@ import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransferItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.dto.response.TransferDetailResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.TransferResponseDto;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import com.dhoon.transfertracker.internal.transfer.service.TransferService;
@@ -80,6 +81,15 @@ public class TransferTxService implements TransferService {
                 .toList();
 
         return AllTransfersResponseDto.of(transfers,transferSlice.hasNext(), transferSlice.hasPrevious());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TransferDetailResponseDto getTransfer(Long transferId) {
+        Transfer transfer = transferRepository.findByIdWithLazyEntities(transferId)
+                .orElseThrow(() -> new IllegalArgumentException("이적 기록을 찾을 수 없습니다."));
+
+        return TransferDetailResponseDto.of(TransferResponseDto.of(transfer));
     }
 
 }

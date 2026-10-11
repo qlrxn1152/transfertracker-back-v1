@@ -34,7 +34,8 @@ public class TeamTxService implements TeamService {
     @Override
     @Transactional(readOnly = true)
     public TeamItemResponseDto getTeam(Long teamId) {
-        Team team = teamRepository.findById(teamId).orElseThrow(NotFoundTeamException::new);
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(NotFoundTeamException::new);
 
         return TeamItemResponseDto.of(team);
     }

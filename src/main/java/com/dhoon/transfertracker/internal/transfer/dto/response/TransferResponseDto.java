@@ -13,6 +13,8 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TransferResponseDto {
 
+    private Long transferId;
+
     private Long playerId;
     private String playerName;
     private String photoUrl;
@@ -28,6 +30,8 @@ public class TransferResponseDto {
 
     public static TransferResponseDto of(Transfer transfer) {
         return new TransferResponseDto(
+                transfer.getId(),
+
                 transfer.getPlayer().getId(),
                 transfer.getPlayer().getDisplayName(),
                 "https://media.api-sports.io/football/players/" + transfer.getPlayer().getApiFootballId() + ".png",

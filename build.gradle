@@ -24,6 +24,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'nl.martijndwars:web-push:5.1.2'
+	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+	implementation 'org.bitbucket.b_c:jose4j:0.7.9'
+	implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'

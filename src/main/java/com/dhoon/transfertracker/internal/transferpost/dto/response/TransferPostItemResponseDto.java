@@ -22,6 +22,8 @@ public class TransferPostItemResponseDto {
     private boolean isRelateTransfer;
     private String translatedContent;
     private String photoUrl;
+    private Long teamId;
+    private String teamName;
 
     public static TransferPostItemResponseDto of(TransferPost transferPost) {
         return new TransferPostItemResponseDto(
@@ -32,7 +34,9 @@ public class TransferPostItemResponseDto {
                 transferPost.getContentCreatedAt(),
                 transferPost.isTransferRelated(),
                 transferPost.getTranslatedContent() == null ? null : transferPost.getTranslatedContent(),
-                transferPost.getPhotoUrl() == null ? null : transferPost.getPhotoUrl()
+                transferPost.getPhotoUrl() == null ? null : transferPost.getPhotoUrl(),
+                transferPost.getTeam() == null ? null : transferPost.getTeam().getId(),
+                transferPost.getTeam() == null ? null : transferPost.getTeam().getDisplayName()
         );
     }
 

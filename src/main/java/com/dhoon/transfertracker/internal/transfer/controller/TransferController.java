@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.transfer.controller;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.dto.response.TransferDetailResponseDto;
 import com.dhoon.transfertracker.internal.transfer.service.TransferService;
 import com.dhoon.transfertracker.internal.transfer.service.impl.TransferOrchestrationService;
 import jakarta.validation.constraints.Min;
@@ -33,6 +34,13 @@ public class TransferController {
             @Min(0) @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "") String keyWord, @RequestParam(required = false) LeagueCode leagueCode, @RequestParam(required = false) Long teamId
     ) {
         AllTransfersResponseDto response = transferOrchestrationService.getTransfers(page, keyWord, leagueCode, teamId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/transfers/{transferId}")
+    public ResponseEntity<TransferDetailResponseDto> getTransfer(@PathVariable Long transferId) {
+        TransferDetailResponseDto response = transferOrchestrationService.getTransfer(transferId);
 
         return ResponseEntity.ok(response);
     }

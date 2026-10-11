@@ -16,5 +16,8 @@ public interface MemberFavoriteTeamRepository extends JpaRepository<MemberFavori
     @Query("select count(distinct mft.member.id) from MemberFavoriteTeam mft")
     long countDistinctMemberIds();
 
+    @Query("select distinct mft.member.id from MemberFavoriteTeam mft")
+    List<Long> findDistinctMemberIds();
+
     void deleteByMemberIdAndTeamId(Long memberId, Long teamId);
 }
