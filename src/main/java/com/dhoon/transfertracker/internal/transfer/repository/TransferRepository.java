@@ -47,6 +47,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
                         join fetch t.inTeam
                         join fetch t.outTeam
             where lower(p.playerName) like lower(concat('%', :keyWord, '%'))                        
+               or lower(coalesce(p.playerNameKo, '')) like lower(concat('%', :keyWord, '%'))
             """)
     Slice<Transfer> findByPlayerNameContainingIgnoreCaseWithLazyEntities(String keyWord, Pageable pageable);
 
@@ -71,7 +72,14 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
                         join fetch t.player p
                         join fetch t.inTeam
                         join fetch t.outTeam
-            where ( (t.inTeam.id = :teamId) or (t.outTeam.id = :teamId) ) and (lower(p.playerName) like lower(concat('%', :keyWord, '%')))                         
+            where (
+                   (t.inTeam.id = :teamId)
+                               or (t.outTeam.id = :teamId)
+                   )
+              and (
+                   lower(p.playerName) like lower(concat('%', :keyWord, '%'))
+                               or lower(coalesce(p.playerNameKo, '')) like lower(concat('%', :keyWord, '%'))
+                   )
             """)
     Slice<Transfer> findAllByTeamIdWithLazyAndKeyWord(Long teamId, String keyWord, Pageable pageable);
 
@@ -90,6 +98,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             and (
                    :keyWord = ''
                                or lower(p.playerName) like lower(concat('%', :keyWord, '%'))
+                               or lower(coalesce(p.playerNameKo, '')) like lower(concat('%', :keyWord, '%'))
                    )   
             and (
                    :teamId is null

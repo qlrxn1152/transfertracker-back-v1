@@ -1,12 +1,18 @@
 package com.dhoon.transfertracker.internal.admin.service;
 
 import com.dhoon.transfertracker.external.x.client.XClient;
+import com.dhoon.transfertracker.internal.analytics.repository.PageViewRepository;
 import com.dhoon.transfertracker.internal.admin.domain.AdminJobLog;
 import com.dhoon.transfertracker.internal.admin.dto.response.*;
+import com.dhoon.transfertracker.internal.admin.exception.AdminSyncFailedException;
 import com.dhoon.transfertracker.internal.admin.repository.AdminJobLogRepository;
+import com.dhoon.transfertracker.internal.notice.repository.NoticeRepository;
+import com.dhoon.transfertracker.internal.player.dto.response.PlayerNameTranslationResponseDto;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
+import com.dhoon.transfertracker.internal.player.service.impl.PlayerNameTranslationService;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
+import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
@@ -18,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -36,8 +43,12 @@ public class AdminService {
     private final PlayerRepository playerRepository;
     private final TransferRepository transferRepository;
     private final TransferPostRepository transferPostRepository;
+    private final NoticeRepository noticeRepository;
+    private final PageViewRepository pageViewRepository;
+    private final TeamPlayerRepository teamPlayerRepository;
     private final AdminJobLogRepository adminJobLogRepository;
     private final TransferPostOrchestrationService transferPostOrchestrationService;
+    private final PlayerNameTranslationService playerNameTranslationService;
     private final XClient xClient;
     private final Environment environment;
 
@@ -47,10 +58,12 @@ public class AdminService {
         long pendingTranslations = transferPostRepository.countByTranslateStatus(TranslateStatus.PENDING);
         long failedTranslations = transferPostRepository.countByTranslateStatus(TranslateStatus.FAILED);
         long unassignedPosts = transferPostRepository.countByTeamIsNull();
+        long pendingPlayerNameTranslations = teamPlayerRepository.countPlayerNameTranslationTargets();
 
         List<AdminMetricResponseDto> metrics = List.of(
                 AdminMetricResponseDto.of("오늘 수집 게시물", todayPosts, "정상", "good", "오늘 수집된 기자 게시물 수입니다."),
                 AdminMetricResponseDto.of("번역 대기", pendingTranslations, "처리 필요", pendingTranslations > 0 ? "warn" : "good", "아직 한국어 번역이 완료되지 않은 게시물입니다."),
+                AdminMetricResponseDto.of("선수명 번역 대기", pendingPlayerNameTranslations, "처리 필요", pendingPlayerNameTranslations > 0 ? "warn" : "good", "팀에 소속되어 있고 한글 이름이 비어있는 선수입니다."),
                 AdminMetricResponseDto.of("팀 미연결 게시물", unassignedPosts, "확인 필요", unassignedPosts > 0 ? "bad" : "good", "팀과 연결되지 않아 화면 필터링에서 빠질 수 있는 게시물입니다."),
                 AdminMetricResponseDto.of("번역 실패", failedTranslations, "재시도", failedTranslations > 0 ? "bad" : "good", "외부 번역 API 처리에 실패한 게시물입니다.")
         );
@@ -70,7 +83,9 @@ public class AdminService {
                 AdminDbSummaryItemResponseDto.of("teams", teamRepository.count(), "팀 기준 데이터"),
                 AdminDbSummaryItemResponseDto.of("players", playerRepository.count(), "선수 기준 데이터"),
                 AdminDbSummaryItemResponseDto.of("transfers", transferRepository.count(), "이적 기록"),
-                AdminDbSummaryItemResponseDto.of("transfer_posts", transferPostRepository.count(), "기자 게시물")
+                AdminDbSummaryItemResponseDto.of("transfer_posts", transferPostRepository.count(), "기자 게시물"),
+                AdminDbSummaryItemResponseDto.of("notices", noticeRepository.count(), "공지사항"),
+                AdminDbSummaryItemResponseDto.of("page_views", pageViewRepository.count(), "방문 기록")
         );
 
         return AdminDbSummaryResponseDto.of(tables);
@@ -81,11 +96,13 @@ public class AdminService {
         long pendingTranslations = transferPostRepository.countByTranslateStatus(TranslateStatus.PENDING);
         long failedTranslations = transferPostRepository.countByTranslateStatus(TranslateStatus.FAILED);
         long unassignedPosts = transferPostRepository.countByTeamIsNull();
+        long pendingPlayerNameTranslations = teamPlayerRepository.countPlayerNameTranslationTargets();
 
         List<AdminDataIssueResponseDto> issues = List.of(
                 AdminDataIssueResponseDto.of("게시물", "team_id", "팀과 연결되지 않은 게시물 " + unassignedPosts + "건", "팀 재매칭", unassignedPosts > 0 ? "bad" : "good"),
                 AdminDataIssueResponseDto.of("번역", "PENDING", "번역 대기 게시물 " + pendingTranslations + "건", "번역 실행", pendingTranslations > 0 ? "warn" : "good"),
                 AdminDataIssueResponseDto.of("번역", "FAILED", "번역 실패 게시물 " + failedTranslations + "건", "실패 확인", failedTranslations > 0 ? "bad" : "good"),
+                AdminDataIssueResponseDto.of("선수", "player_name_ko", "한글 이름이 비어있는 소속 선수 " + pendingPlayerNameTranslations + "건", "선수명 번역", pendingPlayerNameTranslations > 0 ? "warn" : "good"),
                 AdminDataIssueResponseDto.of("운영/로컬", "db-summary", "환경별 DB 요약을 비교할 수 있도록 현재 환경의 테이블 건수를 제공합니다.", "스냅샷 비교", "neutral")
         );
 
@@ -122,6 +139,7 @@ public class AdminService {
         long unassignedPosts = transferPostRepository.countByTeamIsNull();
         long matchablePosts = countMatchableUnassignedPosts();
         long pendingTranslations = transferPostRepository.countByTranslateStatus(TranslateStatus.PENDING);
+        long pendingPlayerNameTranslations = teamPlayerRepository.countPlayerNameTranslationTargets();
 
         List<AdminDryRunJobResponseDto> jobs = new ArrayList<>();
         Arrays.stream(TransferPostSource.values())
@@ -149,6 +167,13 @@ public class AdminService {
                 pendingTranslations,
                 "번역 대기 게시물 " + pendingTranslations + "건이 처리 대상입니다.",
                 pendingTranslations > 0 ? "warn" : "good"
+        ));
+        jobs.add(AdminDryRunJobResponseDto.of(
+                "translate-player-names",
+                "선수명 번역",
+                pendingPlayerNameTranslations,
+                "팀에 소속되어 있고 한글 이름이 비어있는 선수 " + pendingPlayerNameTranslations + "명이 처리 대상입니다.",
+                pendingPlayerNameTranslations > 0 ? "warn" : "good"
         ));
 
         return AdminDryRunResponseDto.of(jobs);
@@ -208,6 +233,16 @@ public class AdminService {
                     affectedCount,
                     "before=" + beforeCount + ", after=" + afterCount
             );
+        } catch (RestClientResponseException exception) {
+            AdminSyncFailedException syncException = new AdminSyncFailedException(
+                    source.getXUsername()
+                            + " 게시물 수집 중 X API 요청이 실패했습니다. X API 권한, 토큰 상태, 계정 접근 가능 여부를 확인해 주세요. (status="
+                            + exception.getStatusCode().value()
+                            + ")",
+                    exception
+            );
+            failJob(job, syncException);
+            throw syncException;
         } catch (RuntimeException exception) {
             failJob(job, exception);
             throw exception;
@@ -249,6 +284,31 @@ public class AdminService {
                     "번역 대기 게시물 처리를 완료했습니다.",
                     affectedCount,
                     "pending before=" + beforeCount + ", after=" + afterCount
+            );
+        } catch (RuntimeException exception) {
+            failJob(job, exception);
+            throw exception;
+        }
+    }
+
+    public AdminSyncResponseDto translatePlayerNames() {
+        String job = "translate-player-names";
+        long beforeCount = teamPlayerRepository.countPlayerNameTranslationTargets();
+
+        try {
+            PlayerNameTranslationResponseDto response = playerNameTranslationService.translate();
+            long afterCount = teamPlayerRepository.countPlayerNameTranslationTargets();
+            long affectedCount = Math.max(0, beforeCount - afterCount);
+
+            return completeJob(
+                    job,
+                    "소속 선수 한글 이름 번역을 완료했습니다.",
+                    affectedCount,
+                    "targets=" + response.getTargetCount()
+                            + ", translated=" + response.getTranslatedCount()
+                            + ", batches=" + response.getBatchCount()
+                            + ", before=" + beforeCount
+                            + ", after=" + afterCount
             );
         } catch (RuntimeException exception) {
             failJob(job, exception);

@@ -86,11 +86,7 @@ public class PlayerNameTranslationService {
                     );
 
 
-            PlayerNameTranslationBatchResult result =
-                    openAiClient
-                            .translatePlayerNames(
-                                    batch
-                            );
+            PlayerNameTranslationBatchResult result = openAiClient.translatePlayerNames(batch);
 
 
             validateResult(

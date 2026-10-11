@@ -1,7 +1,7 @@
 package com.dhoon.transfertracker.internal.member.dto.response;
 
 import com.dhoon.transfertracker.internal.member.domain.Member;
-import com.dhoon.transfertracker.internal.member.dto.request.MemberSignUpRequestDto;
+import com.dhoon.transfertracker.internal.member.domain.MemberGrade;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,8 +14,9 @@ public class MemberSignUpResponseDto {
 
     private Long memberId;
     private String loginId;
+    private MemberGrade memberGrade;
 
     public static MemberSignUpResponseDto of(Member member) {
-        return new MemberSignUpResponseDto(member.getId(), member.getLoginId());
+        return new MemberSignUpResponseDto(member.getId(), member.getLoginId(), member.getMemberGrade());
     }
 }

@@ -21,12 +21,20 @@ public class Member {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    private MemberGrade memberGrade;
+
     private Member(String loginId, String password) {
         this.loginId = loginId;
         this.password = password;
+        this.memberGrade = MemberGrade.USER;
     }
 
     public static Member signUp(String loginId, String password) {
         return new Member(loginId, password);
+    }
+
+    public MemberGrade getMemberGrade() {
+        return memberGrade == null ? MemberGrade.USER : memberGrade;
     }
 }

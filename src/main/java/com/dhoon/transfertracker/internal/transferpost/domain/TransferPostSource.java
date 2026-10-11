@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum TransferPostSource {
     FABRIZIO_ROMANO("FabrizioRomano", "330262748"),
     DAVID_ORNSTEIN("David_Ornstein", "46875124"),
-    MATTEO_MORETTO("MatteMoretto", "975909216824254464");
+    MATTEO_MORETTO("MatteMoretto", "975909216824254464"),
+    FLORIAN_PLETTENBERG("Plettigoal", "2303765948");
 
     private final String xUsername;
     private final String xUserId;

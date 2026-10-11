@@ -39,6 +39,7 @@ public interface TeamPlayerRepository extends JpaRepository<TeamPlayer, Long> {
             and (
                    :keyWord = ''
                                or lower(p.playerName) like lower(concat('%', :keyWord, '%'))
+                               or lower(coalesce(p.playerNameKo, '')) like lower(concat('%', :keyWord, '%'))
                    )
             and (
                    :teamId is null
@@ -52,10 +53,19 @@ public interface TeamPlayerRepository extends JpaRepository<TeamPlayer, Long> {
                         join fetch tp.player p
                         join fetch tp.team t
             where p.playerNameKo is null
-                and t.leagueCode is not null
+                or trim(p.playerNameKo) = ''
             order by p.id asc
             """)
     List<TeamPlayer> findPlayerNameTranslationTargets(Pageable pageable);
+
+    @Query("""
+            select count(tp) from TeamPlayer tp
+                        join tp.player p
+                        join tp.team t
+            where p.playerNameKo is null
+                or trim(p.playerNameKo) = ''
+            """)
+    long countPlayerNameTranslationTargets();
 
 
 

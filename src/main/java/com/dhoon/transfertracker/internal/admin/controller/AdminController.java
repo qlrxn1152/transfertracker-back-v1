@@ -1,9 +1,16 @@
 package com.dhoon.transfertracker.internal.admin.controller;
 
+import com.dhoon.transfertracker.internal.analytics.dto.response.AdminAnalyticsResponseDto;
+import com.dhoon.transfertracker.internal.analytics.service.AnalyticsService;
 import com.dhoon.transfertracker.internal.admin.dto.response.*;
+import com.dhoon.transfertracker.internal.notice.dto.request.NoticeCreateRequestDto;
+import com.dhoon.transfertracker.internal.notice.dto.response.NoticeItemResponseDto;
+import com.dhoon.transfertracker.internal.notice.service.NoticeService;
 import com.dhoon.transfertracker.internal.admin.service.AdminService;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final AdminService adminService;
+    private final NoticeService noticeService;
+    private final AnalyticsService analyticsService;
 
     @GetMapping("/overview")
     public AdminOverviewResponseDto getOverview() {
@@ -35,6 +44,11 @@ public class AdminController {
     @GetMapping("/sources")
     public AdminSourcesResponseDto getSources() {
         return adminService.getSources();
+    }
+
+    @GetMapping("/analytics")
+    public AdminAnalyticsResponseDto getAnalytics() {
+        return analyticsService.getAdminAnalytics();
     }
 
     @GetMapping("/jobs")
@@ -65,5 +79,15 @@ public class AdminController {
     @PostMapping("/sync/translations")
     public AdminSyncResponseDto translatePosts() {
         return adminService.translatePosts();
+    }
+
+    @PostMapping("/sync/player-names")
+    public AdminSyncResponseDto translatePlayerNames() {
+        return adminService.translatePlayerNames();
+    }
+
+    @PostMapping("/notices")
+    public NoticeItemResponseDto createNotice(@Valid @RequestBody NoticeCreateRequestDto request) {
+        return noticeService.createNotice(request);
     }
 }

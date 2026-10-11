@@ -25,9 +25,7 @@ public class PlayerNameTranslationTxService {
 
 
     @Transactional(readOnly = true)
-    public List<PlayerNameTranslationTarget> findTargets(
-            int limit
-    ) {
+    public List<PlayerNameTranslationTarget> findTargets(int limit) {
 
         return teamPlayerRepository
                 .findPlayerNameTranslationTargets(
@@ -48,9 +46,7 @@ public class PlayerNameTranslationTxService {
     }
 
 
-    public void applyTranslations(
-            PlayerNameTranslationBatchResult result
-    ) {
+    public void applyTranslations(PlayerNameTranslationBatchResult result) {
 
         List<Long> playerIds =
                 result.getPlayers()

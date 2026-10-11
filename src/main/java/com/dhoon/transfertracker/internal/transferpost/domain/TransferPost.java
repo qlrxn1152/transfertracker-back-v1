@@ -41,6 +41,9 @@ public class TransferPost {
     @Column(name = "is_transfer_related")
     private boolean transferRelated;
 
+    @Column(name = "photo_url", length = 1000)
+    private String photoUrl;
+
     @Column(name = "translated_content", columnDefinition = "TEXT")
     private String translatedContent;
 
@@ -55,19 +58,24 @@ public class TransferPost {
     @JoinColumn(name = "team_id")
     private Team team;
 
-    private TransferPost(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated) {
+    private TransferPost(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated, String photoUrl) {
         this.sourcer = sourcer;
         this.content = content;
         this.externalPostId = externalPostId;
         this.contentCreatedAt = contentCreatedAt;
         this.transferRelated = transferRelated;
+        this.photoUrl = photoUrl;
 
         this.translatedContent = null;
         this.translateStatus = TranslateStatus.PENDING;
     }
 
     public static TransferPost of(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated) {
-        return new TransferPost(sourcer, content, externalPostId, contentCreatedAt, transferRelated);
+        return new TransferPost(sourcer, content, externalPostId, contentCreatedAt, transferRelated, null);
+    }
+
+    public static TransferPost of(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated, String photoUrl) {
+        return new TransferPost(sourcer, content, externalPostId, contentCreatedAt, transferRelated, photoUrl);
     }
 
     public void translate(String translatedContent) {

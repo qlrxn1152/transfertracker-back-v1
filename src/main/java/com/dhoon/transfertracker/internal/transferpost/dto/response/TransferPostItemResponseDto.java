@@ -21,6 +21,7 @@ public class TransferPostItemResponseDto {
     private Instant postCreatedAt;
     private boolean isRelateTransfer;
     private String translatedContent;
+    private String photoUrl;
 
     public static TransferPostItemResponseDto of(TransferPost transferPost) {
         return new TransferPostItemResponseDto(
@@ -30,8 +31,10 @@ public class TransferPostItemResponseDto {
                 transferPost.getSourcer(),
                 transferPost.getContentCreatedAt(),
                 transferPost.isTransferRelated(),
-                transferPost.getTranslatedContent() == null ? null : transferPost.getTranslatedContent()
+                transferPost.getTranslatedContent() == null ? null : transferPost.getTranslatedContent(),
+                transferPost.getPhotoUrl() == null ? null : transferPost.getPhotoUrl()
         );
     }
+
 
 }
