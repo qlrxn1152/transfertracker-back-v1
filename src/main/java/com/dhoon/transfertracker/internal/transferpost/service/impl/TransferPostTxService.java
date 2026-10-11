@@ -8,6 +8,7 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.exception.InvalidPostIdException;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import com.dhoon.transfertracker.internal.transferpost.service.TransferPostService;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +42,6 @@ public class TransferPostTxService implements TransferPostService {
     @Override
     @Transactional(readOnly = true)
     public TransferPostsResponseDto getTeamTransferPosts(Long teamId) {
-        // 팀은 있는게 맞지않을까?
         teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
 
@@ -70,7 +70,7 @@ public class TransferPostTxService implements TransferPostService {
     @Transactional(readOnly = true)
     public TransferPostDetailResponseDto getTransferPost(Long postId) {
         TransferPost transferPost = transferPostRepository.findByIdWithTeam(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
+                .orElseThrow(InvalidPostIdException::new);
 
         return TransferPostDetailResponseDto.of(TransferPostItemResponseDto.of(transferPost));
     }
@@ -90,7 +90,6 @@ public class TransferPostTxService implements TransferPostService {
                 if (lowerContent.contains(lowerTeamName)) {
                     post.assignTeam(team);
                 }
-
             });
         });
 
