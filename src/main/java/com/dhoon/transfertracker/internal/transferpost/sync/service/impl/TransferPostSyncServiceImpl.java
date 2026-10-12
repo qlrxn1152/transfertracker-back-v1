@@ -24,7 +24,6 @@ import java.util.Map;
 @Service
 public class TransferPostSyncServiceImpl implements TransferPostSyncService {
 
-
     private final TransferPostSyncTxService txService;
     private final XClient xClient;
 
@@ -33,17 +32,17 @@ public class TransferPostSyncServiceImpl implements TransferPostSyncService {
         JsonNode response = xClient.callExternalApi(source);
 
         JsonNode userPosts = response.get("data");
-        Map<String, String> mediaUrlByKey = mapMediaUrlByKey(response);
 
         if (userPosts == null) {
             throw new InvalidSourcerException();
         }
 
+        Map<String, String> mediaUrlByKey = mapMediaUrlByKey(response);
         List<TransferPostItemResponseDto> posts = new ArrayList<>();
 
         userPosts.forEach(post -> {
-            TransferPostItemResponseDto responseDto = txService.saveTransferPost(source, post, mediaUrlByKey);
-            posts.add(responseDto);
+            TransferPostItemResponseDto saveTransferPost = txService.saveTransferPost(source, post, mediaUrlByKey);
+            posts.add(saveTransferPost);
         });
 
         return TransferPostsResponseDto.of(posts);
