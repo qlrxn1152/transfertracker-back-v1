@@ -53,6 +53,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/analytics/page-view")
                         .permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/api/guide-posts", "/api/guide-posts/*")
+                        .permitAll()
+
                         // Health Check
                         .requestMatchers(
                                 "/actuator/health"
@@ -83,7 +86,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/api/member/favorite-teams")
                         .authenticated()
 
-                        .requestMatchers(HttpMethod.DELETE, "/api/member/favorite-teams/*")
+                        .requestMatchers(HttpMethod.DELETE, "/api/member/favorite-teams/**")
                         .authenticated()
 
                         .requestMatchers("/api/member/notifications", "/api/member/notifications/**")
@@ -92,10 +95,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/member/push/**")
                         .authenticated()
 
+                        .requestMatchers(HttpMethod.POST, "/api/guide-posts")
+                        .authenticated()
+
+                        .requestMatchers(HttpMethod.PUT, "/api/guide-posts/**")
+                        .authenticated()
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/guide-posts/**")
+                        .authenticated()
+
 
                         // 일반 조회 API
                         .requestMatchers(
-                                HttpMethod.GET,
                                 "/api/**"
                         )
                         .permitAll()

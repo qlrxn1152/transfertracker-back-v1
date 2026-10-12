@@ -61,6 +61,8 @@ public class XClient {
 
 
     // ================================================================================= //
+
+    // TODO: TransferPostSyncService 전환 완료 후 제거
     public String syncPosts(TransferPostSource source) {
         String userId = source.getXUserId();
         JsonNode response = getUserPosts(userId, 50);
