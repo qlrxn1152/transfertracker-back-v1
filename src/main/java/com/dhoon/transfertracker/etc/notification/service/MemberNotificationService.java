@@ -44,13 +44,13 @@ public class MemberNotificationService {
         int createdCount = createFavoriteTeamNotifications(memberId, false, true);
 
         List<MemberNotificationItemResponseDto> notifications = memberNotificationRepository
-                .findTop50ByMemberIdOrderByCreatedAtDescIdDesc(memberId)
+                .findTop50ByMemberIdAndDeletedAtIsNullOrderByCreatedAtDescIdDesc(memberId)
                 .stream()
                 .map(MemberNotificationItemResponseDto::of)
                 .toList();
 
         return MemberNotificationsResponseDto.of(
-                memberNotificationRepository.countByMemberIdAndReadAtIsNull(memberId),
+                memberNotificationRepository.countByMemberIdAndReadAtIsNullAndDeletedAtIsNull(memberId),
                 createdCount,
                 notifications
         );
@@ -61,15 +61,31 @@ public class MemberNotificationService {
     }
 
     public void markRead(Long memberId, Long notificationId) {
-        MemberNotification notification = memberNotificationRepository.findByIdAndMemberId(notificationId, memberId)
+        MemberNotification notification = memberNotificationRepository.findByIdAndMemberIdAndDeletedAtIsNull(notificationId, memberId)
                 .orElseThrow(IllegalArgumentException::new);
 
         notification.markRead();
     }
 
     public void markAllRead(Long memberId) {
-        memberNotificationRepository.findAllByMemberIdAndReadAtIsNull(memberId)
+        memberNotificationRepository.findAllByMemberIdAndReadAtIsNullAndDeletedAtIsNull(memberId)
                 .forEach(MemberNotification::markRead);
+    }
+
+    public void deleteNotification(Long memberId, Long notificationId) {
+        MemberNotification notification = memberNotificationRepository.findByIdAndMemberIdAndDeletedAtIsNull(notificationId, memberId)
+                .orElseThrow(IllegalArgumentException::new);
+
+        notification.markDeleted();
+    }
+
+    public long deleteReadNotifications(Long memberId) {
+        List<MemberNotification> readNotifications = memberNotificationRepository
+                .findAllByMemberIdAndReadAtIsNotNullAndDeletedAtIsNull(memberId);
+
+        readNotifications.forEach(MemberNotification::markDeleted);
+
+        return readNotifications.size();
     }
 
     public int createFavoriteTeamNotificationsForAllMembers() {

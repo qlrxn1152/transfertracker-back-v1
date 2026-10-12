@@ -62,6 +62,9 @@ public class MemberNotification {
     @Column(name = "read_at")
     private Instant readAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     private MemberNotification(
             Member member,
             Team team,
@@ -100,9 +103,19 @@ public class MemberNotification {
         return readAt != null;
     }
 
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
     public void markRead() {
         if (readAt == null) {
             readAt = Instant.now();
+        }
+    }
+
+    public void markDeleted() {
+        if (deletedAt == null) {
+            deletedAt = Instant.now();
         }
     }
 }

@@ -48,6 +48,20 @@ public class MemberNotificationController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @DeleteMapping("/api/member/notifications/{notificationId}")
+    public ResponseEntity<Void> deleteNotification(@AuthenticationPrincipal Jwt jwt, @PathVariable Long notificationId) {
+        memberNotificationService.deleteNotification(Long.valueOf(jwt.getSubject()), notificationId);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @DeleteMapping("/api/member/notifications/read")
+    public ResponseEntity<Void> deleteReadNotifications(@AuthenticationPrincipal Jwt jwt) {
+        memberNotificationService.deleteReadNotifications(Long.valueOf(jwt.getSubject()));
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     @GetMapping("/api/member/push/config")
     public ResponseEntity<PushConfigResponseDto> getPushConfig() {
         return ResponseEntity.status(HttpStatus.OK).body(memberPushNotificationService.getConfig());
@@ -69,6 +83,13 @@ public class MemberNotificationController {
             @Valid @RequestBody MemberPushSubscriptionRequestDto request
     ) {
         memberPushNotificationService.unsubscribe(Long.valueOf(jwt.getSubject()), request);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PostMapping("/api/member/push/test")
+    public ResponseEntity<Void> sendTestPush(@AuthenticationPrincipal Jwt jwt) {
+        memberPushNotificationService.sendTest(Long.valueOf(jwt.getSubject()));
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

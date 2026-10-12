@@ -77,15 +77,34 @@ public class MemberPushNotificationService {
             return;
         }
 
-        List<MemberPushSubscription> subscriptions = memberPushSubscriptionRepository.findAllByMemberId(
-                notification.getMember().getId()
+        sendToMember(notification.getMember().getId(), toPayload(notification), false);
+    }
+
+    public void sendTest(Long memberId) {
+        validateEnabled();
+
+        memberRepository.findById(memberId)
+                .orElseThrow(NotFoundMemberException::new);
+
+        String payload = toPayload(
+                "TransferTracker 테스트 알림",
+                "이 알림이 보이면 푸시 설정은 정상입니다.",
+                "/notifications",
+                null
         );
 
+        sendToMember(memberId, payload, true);
+    }
+
+    private void sendToMember(Long memberId, String payload, boolean failIfEmpty) {
+        List<MemberPushSubscription> subscriptions = memberPushSubscriptionRepository.findAllByMemberId(memberId);
+
         if (subscriptions.isEmpty()) {
+            if (failIfEmpty) {
+                throw new IllegalStateException("현재 브라우저의 푸시 구독 정보가 없습니다. 먼저 푸시 켜기를 눌러 주세요.");
+            }
             return;
         }
-
-        String payload = toPayload(notification);
 
         for (MemberPushSubscription subscription : subscriptions) {
             send(subscription, payload);
@@ -123,11 +142,20 @@ public class MemberPushNotificationService {
     }
 
     private String toPayload(MemberNotification notification) {
+        return toPayload(
+                notification.getTitle(),
+                notification.getMessage(),
+                notification.getTargetUrl(),
+                notification.getId()
+        );
+    }
+
+    private String toPayload(String title, String body, String url, Long notificationId) {
         return "{"
-                + "\"title\":\"" + escapeJson(notification.getTitle()) + "\","
-                + "\"body\":\"" + escapeJson(notification.getMessage()) + "\","
-                + "\"url\":\"" + escapeJson(notification.getTargetUrl()) + "\","
-                + "\"notificationId\":" + notification.getId()
+                + "\"title\":\"" + escapeJson(title) + "\","
+                + "\"body\":\"" + escapeJson(body) + "\","
+                + "\"url\":\"" + escapeJson(url) + "\","
+                + "\"notificationId\":" + (notificationId == null ? "null" : notificationId)
                 + "}";
     }
 

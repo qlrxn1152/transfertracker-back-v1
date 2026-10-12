@@ -9,13 +9,15 @@ import java.util.Optional;
 
 public interface MemberNotificationRepository extends JpaRepository<MemberNotification, Long> {
 
-    List<MemberNotification> findTop50ByMemberIdOrderByCreatedAtDescIdDesc(Long memberId);
+    List<MemberNotification> findTop50ByMemberIdAndDeletedAtIsNullOrderByCreatedAtDescIdDesc(Long memberId);
 
-    List<MemberNotification> findAllByMemberIdAndReadAtIsNull(Long memberId);
+    List<MemberNotification> findAllByMemberIdAndReadAtIsNullAndDeletedAtIsNull(Long memberId);
 
-    Optional<MemberNotification> findByIdAndMemberId(Long id, Long memberId);
+    List<MemberNotification> findAllByMemberIdAndReadAtIsNotNullAndDeletedAtIsNull(Long memberId);
 
-    long countByMemberIdAndReadAtIsNull(Long memberId);
+    Optional<MemberNotification> findByIdAndMemberIdAndDeletedAtIsNull(Long id, Long memberId);
+
+    long countByMemberIdAndReadAtIsNullAndDeletedAtIsNull(Long memberId);
 
     boolean existsByMemberIdAndTargetTypeAndTargetId(
             Long memberId,
