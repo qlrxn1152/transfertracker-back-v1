@@ -20,7 +20,6 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 @Service
 public class TransferPostSyncServiceImpl implements TransferPostSyncService {
 
