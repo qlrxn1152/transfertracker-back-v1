@@ -27,12 +27,46 @@ public class XClient {
         this.transferPostRepository = transferPostRepository;
     }
 
+    public JsonNode callExternalApi(TransferPostSource source) {
+        String userId = source.getXUserId();
+        return getUserPosts(userId, 50);
+    }
+
+    public JsonNode getUserByUsername(String username) {
+        return xRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/2/users/by/username/{username}")
+                        .build(username)
+                )
+                .retrieve()
+                .body(JsonNode.class);
+    }
+
+    public JsonNode getUserPosts(String userId, int size) {
+        return xRestClient.get()
+                .uri(uriBuilder -> uriBuilder.
+                        path("/2/users/{id}/tweets")
+                        .queryParam("max_results", size) // 1 <= size <= 100 ( size => 자연수 )
+                        .queryParam("tweet.fields", "created_at,attachments")
+                        .queryParam("expansions", "attachments.media_keys")
+                        .queryParam("media.fields", "media_key,type,url,preview_image_url,width,height")
+                        .build(userId)
+                )
+                .retrieve()
+                .body(JsonNode.class);
+    }
 
 
+
+
+
+    // ================================================================================= //
     public String syncPosts(TransferPostSource source) {
         String userId = source.getXUserId();
-
         JsonNode response = getUserPosts(userId, 50);
+
+
+
         JsonNode userPosts = response.get("data");
         Map<String, String> mediaUrlByKey = mapMediaUrlByKey(response);
 
@@ -62,29 +96,7 @@ public class XClient {
 
 
 
-    public JsonNode getUserByUsername(String username) {
-        return xRestClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/2/users/by/username/{username}")
-                        .build(username)
-                )
-                .retrieve()
-                .body(JsonNode.class);
-    }
 
-    public JsonNode getUserPosts(String userId, int size) {
-        return xRestClient.get()
-                .uri(uriBuilder -> uriBuilder.
-                        path("/2/users/{id}/tweets")
-                        .queryParam("max_results", size) // 1 <= size <= 100 ( size => 자연수 )
-                        .queryParam("tweet.fields", "created_at,attachments")
-                        .queryParam("expansions", "attachments.media_keys")
-                        .queryParam("media.fields", "media_key,type,url,preview_image_url,width,height")
-                        .build(userId)
-                )
-                .retrieve()
-                .body(JsonNode.class);
-    }
 
     private Map<String, String> mapMediaUrlByKey(JsonNode response) {
         Map<String, String> mediaUrlByKey = new HashMap<>();

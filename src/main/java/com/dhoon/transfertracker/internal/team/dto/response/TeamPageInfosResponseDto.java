@@ -1,7 +1,7 @@
 package com.dhoon.transfertracker.internal.team.dto.response;
 
 import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayersResponseDto;
-import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

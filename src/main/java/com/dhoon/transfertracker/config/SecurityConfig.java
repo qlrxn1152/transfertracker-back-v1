@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.etc.config;
+package com.dhoon.transfertracker.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

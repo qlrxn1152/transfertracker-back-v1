@@ -1,6 +1,5 @@
-package com.dhoon.transfertracker.internal.transfer.dto.response;
+package com.dhoon.transfertracker.internal.transferpost.dto.response;
 
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

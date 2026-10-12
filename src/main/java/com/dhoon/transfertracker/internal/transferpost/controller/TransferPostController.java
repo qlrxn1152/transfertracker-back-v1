@@ -2,7 +2,7 @@ package com.dhoon.transfertracker.internal.transferpost.controller;
 
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostSourceItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostSourcesResponseDto;

@@ -9,13 +9,11 @@ import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayersResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

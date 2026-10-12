@@ -1,6 +1,6 @@
 package com.dhoon.transfertracker.internal.transferpost.service.impl;
 
-import com.dhoon.transfertracker.internal.transfer.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
