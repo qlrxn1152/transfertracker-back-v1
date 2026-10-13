@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TransferPostQueryOrchestrationService {
 
-    private final TransferPostQueryTransactionService txService;
+    private final TransferPostQueryTxService txService;
 
     public TransferPostsResponseDto getSourcerAllPosts(TransferPostSource sourcer) {
         validateSourcerIsNotNull(sourcer);

@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 @Transactional
 @RequiredArgsConstructor
-public class TransferPostQueryTransactionService implements TransferPostQueryService {
+public class TransferPostQueryTxService implements TransferPostQueryService {
 
     private final TransferPostRepository transferPostRepository;
     private final TeamRepository teamRepository;
