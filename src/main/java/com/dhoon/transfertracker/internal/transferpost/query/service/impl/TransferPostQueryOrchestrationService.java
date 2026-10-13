@@ -1,14 +1,11 @@
-package com.dhoon.transfertracker.internal.transferpost.service.impl;
+package com.dhoon.transfertracker.internal.transferpost.query.service.impl;
 
-import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidPostIdException;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidSourcerException;
-import com.dhoon.transfertracker.internal.transferpost.service.TransferPostService;
-import com.dhoon.transfertracker.internal.transferpost.service.translation.TransferPostTranslationServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,43 +13,35 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TransferPostOrchestrationService {
+public class TransferPostQueryOrchestrationService {
 
-    private final TransferPostService transferPostTxService;
-    private final TransferPostTranslationServiceImpl translationService;
+    private final TransferPostQueryTransactionService txService;
 
     public TransferPostsResponseDto getSourcerAllPosts(TransferPostSource sourcer) {
         validateSourcerIsNotNull(sourcer);
 
-        return transferPostTxService.getSourcerAllPosts(sourcer);
+        return txService.getSourcerAllPosts(sourcer);
     }
 
 
     public TransferPostsResponseDto getTeamTransferPosts(Long teamId) {
         validateTeamIdIsNotNull(teamId);
 
-        return transferPostTxService.getTeamTransferPosts(teamId);
+        return txService.getTeamTransferPosts(teamId);
     }
 
     public TransferPostsResponseDto getAllTransferPosts() {
-        return transferPostTxService.getAllTransferPosts();
+        return txService.getAllTransferPosts();
     }
 
     public TransferPostDetailResponseDto getTransferPost(Long postId) {
         validatePostIdIsNotNull(postId);
 
-        return transferPostTxService.getTransferPost(postId);
+        return txService.getTransferPost(postId);
     }
 
 
 
-    public String postAssignTeam() {
-        return transferPostTxService.postAssignTeam();
-    }
-
-    public TranslationBatchResult translate() {
-        return translationService.translate();
-    }
 
 
 
@@ -74,21 +63,5 @@ public class TransferPostOrchestrationService {
             throw new InvalidTeamIdException();
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

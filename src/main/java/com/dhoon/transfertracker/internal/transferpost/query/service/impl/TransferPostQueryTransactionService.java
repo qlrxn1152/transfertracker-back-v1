@@ -1,16 +1,15 @@
-package com.dhoon.transfertracker.internal.transferpost.service.impl;
+package com.dhoon.transfertracker.internal.transferpost.query.service.impl;
 
-import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidPostIdException;
+import com.dhoon.transfertracker.internal.transferpost.query.service.TransferPostQueryService;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transferpost.service.TransferPostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,7 @@ import java.util.List;
 @Slf4j
 @Transactional
 @RequiredArgsConstructor
-public class TransferPostTxService implements TransferPostService {
+public class TransferPostQueryTransactionService implements TransferPostQueryService {
 
     private final TransferPostRepository transferPostRepository;
     private final TeamRepository teamRepository;
@@ -73,26 +72,5 @@ public class TransferPostTxService implements TransferPostService {
                 .orElseThrow(InvalidPostIdException::new);
 
         return TransferPostDetailResponseDto.of(TransferPostItemResponseDto.of(transferPost));
-    }
-
-
-    @Override
-    public String postAssignTeam() {
-        List<TransferPost> teamNotAssignPosts = transferPostRepository.findAllByTeamIsNull();
-        List<Team> allLeagueTeams = teamRepository.findAllByLeagueCodeIsNotNull();
-
-        teamNotAssignPosts.forEach(post -> {
-            String lowerContent = post.getContent().toLowerCase();
-
-            allLeagueTeams.forEach(team -> {
-                String lowerTeamName = team.getTeamName().toLowerCase();
-
-                if (lowerContent.contains(lowerTeamName)) {
-                    post.assignTeam(team);
-                }
-            });
-        });
-
-        return "OK";
     }
 }

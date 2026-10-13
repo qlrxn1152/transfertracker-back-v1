@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.transferpost.service.translation;
+package com.dhoon.transfertracker.internal.transferpost.translation.service;
 
 import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
 @Transactional
 @RequiredArgsConstructor
+@Service
 public class TransferPostTranslationTxService {
 
     private final TransferPostRepository transferPostRepository;
@@ -49,9 +49,6 @@ public class TransferPostTranslationTxService {
 
                     transferPost.translate(translatedContent);
                 });
+
     }
-
-
-
-
 }

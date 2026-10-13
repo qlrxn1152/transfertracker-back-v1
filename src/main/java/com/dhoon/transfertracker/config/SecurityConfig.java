@@ -69,9 +69,7 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
 
                         // 관리자 API
-                        .requestMatchers(
-                                "/api/admin/**"
-                        )
+                        .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
                         // 외부 데이터 동기화

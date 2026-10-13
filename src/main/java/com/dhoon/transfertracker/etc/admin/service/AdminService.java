@@ -16,11 +16,12 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
+import com.dhoon.transfertracker.internal.transferpost.command.service.TransferPostCommandOrchestrationService;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.domain.TranslateStatus;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transferpost.service.impl.TransferPostOrchestrationService;
+import com.dhoon.transfertracker.internal.transferpost.translation.service.TransferPostTranslationOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -50,7 +51,8 @@ public class AdminService {
     private final PageViewRepository pageViewRepository;
     private final TeamPlayerRepository teamPlayerRepository;
     private final AdminJobLogRepository adminJobLogRepository;
-    private final TransferPostOrchestrationService transferPostOrchestrationService;
+    private final TransferPostTranslationOrchestrationService transferPostTranslationOrchestrationService;
+    private final TransferPostCommandOrchestrationService transferPostCommandOrchestrationService;
     private final PlayerNameTranslationService playerNameTranslationService;
     private final MemberNotificationService memberNotificationService;
     private final XClient xClient;
@@ -258,7 +260,7 @@ public class AdminService {
         long beforeCount = transferPostRepository.countByTeamIsNull();
 
         try {
-            transferPostOrchestrationService.postAssignTeam();
+            transferPostCommandOrchestrationService.postAssignTeam();
             long afterCount = transferPostRepository.countByTeamIsNull();
             long affectedCount = Math.max(0, beforeCount - afterCount);
             int notificationCount = memberNotificationService.createFavoriteTeamNotificationsForAllMembers();
@@ -281,7 +283,7 @@ public class AdminService {
         long beforeCount = transferPostRepository.countByTranslateStatus(TranslateStatus.PENDING);
 
         try {
-            transferPostOrchestrationService.translate();
+            transferPostTranslationOrchestrationService.translate();
             long afterCount = transferPostRepository.countByTranslateStatus(TranslateStatus.PENDING);
             long affectedCount = Math.max(0, beforeCount - afterCount);
 

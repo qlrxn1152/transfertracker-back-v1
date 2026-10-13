@@ -1,16 +1,13 @@
-package com.dhoon.transfertracker.internal.transferpost.service;
+package com.dhoon.transfertracker.internal.transferpost.query.service;
 
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 
-public interface TransferPostService {
+public interface TransferPostQueryService {
 
     TransferPostsResponseDto getSourcerAllPosts(TransferPostSource sourcer);
 
-    String postAssignTeam();
-
-    // 외부 API ID 가 아닌, 사용중인 DB 안에있는 team_id
     TransferPostsResponseDto getTeamTransferPosts(Long teamId);
 
     TransferPostsResponseDto getAllTransferPosts();
