@@ -1,8 +1,9 @@
-package com.dhoon.transfertracker.internal.player.service.impl;
+package com.dhoon.transfertracker.internal.player.query.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
-import com.dhoon.transfertracker.internal.player.query.dto.response.PlayerItemResponseDto;
+import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
 import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
+import com.dhoon.transfertracker.internal.player.query.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
@@ -25,39 +26,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({
-        PlayerOrchestrationService.class,
-        PlayerTxService.class
+        PlayerQueryOrchestrationService.class,
+        PlayerQueryTxService.class
 })
 @ActiveProfiles("test")
-
-/*
- * 실제 요청 구조:
- *
- * Client
- *      ↓
- * Controller
- *      ↓
- * PlayerOrchestrationService
- *      → Transaction X
- *      ↓
- * PlayerTxService
- *      → readOnly Transaction
- *      → Repository
- *      → DTO 생성
- *      ↓
- * Transaction 종료
- *      ↓
- * PlayerOrchestrationService
- *
- *
- * 실제 Transaction 경계를 검증하기 위해
- * DataJpaTest의 기본 Test Transaction을 사용하지 않는다.
- */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class PlayerDetailTest {
+class PlayerDetailQueryTest {
+
 
     @Autowired
-    PlayerOrchestrationService playerOrchestrationService;
+    PlayerQueryOrchestrationService playerQueryOrchestrationService;
 
     @Autowired
     PlayerRepository playerRepository;
@@ -73,27 +51,16 @@ class PlayerDetailTest {
     void clearDatabase() {
 
         teamPlayerRepository.deleteAll();
+
         playerRepository.deleteAll();
         teamRepository.deleteAll();
     }
 
 
     // ==================================================
-    // 정상 상황
+    // 정상
     // ==================================================
 
-    /*
-     * [신규 - 중요]
-     *
-     * 현재 소속팀이 존재한다면
-     * TeamPlayer를 이용해서
-     *
-     * Player
-     * +
-     * Team
-     *
-     * 정보를 하나의 DTO로 만들어 반환한다.
-     */
     @Test
     @DisplayName("현재 소속팀이 있는 선수는 팀 정보까지 함께 반환한다.")
     void getPlayer_withTeam() {
@@ -102,7 +69,7 @@ class PlayerDetailTest {
         Team arsenal =
                 Team.of(
                         "Arsenal",
-                        100L,
+                        42L,
                         LeagueCode.EPL
                 );
 
@@ -120,7 +87,7 @@ class PlayerDetailTest {
                 playerRepository.save(
                         Player.of(
                                 "Bukayo Saka",
-                                1L
+                                10L
                         )
                 );
 
@@ -135,9 +102,10 @@ class PlayerDetailTest {
 
         // when
         PlayerItemResponseDto response =
-                playerOrchestrationService.getPlayer(
-                        saka.getId()
-                );
+                playerQueryOrchestrationService
+                        .getPlayer(
+                                saka.getId()
+                        );
 
 
         // then
@@ -151,7 +119,6 @@ class PlayerDetailTest {
                         "Bukayo Saka"
                 );
 
-
         assertThat(response.getTeamName())
                 .isEqualTo(
                         "아스널"
@@ -159,23 +126,13 @@ class PlayerDetailTest {
 
         assertThat(response.getPhotoUrl())
                 .isEqualTo(
-                        "https://media.api-sports.io/football/players/1.png"
+                        "https://media.api-sports.io/football/players/10.png"
                 );
     }
 
 
-    /*
-     * [신규 - 정책 테스트]
-     *
-     * Player는 존재하지만 TeamPlayer가 없다.
-     *
-     * 즉 현재 소속팀이 없는 선수.
-     *
-     * 단건 조회 자체는 가능하고
-     * Team 정보만 null로 반환한다.
-     */
     @Test
-    @DisplayName("현재 소속팀이 없는 선수는 선수 정보만 반환한다.")
+    @DisplayName("현재 소속팀이 없는 선수도 조회할 수 있고 teamName은 null이다.")
     void getPlayer_withoutTeam() {
 
         // given
@@ -183,16 +140,17 @@ class PlayerDetailTest {
                 playerRepository.save(
                         Player.of(
                                 "Free Agent Player",
-                                2L
+                                20L
                         )
                 );
 
 
         // when
         PlayerItemResponseDto response =
-                playerOrchestrationService.getPlayer(
-                        player.getId()
-                );
+                playerQueryOrchestrationService
+                        .getPlayer(
+                                player.getId()
+                        );
 
 
         // then
@@ -211,27 +169,20 @@ class PlayerDetailTest {
 
         assertThat(response.getPhotoUrl())
                 .isEqualTo(
-                        "https://media.api-sports.io/football/players/2.png"
+                        "https://media.api-sports.io/football/players/20.png"
                 );
     }
 
 
-    /*
-     * [신규]
-     *
-     * PlayerNameKo가 있다면
-     * PlayerItemResponseDto는 getDisplayName()을 사용하므로
-     * 한글 이름을 반환해야 한다.
-     */
     @Test
-    @DisplayName("선수 한글 이름이 존재하면 한글 이름을 반환한다.")
+    @DisplayName("선수 한글 이름이 존재하면 displayName으로 한글 이름을 반환한다.")
     void getPlayer_withKoreanName() {
 
         // given
         Player player =
                 Player.of(
                         "Son Heung-min",
-                        3L
+                        30L
                 );
 
         player.assignKoPlayerName(
@@ -246,9 +197,10 @@ class PlayerDetailTest {
 
         // when
         PlayerItemResponseDto response =
-                playerOrchestrationService.getPlayer(
-                        player.getId()
-                );
+                playerQueryOrchestrationService
+                        .getPlayer(
+                                player.getId()
+                        );
 
 
         // then
@@ -256,24 +208,100 @@ class PlayerDetailTest {
                 .isEqualTo(
                         "손흥민"
                 );
+
+        assertThat(response.getTeamName())
+                .isNull();
+    }
+
+
+    @Test
+    @DisplayName("선수와 팀 모두 한글 이름이 존재하면 각각 displayName을 반환한다.")
+    void getPlayer_withKoreanPlayerAndTeamName() {
+
+        // given
+        Team arsenal =
+                Team.of(
+                        "Arsenal",
+                        42L,
+                        LeagueCode.EPL
+                );
+
+        arsenal.assignKoTeamName(
+                "아스널"
+        );
+
+        arsenal =
+                teamRepository.save(
+                        arsenal
+                );
+
+
+        Player saka =
+                Player.of(
+                        "Bukayo Saka",
+                        10L
+                );
+
+        saka.assignKoPlayerName(
+                "부카요 사카"
+        );
+
+        saka =
+                playerRepository.save(
+                        saka
+                );
+
+
+        teamPlayerRepository.save(
+                TeamPlayer.of(
+                        arsenal,
+                        saka
+                )
+        );
+
+
+        // when
+        PlayerItemResponseDto response =
+                playerQueryOrchestrationService
+                        .getPlayer(
+                                saka.getId()
+                        );
+
+
+        // then
+        assertThat(response.getPlayerName())
+                .isEqualTo(
+                        "부카요 사카"
+                );
+
+        assertThat(response.getTeamName())
+                .isEqualTo(
+                        "아스널"
+                );
     }
 
 
     // ==================================================
-    // 실패 상황
+    // 실패
     // ==================================================
 
-    /*
-     * [신규 - 실패]
-     *
-     * TeamPlayer 조회 실패
-     *      ↓
-     * Player 조회
-     *      ↓
-     * Player도 없음
-     *      ↓
-     * NotFoundPlayerException
-     */
+    @Test
+    @DisplayName("playerId가 null이면 예외가 발생한다.")
+    void getPlayer_nullPlayerId() {
+
+        // when & then
+        assertThatThrownBy(() ->
+                playerQueryOrchestrationService
+                        .getPlayer(
+                                null
+                        )
+        )
+                .isInstanceOf(
+                        InvalidPlayerIdException.class
+                );
+    }
+
+
     @Test
     @DisplayName("존재하지 않는 선수를 조회하면 예외가 발생한다.")
     void getPlayer_notFound() {
@@ -284,9 +312,10 @@ class PlayerDetailTest {
 
         // when & then
         assertThatThrownBy(() ->
-                playerOrchestrationService.getPlayer(
-                        playerId
-                )
+                playerQueryOrchestrationService
+                        .getPlayer(
+                                playerId
+                        )
         )
                 .isInstanceOf(
                         NotFoundPlayerException.class

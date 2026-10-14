@@ -103,7 +103,10 @@ public class PlayerNameTranslationTxService {
              * 번역 대상 조회 이후 사람이 직접 값을 수정한 경우에는
              * AI 결과로 덮어쓰지 않는다.
              */
-            if (player.getPlayerNameKo() == null) {
+            if (
+                    player.getPlayerNameKo() == null
+                            || player.getPlayerNameKo().isBlank()
+            ) {
 
                 player.assignKoPlayerName(
                         playerNameKo

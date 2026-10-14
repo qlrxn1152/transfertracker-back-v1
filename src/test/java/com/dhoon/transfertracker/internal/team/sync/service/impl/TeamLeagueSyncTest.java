@@ -1,11 +1,11 @@
 package com.dhoon.transfertracker.internal.team.sync.service.impl;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
-import com.dhoon.transfertracker.external.football.dto.LeagueTeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
+import com.dhoon.transfertracker.internal.team.sync.dto.response.LeagueTeamsResponseDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
