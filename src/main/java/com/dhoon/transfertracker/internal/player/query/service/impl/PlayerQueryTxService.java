@@ -1,17 +1,15 @@
-package com.dhoon.transfertracker.internal.player.service.impl;
+package com.dhoon.transfertracker.internal.player.query.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
-import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
-import com.dhoon.transfertracker.internal.player.dto.response.PlayersResponseDto;
+import com.dhoon.transfertracker.internal.player.query.dto.response.PlayerItemResponseDto;
+import com.dhoon.transfertracker.internal.player.query.dto.response.PlayersResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
-import com.dhoon.transfertracker.internal.player.service.PlayerService;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -19,16 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@RequiredArgsConstructor
 @Slf4j
-@Transactional
 @Service
-public class PlayerTxService implements PlayerService {
+@RequiredArgsConstructor
+@Transactional
+public class PlayerQueryTxService {
 
     private final PlayerRepository playerRepository;
     private final TeamPlayerRepository teamPlayerRepository;
 
-    @Override
     @Transactional(readOnly = true)
     public PlayerItemResponseDto getPlayerResponse(Long playerId) {
         return teamPlayerRepository.findByPlayerId(playerId)
@@ -41,7 +38,6 @@ public class PlayerTxService implements PlayerService {
                 });
     }
 
-    @Override
     @Transactional(readOnly = true)
     public PlayersResponseDto getPlayers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
 
@@ -58,4 +54,6 @@ public class PlayerTxService implements PlayerService {
                 .map(PlayerItemResponseDto::of)
                 .toList();
     }
+
+
 }

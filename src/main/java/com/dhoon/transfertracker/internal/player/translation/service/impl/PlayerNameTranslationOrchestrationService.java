@@ -1,11 +1,12 @@
-package com.dhoon.transfertracker.internal.player.service.impl;
+package com.dhoon.transfertracker.internal.player.translation.service.impl;
 
 import com.dhoon.transfertracker.external.openai.client.OpenAiClient;
 import com.dhoon.transfertracker.external.openai.dto.request.PlayerNameTranslationTarget;
 import com.dhoon.transfertracker.external.openai.dto.response.PlayerNameTranslationBatchResult;
 import com.dhoon.transfertracker.external.openai.dto.response.PlayerNameTranslationResult;
-import com.dhoon.transfertracker.internal.player.dto.response.PlayerNameTranslationResponseDto;
+import com.dhoon.transfertracker.internal.player.translation.dto.response.PlayerNameTranslationResponseDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -13,9 +14,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class PlayerNameTranslationService {
+public class PlayerNameTranslationOrchestrationService {
 
     /*
      * DB에서는 한 번에 최대 300명의
@@ -126,7 +128,7 @@ public class PlayerNameTranslationService {
 
         if (
                 result == null
-                || result.getPlayers() == null
+                        || result.getPlayers() == null
         ) {
 
             throw new IllegalStateException(
@@ -162,7 +164,7 @@ public class PlayerNameTranslationService {
 
         if (
                 responseIds.size()
-                != responseIdSet.size()
+                        != responseIdSet.size()
         ) {
 
             throw new IllegalStateException(
@@ -189,7 +191,7 @@ public class PlayerNameTranslationService {
                         .anyMatch(
                                 player ->
                                         player.getPlayerNameKo() == null
-                                        || player.getPlayerNameKo().isBlank()
+                                                || player.getPlayerNameKo().isBlank()
                         );
 
 

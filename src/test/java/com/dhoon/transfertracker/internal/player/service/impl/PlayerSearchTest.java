@@ -1,8 +1,8 @@
 package com.dhoon.transfertracker.internal.player.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
-import com.dhoon.transfertracker.internal.player.dto.response.PlayerItemResponseDto;
-import com.dhoon.transfertracker.internal.player.dto.response.PlayersResponseDto;
+import com.dhoon.transfertracker.internal.player.query.dto.response.PlayerItemResponseDto;
+import com.dhoon.transfertracker.internal.player.query.dto.response.PlayersResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerSearchPageValueException;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;

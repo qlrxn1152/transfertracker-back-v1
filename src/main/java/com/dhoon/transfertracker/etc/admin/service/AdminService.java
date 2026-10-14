@@ -10,9 +10,9 @@ import com.dhoon.transfertracker.etc.admin.exception.AdminSyncFailedException;
 import com.dhoon.transfertracker.etc.admin.repository.AdminJobLogRepository;
 import com.dhoon.transfertracker.etc.notification.service.MemberNotificationService;
 import com.dhoon.transfertracker.etc.notice.repository.NoticeRepository;
-import com.dhoon.transfertracker.internal.player.dto.response.PlayerNameTranslationResponseDto;
+import com.dhoon.transfertracker.internal.player.translation.dto.response.PlayerNameTranslationResponseDto;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
-import com.dhoon.transfertracker.internal.player.service.impl.PlayerNameTranslationService;
+import com.dhoon.transfertracker.internal.player.translation.service.impl.PlayerNameTranslationOrchestrationService;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
@@ -54,8 +54,8 @@ public class AdminService {
     private final TeamPlayerRepository teamPlayerRepository;
     private final AdminJobLogRepository adminJobLogRepository;
     private final TransferPostTranslationOrchestrationService transferPostTranslationOrchestrationService;
+    private final PlayerNameTranslationOrchestrationService playerNameTranslationOrchestrationService;
     private final TransferPostCommandOrchestrationService transferPostCommandOrchestrationService;
-    private final PlayerNameTranslationService playerNameTranslationService;
     private final MemberNotificationService memberNotificationService;
     private final XClient xClient;
     private final Environment environment;
@@ -372,7 +372,7 @@ public class AdminService {
         long beforeCount = teamPlayerRepository.countPlayerNameTranslationTargets();
 
         try {
-            PlayerNameTranslationResponseDto response = playerNameTranslationService.translate();
+            PlayerNameTranslationResponseDto response = playerNameTranslationOrchestrationService.translate();
             long afterCount = teamPlayerRepository.countPlayerNameTranslationTargets();
             long affectedCount = Math.max(0, beforeCount - afterCount);
 
