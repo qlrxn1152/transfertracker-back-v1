@@ -1,16 +1,18 @@
-package com.dhoon.transfertracker.internal.team.service.impl;
+package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
-import com.dhoon.transfertracker.internal.team.dto.response.*;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfoForTeamResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +25,12 @@ import java.util.List;
 @Slf4j
 @Transactional
 @Service
-public class TeamTxService implements TeamService {
+public class TeamQueryTxService {
 
     private final TeamRepository teamRepository;
     private final TeamPlayerRepository teamPlayerRepository;
     private final TransferPostRepository transferPostRepository;
 
-    @Override
     @Transactional(readOnly = true)
     public TeamItemResponseDto getTeam(Long teamId) {
         Team team = teamRepository.findById(teamId)
@@ -38,7 +39,6 @@ public class TeamTxService implements TeamService {
         return TeamItemResponseDto.of(team);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public TeamsResponseDto getTeams() {
         List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCodeIsNotNull()
@@ -49,8 +49,6 @@ public class TeamTxService implements TeamService {
         return TeamsResponseDto.of(teams);
     }
 
-    // 특정 리그에 속한 팀들 조회
-    @Override
     @Transactional(readOnly = true)
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
         List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCode(leagueCode)
@@ -61,7 +59,6 @@ public class TeamTxService implements TeamService {
         return TeamsResponseDto.of(teams);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public TeamPageInfosResponseDto getTeamInfo(Long teamId) {
         Team team = teamRepository.findById(teamId)

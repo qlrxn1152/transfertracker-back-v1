@@ -1,13 +1,11 @@
-package com.dhoon.transfertracker.internal.team.service.impl;
+package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfosResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueException;
-import com.dhoon.transfertracker.internal.team.service.TeamService;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
-import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,28 +13,28 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TeamOrchestrationService {
+public class TeamQueryOrchestrationService {
 
-    private final TeamService teamTxService;
+    private final TeamQueryTxService txService;
 
     public TeamItemResponseDto getTeam(Long teamId) {
         validateTeamId(teamId);
 
-        return teamTxService.getTeam(teamId);
+        return txService.getTeam(teamId);
     }
 
     public TeamsResponseDto getTeams() {
-        return teamTxService.getTeams();
+        return txService.getTeams();
     }
 
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
         validateLeagueCode(leagueCode);
-        return teamTxService.getLeagueTeams(leagueCode);
+        return txService.getLeagueTeams(leagueCode);
     }
 
     public TeamPageInfosResponseDto getTeamInfo(Long teamId) {
         validateTeamId(teamId);
-        return teamTxService.getTeamInfo(teamId);
+        return txService.getTeamInfo(teamId);
     }
 
 
@@ -51,7 +49,5 @@ public class TeamOrchestrationService {
             throw new InvalidLeagueCodeValueException();
         }
     }
-
-
 
 }

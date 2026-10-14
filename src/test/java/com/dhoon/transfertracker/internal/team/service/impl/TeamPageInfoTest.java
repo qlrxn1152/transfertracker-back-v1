@@ -4,7 +4,7 @@ import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamPageInfosResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;

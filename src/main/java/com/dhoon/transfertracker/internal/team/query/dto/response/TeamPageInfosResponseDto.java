@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.team.dto.response;
+package com.dhoon.transfertracker.internal.team.query.dto.response;
 
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;

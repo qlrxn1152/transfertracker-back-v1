@@ -2,8 +2,8 @@ package com.dhoon.transfertracker.internal.team.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;

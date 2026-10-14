@@ -2,7 +2,7 @@ package com.dhoon.transfertracker.internal.team.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
-import com.dhoon.transfertracker.internal.team.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
