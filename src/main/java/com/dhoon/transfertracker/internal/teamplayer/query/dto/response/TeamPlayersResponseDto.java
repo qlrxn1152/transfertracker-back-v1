@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.teamplayer.dto.response;
+package com.dhoon.transfertracker.internal.teamplayer.query.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

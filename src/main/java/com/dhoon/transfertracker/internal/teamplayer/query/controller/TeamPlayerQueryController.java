@@ -1,8 +1,7 @@
-package com.dhoon.transfertracker.internal.teamplayer.controller;
+package com.dhoon.transfertracker.internal.teamplayer.query.controller;
 
-import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayersResponseDto;
-import com.dhoon.transfertracker.internal.teamplayer.service.TeamPlayerService;
-import com.dhoon.transfertracker.internal.teamplayer.service.impl.TeamPlayerOrchestrationService;
+import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
+import com.dhoon.transfertracker.internal.teamplayer.query.service.impl.TeamPlayerQueryOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -13,14 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-public class TeamPlayerController {
+public class TeamPlayerQueryController {
 
-    private final TeamPlayerOrchestrationService teamPlayerOrchestrationService;
+    private final TeamPlayerQueryOrchestrationService teamPlayerQueryOrchestrationService;
 
 
     @GetMapping("/api/team/player/{teamId}")
     public ResponseEntity<TeamPlayersResponseDto> getTeamPlayers(@PathVariable Long teamId) {
-        TeamPlayersResponseDto response = teamPlayerOrchestrationService.getTeamPlayers(teamId);
+        TeamPlayersResponseDto response = teamPlayerQueryOrchestrationService.getTeamPlayers(teamId);
 
         return ResponseEntity.ok(response);
     }

@@ -1,8 +1,8 @@
-package com.dhoon.transfertracker.internal.teamplayer.service.impl;
+package com.dhoon.transfertracker.internal.teamplayer.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
-import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayersResponseDto;
-import com.dhoon.transfertracker.internal.teamplayer.service.TeamPlayerService;
+import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
+import com.dhoon.transfertracker.internal.teamplayer.query.service.TeamPlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TeamPlayerOrchestrationService {
+public class TeamPlayerQueryOrchestrationService {
 
     private final TeamPlayerService teamPlayerTxService;
 

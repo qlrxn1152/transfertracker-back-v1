@@ -8,8 +8,10 @@ import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
-import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayerItemResponseDto;
-import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayersResponseDto;
+import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayerItemResponseDto;
+import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
+import com.dhoon.transfertracker.internal.teamplayer.query.service.impl.TeamPlayerQueryOrchestrationService;
+import com.dhoon.transfertracker.internal.teamplayer.query.service.impl.TeamPlayerQueryTxService;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,8 +29,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({
-        TeamPlayerOrchestrationService.class,
-        TeamPlayerTxService.class
+        TeamPlayerQueryOrchestrationService.class,
+        TeamPlayerQueryTxService.class
 })
 @ActiveProfiles("test")
 
@@ -62,7 +64,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class TeamPlayerTest {
 
     @Autowired
-    TeamPlayerOrchestrationService teamPlayerOrchestrationService;
+    TeamPlayerQueryOrchestrationService teamPlayerQueryOrchestrationService;
 
     @Autowired
     TeamPlayerRepository teamPlayerRepository;
@@ -120,7 +122,7 @@ class TeamPlayerTest {
 
         // when
         TeamPlayersResponseDto response =
-                teamPlayerOrchestrationService.getTeamPlayers(
+                teamPlayerQueryOrchestrationService.getTeamPlayers(
                         arsenal.getId()
                 );
 
@@ -189,7 +191,7 @@ class TeamPlayerTest {
 
         // when
         TeamPlayersResponseDto response =
-                teamPlayerOrchestrationService.getTeamPlayers(
+                teamPlayerQueryOrchestrationService.getTeamPlayers(
                         arsenal.getId()
                 );
 
@@ -247,7 +249,7 @@ class TeamPlayerTest {
 
         // when
         TeamPlayersResponseDto response =
-                teamPlayerOrchestrationService.getTeamPlayers(
+                teamPlayerQueryOrchestrationService.getTeamPlayers(
                         arsenal.getId()
                 );
 
@@ -316,7 +318,7 @@ class TeamPlayerTest {
 
         // when
         TeamPlayersResponseDto response =
-                teamPlayerOrchestrationService.getTeamPlayers(
+                teamPlayerQueryOrchestrationService.getTeamPlayers(
                         arsenal.getId()
                 );
 
@@ -361,7 +363,7 @@ class TeamPlayerTest {
 
         // when
         TeamPlayersResponseDto response =
-                teamPlayerOrchestrationService.getTeamPlayers(
+                teamPlayerQueryOrchestrationService.getTeamPlayers(
                         arsenal.getId()
                 );
 
@@ -387,7 +389,7 @@ class TeamPlayerTest {
 
         // when & then
         assertThatThrownBy(() ->
-                teamPlayerOrchestrationService.getTeamPlayers(
+                teamPlayerQueryOrchestrationService.getTeamPlayers(
                         null
                 )
         )
@@ -413,7 +415,7 @@ class TeamPlayerTest {
 
         // when & then
         assertThatThrownBy(() ->
-                teamPlayerOrchestrationService.getTeamPlayers(
+                teamPlayerQueryOrchestrationService.getTeamPlayers(
                         teamId
                 )
         )

@@ -33,12 +33,6 @@ public class ApiFootballController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/external/api/team/players/{teamApiId}")
-    public ResponseEntity<TeamPlayersSaveResponseDto> saveTeamPlayers(@PathVariable Long teamApiId) {
-        TeamPlayersSaveResponseDto response = footballSyncService.syncTeamPlayers(teamApiId);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
 
     @PostMapping("/external/api/teams/league/{leagueCode}")
     public ResponseEntity<LeagueTeamsResponseDto> syncLeagueTeams(@PathVariable LeagueCode leagueCode) {

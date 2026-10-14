@@ -1,11 +1,11 @@
-package com.dhoon.transfertracker.internal.teamplayer.service.impl;
+package com.dhoon.transfertracker.internal.teamplayer.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayerItemResponseDto;
-import com.dhoon.transfertracker.internal.teamplayer.dto.response.TeamPlayersResponseDto;
+import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayerItemResponseDto;
+import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import com.dhoon.transfertracker.internal.teamplayer.service.TeamPlayerService;
+import com.dhoon.transfertracker.internal.teamplayer.query.service.TeamPlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 @Service
-public class TeamPlayerTxService implements TeamPlayerService {
+public class TeamPlayerQueryTxService implements TeamPlayerService {
 
     private final TeamPlayerRepository teamPlayerRepository;
     private final TeamRepository teamRepository;
