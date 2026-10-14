@@ -1,6 +1,6 @@
 package com.dhoon.transfertracker.external.football.dto;
 
-import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransfersResponseDto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

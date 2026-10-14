@@ -1,5 +1,7 @@
 package com.dhoon.transfertracker.etc.admin.service;
 
+import com.dhoon.transfertracker.etc.admin.dto.request.AdminTransferPostImportItemRequestDto;
+import com.dhoon.transfertracker.etc.admin.dto.request.AdminTransferPostImportRequestDto;
 import com.dhoon.transfertracker.etc.admin.dto.response.*;
 import com.dhoon.transfertracker.external.x.client.XClient;
 import com.dhoon.transfertracker.etc.analytics.repository.PageViewRepository;
@@ -16,12 +18,12 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
-import com.dhoon.transfertracker.internal.transferpost.command.service.TransferPostCommandOrchestrationService;
+import com.dhoon.transfertracker.internal.transferpost.command.service.impl.TransferPostCommandOrchestrationService;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.domain.TranslateStatus;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transferpost.translation.service.TransferPostTranslationOrchestrationService;
+import com.dhoon.transfertracker.internal.transferpost.translation.service.impl.TransferPostTranslationOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -255,6 +257,72 @@ public class AdminService {
         }
     }
 
+    @Transactional
+    public AdminSyncResponseDto importPosts(TransferPostSource source, AdminTransferPostImportRequestDto request) {
+        String job = "import-posts:" + source.name();
+        long beforeCount = transferPostRepository.countBySourcer(source);
+
+        try {
+            int processed = 0;
+            int skipped = 0;
+
+            for (AdminTransferPostImportItemRequestDto post : request.getPosts()) {
+                if (post.getSource() != null && post.getSource() != source) {
+                    skipped++;
+                    continue;
+                }
+
+                String content = normalizeBlank(post.getContent());
+                String externalPostId = normalizeBlank(post.getExternalPostId());
+                if (content == null || externalPostId == null) {
+                    skipped++;
+                    continue;
+                }
+
+                Team team = resolveTeam(post.getTeamName());
+                TransferPost transferPost = transferPostRepository.findByExternalPostId(externalPostId)
+                        .or(() -> transferPostRepository.findBySourcerAndContent(source, content))
+                        .orElseGet(() -> transferPostRepository.save(TransferPost.of(
+                                source,
+                                content,
+                                externalPostId,
+                                post.getPostCreatedAt(),
+                                post.isRelateTransfer(),
+                                normalizeBlank(post.getPhotoUrl())
+                        )));
+
+                transferPost.importFromLocal(
+                        content,
+                        post.getPostCreatedAt(),
+                        post.isRelateTransfer(),
+                        normalizeBlank(post.getPhotoUrl()),
+                        normalizeBlank(post.getTranslatedContent()),
+                        team
+                );
+                processed++;
+            }
+
+            long afterCount = transferPostRepository.countBySourcer(source);
+            long affectedCount = Math.max(0, afterCount - beforeCount);
+            int notificationCount = memberNotificationService.createFavoriteTeamNotificationsForAllMembers();
+
+            return completeJob(
+                    job,
+                    "로컬 게시물 " + processed + "건을 운영 DB에 반영했습니다.",
+                    affectedCount,
+                    "received=" + request.getPosts().size()
+                            + ", processed=" + processed
+                            + ", skipped=" + skipped
+                            + ", before=" + beforeCount
+                            + ", after=" + afterCount
+                            + ", notifications=" + notificationCount
+            );
+        } catch (RuntimeException exception) {
+            failJob(job, exception);
+            throw exception;
+        }
+    }
+
     public AdminSyncResponseDto assignPostTeams() {
         String job = "assign-post-teams";
         long beforeCount = transferPostRepository.countByTeamIsNull();
@@ -345,6 +413,23 @@ public class AdminService {
                             .anyMatch(content::contains);
                 })
                 .count();
+    }
+
+    private Team resolveTeam(String teamName) {
+        String normalizedTeamName = normalizeBlank(teamName);
+        if (normalizedTeamName == null) {
+            return null;
+        }
+
+        return teamRepository.findByAnyDisplayName(normalizedTeamName).orElse(null);
+    }
+
+    private static String normalizeBlank(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
     }
 
     private AdminSyncResponseDto completeJob(String job, String message, long affectedCount, String detail) {

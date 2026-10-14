@@ -1,7 +1,7 @@
 package com.dhoon.transfertracker.internal.transferpost.translation.controller;
 
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
-import com.dhoon.transfertracker.internal.transferpost.translation.service.TransferPostTranslationOrchestrationService;
+import com.dhoon.transfertracker.internal.transferpost.translation.service.impl.TransferPostTranslationOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

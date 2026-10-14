@@ -6,9 +6,11 @@ import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
-import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
-import com.dhoon.transfertracker.internal.transfer.dto.response.TransferResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.dto.response.AllTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.dto.response.TransferResponseDto;
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
+import com.dhoon.transfertracker.internal.transfer.query.service.impl.TransferQueryOrchestrationService;
+import com.dhoon.transfertracker.internal.transfer.query.service.impl.TransferQueryTxService;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,15 +31,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({
-        TransferOrchestrationService.class,
-        TransferTxService.class
+        TransferQueryOrchestrationService.class,
+        TransferQueryTxService.class
 })
 @ActiveProfiles("test")
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class TransferSearchTest {
 
     @Autowired
-    TransferOrchestrationService transferOrchestrationService;
+    TransferQueryOrchestrationService transferQueryOrchestrationService;
 
     @Autowired
     TransferRepository transferRepository;
@@ -99,7 +101,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "Saka",
                         null,
@@ -185,7 +187,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "",
                         null,
@@ -271,7 +273,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "sAkA",
                         null,
@@ -321,7 +323,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "Saka",
                         null,
@@ -422,7 +424,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "",
                         null,
@@ -485,7 +487,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "",
                         null,
@@ -545,7 +547,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "",
                         LeagueCode.EPL,
@@ -600,7 +602,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "",
                         LeagueCode.EPL,
@@ -655,7 +657,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "",
                         LeagueCode.EPL,
@@ -733,7 +735,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "",
                         null,
@@ -799,7 +801,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "",
                         null,
@@ -900,7 +902,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "Saka",
                         LeagueCode.EPL,
@@ -978,7 +980,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto firstPage =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "Player",
                         null,
@@ -986,7 +988,7 @@ class TransferSearchTest {
                 );
 
         AllTransfersResponseDto secondPage =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         1,
                         "Player",
                         null,
@@ -1058,7 +1060,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "Player",
                         null,
@@ -1103,7 +1105,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         100,
                         "",
                         null,
@@ -1152,7 +1154,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "   Saka   ",
                         null,
@@ -1208,7 +1210,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         null,
                         null,
@@ -1256,7 +1258,7 @@ class TransferSearchTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         0,
                         "Messi",
                         null,
@@ -1286,7 +1288,7 @@ class TransferSearchTest {
 
         // when & then
         assertThatThrownBy(() ->
-                transferOrchestrationService.getTransfers(
+                transferQueryOrchestrationService.getTransfers(
                         -1,
                         "",
                         null,

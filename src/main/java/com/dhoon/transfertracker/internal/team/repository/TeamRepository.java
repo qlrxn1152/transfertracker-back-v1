@@ -17,4 +17,11 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findAllByLeagueCode(LeagueCode leagueCode);
 
     List<Team> findAllByLeagueCodeIsNotNull();
+
+    @Query("""
+            select t from Team t
+            where lower(t.teamName) = lower(:teamName)
+               or lower(t.teamNameKo) = lower(:teamName)
+            """)
+    Optional<Team> findByAnyDisplayName(String teamName);
 }

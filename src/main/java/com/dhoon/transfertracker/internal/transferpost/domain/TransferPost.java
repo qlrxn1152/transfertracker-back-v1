@@ -92,5 +92,24 @@ public class TransferPost {
         this.team = team;
     }
 
+    public void importFromLocal(String content, Instant contentCreatedAt, boolean transferRelated, String photoUrl, String translatedContent, Team team) {
+        this.content = content;
+        this.contentCreatedAt = contentCreatedAt;
+        this.transferRelated = transferRelated;
+        this.photoUrl = photoUrl;
+
+        if (translatedContent != null && !translatedContent.isBlank()) {
+            this.translatedContent = translatedContent;
+            this.translateStatus = TranslateStatus.COMPLETED;
+            if (this.translatedAt == null) {
+                this.translatedAt = Instant.now();
+            }
+        }
+
+        if (team != null) {
+            this.team = team;
+        }
+    }
+
 
 }

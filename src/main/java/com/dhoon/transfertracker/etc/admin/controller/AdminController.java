@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.etc.admin.controller;
 
+import com.dhoon.transfertracker.etc.admin.dto.request.AdminTransferPostImportRequestDto;
 import com.dhoon.transfertracker.etc.admin.dto.response.*;
 import com.dhoon.transfertracker.etc.analytics.dto.response.AdminAnalyticsResponseDto;
 import com.dhoon.transfertracker.etc.analytics.service.AnalyticsService;
@@ -71,6 +72,12 @@ public class AdminController {
     @PostMapping("/sync/posts/{source}")
     public AdminSyncResponseDto syncPosts(@PathVariable TransferPostSource source) {
         return adminService.syncPosts(source);
+    }
+
+    @PostMapping("/import/posts/{source}")
+    public AdminSyncResponseDto importPosts(@PathVariable TransferPostSource source,
+                                            @Valid @RequestBody AdminTransferPostImportRequestDto request) {
+        return adminService.importPosts(source, request);
     }
 
     @PostMapping("/sync/post-teams")

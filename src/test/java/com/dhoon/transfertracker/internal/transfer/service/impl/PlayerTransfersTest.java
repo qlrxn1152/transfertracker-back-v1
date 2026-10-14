@@ -7,8 +7,10 @@ import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
-import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransferItemResponseDto;
-import com.dhoon.transfertracker.internal.transfer.dto.response.PlayerTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransferItemResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.service.impl.TransferQueryOrchestrationService;
+import com.dhoon.transfertracker.internal.transfer.query.service.impl.TransferQueryTxService;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,8 +30,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({
-        TransferOrchestrationService.class,
-        TransferTxService.class
+        TransferQueryOrchestrationService.class,
+        TransferQueryTxService.class
 })
 @ActiveProfiles("test")
 
@@ -63,7 +65,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class PlayerTransfersTest {
 
     @Autowired
-    TransferOrchestrationService transferOrchestrationService;
+    TransferQueryOrchestrationService transferQueryOrchestrationService;
 
     @Autowired
     TransferRepository transferRepository;
@@ -131,7 +133,7 @@ class PlayerTransfersTest {
 
         // when
         PlayerTransfersResponseDto response =
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         saka.getId()
                 );
 
@@ -217,7 +219,7 @@ class PlayerTransfersTest {
 
         // when
         PlayerTransfersResponseDto response =
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         saka.getId()
                 );
 
@@ -305,7 +307,7 @@ class PlayerTransfersTest {
 
         // when
         PlayerTransfersResponseDto response =
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         saka.getId()
                 );
 
@@ -383,7 +385,7 @@ class PlayerTransfersTest {
 
         // when
         PlayerTransfersResponseDto response =
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         saka.getId()
                 );
 
@@ -458,7 +460,7 @@ class PlayerTransfersTest {
 
         // when
         PlayerTransfersResponseDto response =
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         saka.getId()
                 );
 
@@ -550,7 +552,7 @@ class PlayerTransfersTest {
 
         // when
         PlayerTransfersResponseDto response =
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         son.getId()
                 );
 
@@ -598,7 +600,7 @@ class PlayerTransfersTest {
 
         // when
         PlayerTransfersResponseDto response =
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         saka.getId()
                 );
 
@@ -629,7 +631,7 @@ class PlayerTransfersTest {
 
         // when & then
         assertThatThrownBy(() ->
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         null
                 )
         )
@@ -655,7 +657,7 @@ class PlayerTransfersTest {
 
         // when & then
         assertThatThrownBy(() ->
-                transferOrchestrationService.getPlayerTransfers(
+                transferQueryOrchestrationService.getPlayerTransfers(
                         playerId
                 )
         )

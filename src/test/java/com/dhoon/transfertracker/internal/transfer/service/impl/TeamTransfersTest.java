@@ -7,9 +7,11 @@ import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
-import com.dhoon.transfertracker.internal.transfer.dto.response.AllTransfersResponseDto;
-import com.dhoon.transfertracker.internal.transfer.dto.response.TransferResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.dto.response.AllTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.dto.response.TransferResponseDto;
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
+import com.dhoon.transfertracker.internal.transfer.query.service.impl.TransferQueryOrchestrationService;
+import com.dhoon.transfertracker.internal.transfer.query.service.impl.TransferQueryTxService;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,8 +32,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({
-        TransferOrchestrationService.class,
-        TransferTxService.class
+        TransferQueryOrchestrationService.class,
+        TransferQueryTxService.class
 })
 @ActiveProfiles("test")
 
@@ -68,7 +70,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class TeamTransfersTest {
 
     @Autowired
-    TransferOrchestrationService transferOrchestrationService;
+    TransferQueryOrchestrationService transferQueryOrchestrationService;
 
     @Autowired
     TransferRepository transferRepository;
@@ -133,7 +135,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -216,7 +218,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -309,7 +311,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -389,7 +391,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -483,7 +485,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -544,7 +546,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -641,7 +643,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         "Saka"
@@ -696,7 +698,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         "sAkA"
@@ -748,7 +750,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         "   Saka   "
@@ -840,7 +842,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -913,7 +915,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -978,14 +980,14 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto firstPage =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         "Player"
                 );
 
         AllTransfersResponseDto secondPage =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         1,
                         "Player"
@@ -1056,7 +1058,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -1109,7 +1111,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         100,
                         ""
@@ -1146,7 +1148,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         ""
@@ -1199,7 +1201,7 @@ class TeamTransfersTest {
 
         // when
         AllTransfersResponseDto response =
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         arsenal.getId(),
                         0,
                         null
@@ -1227,7 +1229,7 @@ class TeamTransfersTest {
 
         // when & then
         assertThatThrownBy(() ->
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         1L,
                         -1,
                         ""
@@ -1249,7 +1251,7 @@ class TeamTransfersTest {
 
         // when & then
         assertThatThrownBy(() ->
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         null,
                         0,
                         ""
@@ -1277,7 +1279,7 @@ class TeamTransfersTest {
 
         // when & then
         assertThatThrownBy(() ->
-                transferOrchestrationService.getTeamTransfers(
+                transferQueryOrchestrationService.getTeamTransfers(
                         teamId,
                         0,
                         ""
