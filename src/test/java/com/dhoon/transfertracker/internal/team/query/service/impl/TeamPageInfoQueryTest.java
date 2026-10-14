@@ -1,12 +1,12 @@
-package com.dhoon.transfertracker.internal.team.service.impl;
+package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
+import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayerItemResponseDto;
@@ -33,15 +33,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({
-        TeamOrchestrationService.class,
-        TeamTxService.class
+        TeamQueryOrchestrationService.class,
+        TeamQueryTxService.class
 })
 @ActiveProfiles("test")
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class TeamPageInfoTest {
+class TeamPageInfoQueryTest {
+
 
     @Autowired
-    TeamOrchestrationService teamOrchestrationService;
+    TeamQueryOrchestrationService teamQueryOrchestrationService;
 
     @Autowired
     TeamRepository teamRepository;
@@ -56,10 +57,6 @@ class TeamPageInfoTest {
     TransferPostRepository transferPostRepository;
 
 
-    /*
-     * Test Transaction이 없기 때문에
-     * FK 자식 Entity부터 직접 제거한다.
-     */
     @AfterEach
     void clearDatabase() {
 
@@ -72,7 +69,7 @@ class TeamPageInfoTest {
 
 
     // ==================================================
-    // 정상 상황
+    // Team 정보
     // ==================================================
 
     @Test
@@ -80,31 +77,32 @@ class TeamPageInfoTest {
     void getTeamInfo_teamInfo() {
 
         // given
-        Team arsenal =
-                Team.of(
-                        "Arsenal",
-                        42L,
-                        LeagueCode.EPL
-                );
+        Team arsenal = Team.of(
+                "Arsenal",
+                42L,
+                LeagueCode.EPL
+        );
 
         arsenal.assignKoTeamName(
                 "아스널"
         );
 
-        arsenal =
-                teamRepository.save(
-                        arsenal
-                );
+        arsenal = teamRepository.save(
+                arsenal
+        );
 
 
         // when
         TeamPageInfosResponseDto response =
-                teamOrchestrationService.getTeamInfo(
+                teamQueryOrchestrationService.getTeamInfo(
                         arsenal.getId()
                 );
 
 
         // then
+        assertThat(response.getTeams())
+                .isNotNull();
+
         assertThat(response.getTeams().getTeamId())
                 .isEqualTo(
                         arsenal.getId()
@@ -125,104 +123,100 @@ class TeamPageInfoTest {
     }
 
 
-    /*
-     * countByTeamId() 결과가
-     * 실제 현재 소속 선수 수와 일치하는지 확인한다.
-     */
+    // ==================================================
+    // Player Count
+    // ==================================================
+
     @Test
     @DisplayName("팀 페이지에는 현재 소속 선수 수가 포함된다.")
     void getTeamInfo_playerCount() {
 
         // given
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        42L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
+
 
         savePlayerWithTeam(
                 "Bukayo Saka",
-                1L,
+                10L,
                 arsenal
         );
 
         savePlayerWithTeam(
                 "Martin Odegaard",
-                2L,
+                20L,
                 arsenal
         );
 
 
         // when
         TeamPageInfosResponseDto response =
-                teamOrchestrationService.getTeamInfo(
+                teamQueryOrchestrationService.getTeamInfo(
                         arsenal.getId()
                 );
 
 
         // then
-        assertThat(response.getTeams().getTeamPlayerCount())
+        assertThat(
+                response.getTeams()
+                        .getTeamPlayerCount()
+        )
                 .isEqualTo(2L);
     }
 
 
-    /*
-     * 중요.
-     *
-     * TeamPlayer.player는 LAZY다.
-     *
-     * TeamTxService Transaction 안에서
-     *
-     * TeamPlayer
-     *      ↓
-     * Player
-     *      ↓
-     * TeamPlayerItemResponseDto
-     *
-     * 변환이 끝나야 한다.
-     *
-     * Test 자체 Transaction이 없으므로
-     * Entity를 밖으로 반환하는 구조라면
-     * Transaction boundary 문제가 드러날 수 있다.
-     */
+    // ==================================================
+    // Player 목록
+    // ==================================================
+
     @Test
-    @DisplayName("팀 페이지의 선수 정보는 Transaction 안에서 DTO로 변환되어 반환된다.")
+    @DisplayName("팀 페이지에는 현재 소속 선수 목록이 포함된다.")
     void getTeamInfo_players() {
 
         // given
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        42L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
 
-        Player saka =
-                savePlayerWithTeam(
-                        "Bukayo Saka",
-                        1L,
-                        arsenal
-                );
 
-        Player odegaard =
-                savePlayerWithTeam(
-                        "Martin Odegaard",
-                        2L,
-                        arsenal
-                );
+        Player saka = savePlayerWithTeam(
+                "Bukayo Saka",
+                10L,
+                arsenal
+        );
+
+        Player odegaard = savePlayerWithTeam(
+                "Martin Odegaard",
+                20L,
+                arsenal
+        );
 
 
         // when
         TeamPageInfosResponseDto response =
-                teamOrchestrationService.getTeamInfo(
+                teamQueryOrchestrationService.getTeamInfo(
                         arsenal.getId()
                 );
 
 
         // then
-        assertThat(response.getPlayers().getTeamPlayers())
+        assertThat(response.getPlayers())
+                .isNotNull();
+
+        assertThat(
+                response.getPlayers()
+                        .getTeamPlayers()
+        )
                 .hasSize(2);
 
-        assertThat(response.getPlayers().getTeamPlayers())
+
+        assertThat(
+                response.getPlayers()
+                        .getTeamPlayers()
+        )
                 .extracting(
                         TeamPlayerItemResponseDto::getPlayerId
                 )
@@ -231,7 +225,11 @@ class TeamPageInfoTest {
                         odegaard.getId()
                 );
 
-        assertThat(response.getPlayers().getTeamPlayers())
+
+        assertThat(
+                response.getPlayers()
+                        .getTeamPlayers()
+        )
                 .extracting(
                         TeamPlayerItemResponseDto::getPlayerName
                 )
@@ -243,30 +241,78 @@ class TeamPageInfoTest {
 
 
     @Test
-    @DisplayName("팀 페이지 선수 정보에서도 한글 선수명이 존재하면 한글 이름을 반환한다.")
+    @DisplayName("팀 페이지의 선수 DTO에는 선수 사진 URL이 포함된다.")
+    void getTeamInfo_playerDtoMapping() {
+
+        // given
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
+
+
+        Player saka = savePlayerWithTeam(
+                "Bukayo Saka",
+                10L,
+                arsenal
+        );
+
+
+        // when
+        TeamPageInfosResponseDto response =
+                teamQueryOrchestrationService.getTeamInfo(
+                        arsenal.getId()
+                );
+
+
+        // then
+        TeamPlayerItemResponseDto player =
+                response.getPlayers()
+                        .getTeamPlayers()
+                        .get(0);
+
+
+        assertThat(player.getPlayerId())
+                .isEqualTo(
+                        saka.getId()
+                );
+
+        assertThat(player.getPlayerName())
+                .isEqualTo(
+                        "Bukayo Saka"
+                );
+
+        assertThat(player.getPhotoUrl())
+                .isEqualTo(
+                        "https://media.api-sports.io/football/players/10.png"
+                );
+    }
+
+
+    @Test
+    @DisplayName("팀 페이지 선수 정보에서도 한글 선수명이 존재하면 displayName을 반환한다.")
     void getTeamInfo_playerKoreanName() {
 
         // given
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        42L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
 
-        Player saka =
-                Player.of(
-                        "Bukayo Saka",
-                        1L
-                );
+
+        Player saka = Player.of(
+                "Bukayo Saka",
+                10L
+        );
 
         saka.assignKoPlayerName(
                 "부카요 사카"
         );
 
-        saka =
-                playerRepository.save(
-                        saka
-                );
+        saka = playerRepository.save(
+                saka
+        );
+
 
         teamPlayerRepository.save(
                 TeamPlayer.of(
@@ -278,14 +324,18 @@ class TeamPageInfoTest {
 
         // when
         TeamPageInfosResponseDto response =
-                teamOrchestrationService.getTeamInfo(
+                teamQueryOrchestrationService.getTeamInfo(
                         arsenal.getId()
                 );
 
 
         // then
-        assertThat(response.getPlayers().getTeamPlayers())
+        assertThat(
+                response.getPlayers()
+                        .getTeamPlayers()
+        )
                 .hasSize(1);
+
 
         assertThat(
                 response.getPlayers()
@@ -299,44 +349,56 @@ class TeamPageInfoTest {
     }
 
 
+    // ==================================================
+    // TransferPost
+    // ==================================================
+
     @Test
-    @DisplayName("팀에 연결된 게시물 정보를 함께 반환한다.")
+    @DisplayName("팀 페이지에는 해당 팀에 연결된 게시물 목록이 포함된다.")
     void getTeamInfo_posts() {
 
         // given
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        42L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
 
-        TransferPost firstPost =
-                saveTransferPost(
-                        arsenal,
-                        "Arsenal transfer news",
-                        "post-1"
-                );
 
-        TransferPost secondPost =
-                saveTransferPost(
-                        arsenal,
-                        "Another Arsenal news",
-                        "post-2"
-                );
+        TransferPost firstPost = saveTransferPost(
+                arsenal,
+                "Arsenal transfer news",
+                "post-1"
+        );
+
+        TransferPost secondPost = saveTransferPost(
+                arsenal,
+                "Another Arsenal news",
+                "post-2"
+        );
 
 
         // when
         TeamPageInfosResponseDto response =
-                teamOrchestrationService.getTeamInfo(
+                teamQueryOrchestrationService.getTeamInfo(
                         arsenal.getId()
                 );
 
 
         // then
-        assertThat(response.getPosts().getPosts())
+        assertThat(response.getPosts())
+                .isNotNull();
+
+        assertThat(
+                response.getPosts()
+                        .getPosts()
+        )
                 .hasSize(2);
 
-        assertThat(response.getPosts().getPosts())
+
+        assertThat(
+                response.getPosts()
+                        .getPosts()
+        )
                 .extracting(
                         TransferPostItemResponseDto::getPostId
                 )
@@ -345,7 +407,11 @@ class TeamPageInfoTest {
                         secondPost.getId()
                 );
 
-        assertThat(response.getPosts().getPosts())
+
+        assertThat(
+                response.getPosts()
+                        .getPosts()
+        )
                 .extracting(
                         TransferPostItemResponseDto::getContent
                 )
@@ -356,40 +422,133 @@ class TeamPageInfoTest {
     }
 
 
-    /*
-     * 다른 팀의 데이터가 섞이지 않는지 확인.
-     *
-     * TeamPlayer / TransferPost 모두
-     * teamId 조건이 정확히 적용되어야 한다.
-     */
     @Test
-    @DisplayName("팀 페이지에는 해당 팀의 선수와 게시물만 반환된다.")
+    @DisplayName("팀 페이지의 게시물 정보는 DTO로 정상 변환된다.")
+    void getTeamInfo_postDtoMapping() {
+
+        // given
+        Team arsenal = Team.of(
+                "Arsenal",
+                42L,
+                LeagueCode.EPL
+        );
+
+        arsenal.assignKoTeamName(
+                "아스널"
+        );
+
+        arsenal = teamRepository.save(
+                arsenal
+        );
+
+
+        Instant createdAt =
+                Instant.parse(
+                        "2026-07-01T12:00:00Z"
+                );
+
+
+        TransferPost post = TransferPost.of(
+                TransferPostSource.FABRIZIO_ROMANO,
+                "Arsenal transfer news",
+                "external-post-1",
+                createdAt,
+                true
+        );
+
+        post.assignTeam(
+                arsenal
+        );
+
+        post = transferPostRepository.save(
+                post
+        );
+
+
+        // when
+        TeamPageInfosResponseDto response =
+                teamQueryOrchestrationService.getTeamInfo(
+                        arsenal.getId()
+                );
+
+
+        // then
+        TransferPostItemResponseDto postResponse =
+                response.getPosts()
+                        .getPosts()
+                        .get(0);
+
+
+        assertThat(postResponse.getPostId())
+                .isEqualTo(
+                        post.getId()
+                );
+
+        assertThat(postResponse.getExternalPostId())
+                .isEqualTo(
+                        "external-post-1"
+                );
+
+        assertThat(postResponse.getContent())
+                .isEqualTo(
+                        "Arsenal transfer news"
+                );
+
+        assertThat(postResponse.getSource())
+                .isEqualTo(
+                        TransferPostSource.FABRIZIO_ROMANO
+                );
+
+        assertThat(postResponse.getPostCreatedAt())
+                .isEqualTo(
+                        createdAt
+                );
+
+        assertThat(postResponse.isRelateTransfer())
+                .isTrue();
+
+        assertThat(postResponse.getTeamId())
+                .isEqualTo(
+                        arsenal.getId()
+                );
+
+        assertThat(postResponse.getTeamName())
+                .isEqualTo(
+                        "아스널"
+                );
+    }
+
+
+    // ==================================================
+    // 다른 Team 데이터 제외
+    // ==================================================
+
+    @Test
+    @DisplayName("팀 페이지에는 해당 팀의 선수와 게시물만 반환한다.")
     void getTeamInfo_excludeOtherTeamData() {
 
         // given
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        42L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
 
-        Team barcelona =
-                saveTeam(
-                        "Barcelona",
-                        529L,
-                        LeagueCode.LA_LIGA
-                );
+        Team barcelona = saveTeam(
+                "Barcelona",
+                529L,
+                LeagueCode.LA_LIGA
+        );
 
 
         savePlayerWithTeam(
                 "Bukayo Saka",
-                1L,
+                10L,
                 arsenal
         );
 
         savePlayerWithTeam(
                 "Pedri",
-                2L,
+                20L,
                 barcelona
         );
 
@@ -409,16 +568,23 @@ class TeamPageInfoTest {
 
         // when
         TeamPageInfosResponseDto response =
-                teamOrchestrationService.getTeamInfo(
+                teamQueryOrchestrationService.getTeamInfo(
                         arsenal.getId()
                 );
 
 
         // then
-        assertThat(response.getTeams().getTeamPlayerCount())
+        assertThat(
+                response.getTeams()
+                        .getTeamPlayerCount()
+        )
                 .isEqualTo(1L);
 
-        assertThat(response.getPlayers().getTeamPlayers())
+
+        assertThat(
+                response.getPlayers()
+                        .getTeamPlayers()
+        )
                 .extracting(
                         TeamPlayerItemResponseDto::getPlayerName
                 )
@@ -426,7 +592,11 @@ class TeamPageInfoTest {
                         "Bukayo Saka"
                 );
 
-        assertThat(response.getPosts().getPosts())
+
+        assertThat(
+                response.getPosts()
+                        .getPosts()
+        )
                 .extracting(
                         TransferPostItemResponseDto::getContent
                 )
@@ -437,43 +607,69 @@ class TeamPageInfoTest {
 
 
     // ==================================================
-    // 경계 상황
+    // 경계
     // ==================================================
 
     @Test
-    @DisplayName("선수와 게시물이 없는 팀은 빈 목록을 반환한다.")
+    @DisplayName("선수와 게시물이 없는 팀은 빈 목록과 선수 수 0을 반환한다.")
     void getTeamInfo_emptyPlayersAndPosts() {
 
         // given
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        42L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
 
 
         // when
         TeamPageInfosResponseDto response =
-                teamOrchestrationService.getTeamInfo(
+                teamQueryOrchestrationService.getTeamInfo(
                         arsenal.getId()
                 );
 
 
         // then
-        assertThat(response.getTeams().getTeamPlayerCount())
+        assertThat(
+                response.getTeams()
+                        .getTeamPlayerCount()
+        )
                 .isZero();
 
-        assertThat(response.getPlayers().getTeamPlayers())
+
+        assertThat(
+                response.getPlayers()
+                        .getTeamPlayers()
+        )
                 .isEmpty();
 
-        assertThat(response.getPosts().getPosts())
+
+        assertThat(
+                response.getPosts()
+                        .getPosts()
+        )
                 .isEmpty();
     }
 
 
     // ==================================================
-    // 실패 상황
+    // 실패
     // ==================================================
+
+    @Test
+    @DisplayName("teamId가 null이면 팀 페이지 조회 전에 예외가 발생한다.")
+    void getTeamInfo_nullTeamId() {
+
+        // when & then
+        assertThatThrownBy(() ->
+                teamQueryOrchestrationService.getTeamInfo(
+                        null
+                )
+        )
+                .isInstanceOf(
+                        InvalidTeamIdException.class
+                );
+    }
+
 
     @Test
     @DisplayName("존재하지 않는 팀 페이지를 조회하면 예외가 발생한다.")
@@ -485,28 +681,12 @@ class TeamPageInfoTest {
 
         // when & then
         assertThatThrownBy(() ->
-                teamOrchestrationService.getTeamInfo(
+                teamQueryOrchestrationService.getTeamInfo(
                         teamId
                 )
         )
                 .isInstanceOf(
                         NotFoundTeamException.class
-                );
-    }
-
-
-    @Test
-    @DisplayName("teamId가 null이면 팀 페이지 조회 전에 예외가 발생한다.")
-    void getTeamInfo_nullTeamId() {
-
-        // when & then
-        assertThatThrownBy(() ->
-                teamOrchestrationService.getTeamInfo(
-                        null
-                )
-        )
-                .isInstanceOf(
-                        InvalidTeamIdException.class
                 );
     }
 
@@ -558,12 +738,14 @@ class TeamPageInfoTest {
                         )
                 );
 
+
         teamPlayerRepository.save(
                 TeamPlayer.of(
                         team,
                         player
                 )
         );
+
 
         return player;
     }
@@ -584,9 +766,11 @@ class TeamPageInfoTest {
                         true
                 );
 
+
         post.assignTeam(
                 team
         );
+
 
         return transferPostRepository.save(
                 post

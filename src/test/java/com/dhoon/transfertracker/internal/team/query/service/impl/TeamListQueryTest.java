@@ -1,10 +1,9 @@
-package com.dhoon.transfertracker.internal.team.service.impl;
+package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamsResponseDto;
-import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,20 +16,20 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 @DataJpaTest
 @Import({
-        TeamOrchestrationService.class,
-        TeamTxService.class
+        TeamQueryOrchestrationService.class,
+        TeamQueryTxService.class
 })
 @ActiveProfiles("test")
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class TeamLeagueTest {
+class TeamListQueryTest {
+
 
     @Autowired
-    TeamOrchestrationService teamOrchestrationService;
+    TeamQueryOrchestrationService teamQueryOrchestrationService;
 
     @Autowired
     TeamRepository teamRepository;
@@ -43,33 +42,23 @@ class TeamLeagueTest {
 
 
     // ==================================================
-    // 정상 상황
+    // 정상
     // ==================================================
 
     @Test
-    @DisplayName("선택한 리그에 속한 팀만 조회할 수 있다.")
-    void getLeagueTeams_success() {
+    @DisplayName("리그에 등록된 팀 목록을 조회할 수 있다.")
+    void getTeams_success() {
 
         // given
-        Team arsenal =
-                teamRepository.save(
-                        Team.of(
-                                "Arsenal",
-                                42L,
-                                LeagueCode.EPL
-                        )
-                );
+        Team arsenal = teamRepository.save(
+                Team.of(
+                        "Arsenal",
+                        42L,
+                        LeagueCode.EPL
+                )
+        );
 
-        Team manUnited =
-                teamRepository.save(
-                        Team.of(
-                                "Manchester United",
-                                33L,
-                                LeagueCode.EPL
-                        )
-                );
-
-        teamRepository.save(
+        Team barcelona = teamRepository.save(
                 Team.of(
                         "Barcelona",
                         529L,
@@ -77,17 +66,24 @@ class TeamLeagueTest {
                 )
         );
 
+        Team bayern = teamRepository.save(
+                Team.of(
+                        "Bayern Munich",
+                        157L,
+                        LeagueCode.BUNDESLIGA
+                )
+        );
+
 
         // when
         TeamsResponseDto response =
-                teamOrchestrationService.getLeagueTeams(
-                        LeagueCode.EPL
-                );
+                teamQueryOrchestrationService.getTeams();
 
 
         // then
         assertThat(response.getTeams())
-                .hasSize(2);
+                .hasSize(3);
+
 
         assertThat(response.getTeams())
                 .extracting(
@@ -95,8 +91,10 @@ class TeamLeagueTest {
                 )
                 .containsExactlyInAnyOrder(
                         arsenal.getId(),
-                        manUnited.getId()
+                        barcelona.getId(),
+                        bayern.getId()
                 );
+
 
         assertThat(response.getTeams())
                 .extracting(
@@ -104,73 +102,71 @@ class TeamLeagueTest {
                 )
                 .containsExactlyInAnyOrder(
                         "Arsenal",
-                        "Manchester United"
+                        "Barcelona",
+                        "Bayern Munich"
                 );
     }
 
 
+    // ==================================================
+    // DTO Mapping
+    // ==================================================
+
     @Test
-    @DisplayName("선택한 리그가 아닌 팀은 조회되지 않는다.")
-    void getLeagueTeams_excludeOtherLeague() {
+    @DisplayName("팀 목록 조회 결과는 TeamItemResponseDto로 정상 변환된다.")
+    void getTeams_dtoMapping() {
 
         // given
-        teamRepository.save(
+        Team arsenal = teamRepository.save(
                 Team.of(
                         "Arsenal",
                         42L,
                         LeagueCode.EPL
-                )
-        );
-
-        teamRepository.save(
-                Team.of(
-                        "Barcelona",
-                        529L,
-                        LeagueCode.LA_LIGA
                 )
         );
 
 
         // when
         TeamsResponseDto response =
-                teamOrchestrationService.getLeagueTeams(
-                        LeagueCode.EPL
-                );
+                teamQueryOrchestrationService.getTeams();
 
 
         // then
         assertThat(response.getTeams())
                 .hasSize(1);
 
-        assertThat(response.getTeams())
-                .extracting(
-                        TeamItemResponseDto::getTeamName
-                )
-                .containsExactly(
+
+        TeamItemResponseDto team =
+                response.getTeams().get(0);
+
+
+        assertThat(team.getTeamId())
+                .isEqualTo(
+                        arsenal.getId()
+                );
+
+        assertThat(team.getTeamName())
+                .isEqualTo(
                         "Arsenal"
                 );
 
-        assertThat(response.getTeams())
-                .extracting(
-                        TeamItemResponseDto::getTeamName
-                )
-                .doesNotContain(
-                        "Barcelona"
+        assertThat(team.getLogoUrl())
+                .isEqualTo(
+                        "https://media.api-sports.io/football/teams/42.png"
                 );
     }
 
 
     @Test
-    @DisplayName("리그별 팀 조회에서도 한글 팀명이 있으면 한글 이름을 반환한다.")
-    void getLeagueTeams_withKoreanName() {
+    @DisplayName("한글 팀명이 존재하면 팀 목록에서도 displayName을 반환한다.")
+    void getTeams_withKoreanName() {
 
         // given
-        Team arsenal =
-                Team.of(
-                        "Arsenal",
-                        42L,
-                        LeagueCode.EPL
-                );
+        Team arsenal = Team.of(
+                "Arsenal",
+                42L,
+                LeagueCode.EPL
+        );
 
         arsenal.assignKoTeamName(
                 "아스널"
@@ -183,14 +179,13 @@ class TeamLeagueTest {
 
         // when
         TeamsResponseDto response =
-                teamOrchestrationService.getLeagueTeams(
-                        LeagueCode.EPL
-                );
+                teamQueryOrchestrationService.getTeams();
 
 
         // then
         assertThat(response.getTeams())
                 .hasSize(1);
+
 
         assertThat(
                 response.getTeams()
@@ -204,15 +199,15 @@ class TeamLeagueTest {
 
 
     // ==================================================
-    // 경계 상황
+    // 비즈니스 규칙
     // ==================================================
 
     @Test
-    @DisplayName("선택한 리그에 팀이 없으면 빈 목록을 반환한다.")
-    void getLeagueTeams_empty() {
+    @DisplayName("리그에 등록되지 않은 팀은 전체 팀 목록에서 제외한다.")
+    void getTeams_excludeTeamWithoutLeague() {
 
         // given
-        teamRepository.save(
+        Team arsenal = teamRepository.save(
                 Team.of(
                         "Arsenal",
                         42L,
@@ -221,35 +216,67 @@ class TeamLeagueTest {
         );
 
 
+        teamRepository.save(
+                Team.of(
+                        "Unknown Team",
+                        999L
+                )
+        );
+
+
         // when
         TeamsResponseDto response =
-                teamOrchestrationService.getLeagueTeams(
-                        LeagueCode.LA_LIGA
+                teamQueryOrchestrationService.getTeams();
+
+
+        // then
+        assertThat(response.getTeams())
+                .hasSize(1);
+
+
+        assertThat(response.getTeams())
+                .extracting(
+                        TeamItemResponseDto::getTeamId
+                )
+                .containsExactly(
+                        arsenal.getId()
                 );
+
+
+        assertThat(response.getTeams())
+                .extracting(
+                        TeamItemResponseDto::getTeamName
+                )
+                .containsExactly(
+                        "Arsenal"
+                );
+    }
+
+
+    // ==================================================
+    // 경계
+    // ==================================================
+
+    @Test
+    @DisplayName("리그에 등록된 팀이 없으면 빈 목록을 반환한다.")
+    void getTeams_empty() {
+
+        // given
+        teamRepository.save(
+                Team.of(
+                        "Unknown Team",
+                        999L
+                )
+        );
+
+
+        // when
+        TeamsResponseDto response =
+                teamQueryOrchestrationService.getTeams();
 
 
         // then
         assertThat(response.getTeams())
                 .isEmpty();
-    }
-
-
-    // ==================================================
-    // 실패 상황
-    // ==================================================
-
-    @Test
-    @DisplayName("leagueCode가 null이면 예외가 발생한다.")
-    void getLeagueTeams_nullLeagueCode() {
-
-        // when & then
-        assertThatThrownBy(() ->
-                teamOrchestrationService.getLeagueTeams(
-                        null
-                )
-        )
-                .isInstanceOf(
-                        InvalidLeagueCodeValueException.class
-                );
     }
 }
