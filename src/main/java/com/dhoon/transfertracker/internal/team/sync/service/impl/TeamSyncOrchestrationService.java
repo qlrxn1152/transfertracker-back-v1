@@ -1,10 +1,10 @@
 package com.dhoon.transfertracker.internal.team.sync.service.impl;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
-import com.dhoon.transfertracker.external.football.dto.LeagueTeamsResponseDto;
-import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.sync.dto.response.LeagueTeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.sync.dto.response.TeamSaveResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

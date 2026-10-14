@@ -1,6 +1,6 @@
 package com.dhoon.transfertracker.internal.teamplayer.sync.controller;
 
-import com.dhoon.transfertracker.external.football.dto.TeamPlayersSaveResponseDto;
+import com.dhoon.transfertracker.internal.teamplayer.sync.dto.response.TeamPlayersSaveResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.sync.service.impl.TeamPlayerSyncOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

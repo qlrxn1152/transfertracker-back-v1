@@ -22,5 +22,4 @@ public class PlayerNameTranslationController {
         return ResponseEntity.ok(response);
     }
 
-
 }

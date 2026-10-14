@@ -1,8 +1,8 @@
 package com.dhoon.transfertracker.internal.team.sync.controller;
 
-import com.dhoon.transfertracker.external.football.dto.LeagueTeamsResponseDto;
-import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
+import com.dhoon.transfertracker.internal.team.sync.dto.response.LeagueTeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.sync.dto.response.TeamSaveResponseDto;
 import com.dhoon.transfertracker.internal.team.sync.service.impl.TeamSyncOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

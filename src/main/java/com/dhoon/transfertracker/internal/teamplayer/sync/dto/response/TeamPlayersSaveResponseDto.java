@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.external.football.dto;
+package com.dhoon.transfertracker.internal.teamplayer.sync.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

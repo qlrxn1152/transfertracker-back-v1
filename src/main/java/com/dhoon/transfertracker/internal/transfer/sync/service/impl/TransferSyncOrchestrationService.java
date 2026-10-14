@@ -1,8 +1,8 @@
 package com.dhoon.transfertracker.internal.transfer.sync.service.impl;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
-import com.dhoon.transfertracker.external.football.dto.TeamTransfersSaveResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransfersResponseDto;
+import com.dhoon.transfertracker.internal.transfer.sync.dto.response.TeamTransfersSaveResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

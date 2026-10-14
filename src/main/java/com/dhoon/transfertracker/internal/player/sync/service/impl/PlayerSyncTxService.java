@@ -1,16 +1,9 @@
-package com.dhoon.transfertracker.external.football.service;
+package com.dhoon.transfertracker.internal.player.sync.service.impl;
 
-import com.dhoon.transfertracker.external.football.dto.PlayerSaveResponseDto;
-import com.dhoon.transfertracker.external.football.dto.TeamPlayerSaveResponseDto;
-import com.dhoon.transfertracker.external.football.dto.TeamSaveResponseDto;
+
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
-import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
-import com.dhoon.transfertracker.internal.team.domain.Team;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
-import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
+import com.dhoon.transfertracker.internal.player.sync.dto.response.PlayerSaveResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,12 +12,11 @@ import tools.jackson.databind.JsonNode;
 
 @Service
 @Slf4j
-@Transactional
 @RequiredArgsConstructor
-public class FootballSyncTxService {
+@Transactional
+public class PlayerSyncTxService {
 
     private final PlayerRepository playerRepository;
-
 
     public PlayerSaveResponseDto getOrCreatePlayerResponse(JsonNode playerData) {
         Player player = getOrCreatePlayer(playerData);
@@ -43,9 +35,5 @@ public class FootballSyncTxService {
                         ))
                 );
     }
-
-
-
-
 
 }

@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.external.football.dto;
+package com.dhoon.transfertracker.internal.team.sync.dto.response;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
