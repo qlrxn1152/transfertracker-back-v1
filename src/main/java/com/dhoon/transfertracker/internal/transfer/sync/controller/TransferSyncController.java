@@ -27,7 +27,7 @@ public class TransferSyncController {
 
     @PostMapping("/external/api/transfers/team/{teamApiId}")
     public ResponseEntity<TeamTransfersSaveResponseDto> saveTeamTransfers(@PathVariable Long teamApiId) {
-        TeamTransfersSaveResponseDto response = transferSyncOrchestrationService.saveTeamTransfers(teamApiId);
+        TeamTransfersSaveResponseDto response = transferSyncOrchestrationService.syncTeamTransfers(teamApiId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

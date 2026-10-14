@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.transfer.service.impl;
+package com.dhoon.transfertracker.internal.transfer.query.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
@@ -9,8 +9,6 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransferItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransfersResponseDto;
-import com.dhoon.transfertracker.internal.transfer.query.service.impl.TransferQueryOrchestrationService;
-import com.dhoon.transfertracker.internal.transfer.query.service.impl.TransferQueryTxService;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,42 +25,14 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-
 @DataJpaTest
 @Import({
         TransferQueryOrchestrationService.class,
         TransferQueryTxService.class
 })
 @ActiveProfiles("test")
-
-/*
- * 실제 요청 흐름:
- *
- * Client
- *      ↓
- * Controller
- *      ↓
- * TransferOrchestrationService
- *      → Transaction X
- *      → playerId validation
- *      ↓
- * TransferTxService
- *      → @Transactional(readOnly = true)
- *      → Player 존재 확인
- *      → Transfer 조회
- *      → Lazy Player / Team 접근
- *      → DTO 변환
- *      ↓
- * Transaction 종료
- *      ↓
- * DTO 반환
- *
- *
- * 실제 Transaction 경계를 확인하기 위해
- * DataJpaTest의 기본 Test Transaction을 사용하지 않는다.
- */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class PlayerTransfersTest {
+class PlayerTransfersQueryTest {
 
     @Autowired
     TransferQueryOrchestrationService transferQueryOrchestrationService;
@@ -77,18 +47,8 @@ class PlayerTransfersTest {
     TeamRepository teamRepository;
 
 
-    /*
-     * Test Transaction이 없으므로
-     * FK 자식부터 직접 제거한다.
-     *
-     * Transfer
-     *  ├─ Player
-     *  ├─ inTeam
-     *  └─ outTeam
-     */
     @AfterEach
     void clearDatabase() {
-
         transferRepository.deleteAll();
         playerRepository.deleteAll();
         teamRepository.deleteAll();
@@ -96,7 +56,7 @@ class PlayerTransfersTest {
 
 
     // ==================================================
-    // 정상 상황
+    // 정상
     // ==================================================
 
     @Test
@@ -104,23 +64,20 @@ class PlayerTransfersTest {
     void getPlayerTransfers_success() {
 
         // given
-        Player saka =
-                savePlayer(
-                        "Bukayo Saka",
-                        10L
-                );
+        Player saka = savePlayer(
+                "Bukayo Saka",
+                10L
+        );
 
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        1L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
 
-        Team chelsea =
-                saveTeam(
-                        "Chelsea",
-                        2L
-                );
+        Team chelsea = saveTeam(
+                "Chelsea",
+                49L
+        );
 
         saveTransfer(
                 saka,
@@ -140,112 +97,28 @@ class PlayerTransfersTest {
 
         // then
         assertThat(response.getPlayerName())
-                .isEqualTo(
-                        "Bukayo Saka"
-                );
+                .isEqualTo("Bukayo Saka");
 
         assertThat(response.getPlayerTransfers())
                 .hasSize(1);
 
+
         PlayerTransferItemResponseDto transfer =
                 response.getPlayerTransfers().get(0);
 
+
         assertThat(transfer.getInTeamName())
-                .isEqualTo(
-                        "Arsenal"
-                );
+                .isEqualTo("Arsenal");
 
         assertThat(transfer.getOutTeamName())
-                .isEqualTo(
-                        "Chelsea"
-                );
+                .isEqualTo("Chelsea");
 
         assertThat(transfer.getType())
-                .isEqualTo(
-                        "Transfer"
-                );
+                .isEqualTo("Transfer");
 
         assertThat(transfer.getDate())
                 .isEqualTo(
                         LocalDate.of(2026, 7, 1)
-                );
-    }
-
-
-    /*
-     * Transfer.inTeam / outTeam은 LAZY다.
-     *
-     * Repository fetch join
-     *      ↓
-     * TransferTxService Transaction
-     *      ↓
-     * PlayerTransferItemResponseDto 변환
-     *      ↓
-     * Transaction 종료
-     *
-     * 순서로 끝나야 한다.
-     */
-    @Test
-    @DisplayName("선수 이적 정보는 Transaction 내부에서 DTO로 변환되어 반환된다.")
-    void getPlayerTransfers_dtoMapping() {
-
-        // given
-        Player saka =
-                savePlayer(
-                        "Bukayo Saka",
-                        10L
-                );
-
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        1L
-                );
-
-        Team chelsea =
-                saveTeam(
-                        "Chelsea",
-                        2L
-                );
-
-        saveTransfer(
-                saka,
-                chelsea,
-                arsenal,
-                "Permanent",
-                LocalDate.of(2026, 8, 1)
-        );
-
-
-        // when
-        PlayerTransfersResponseDto response =
-                transferQueryOrchestrationService.getPlayerTransfers(
-                        saka.getId()
-                );
-
-
-        // then
-        PlayerTransferItemResponseDto transfer =
-                response.getPlayerTransfers().get(0);
-
-        assertThat(transfer.getInTeamName())
-                .isEqualTo(
-                        "Chelsea"
-                );
-
-        assertThat(transfer.getOutTeamName())
-                .isEqualTo(
-                        "Arsenal"
-                );
-
-        assertThat(transfer.getDate())
-                .isEqualTo(
-                        LocalDate.of(2026, 8, 1)
-                );
-
-        assertThat(transfer.getType())
-                .isEqualTo(
-                        "Permanent"
                 );
     }
 
@@ -255,36 +128,32 @@ class PlayerTransfersTest {
     void getPlayerTransfers_sortByTransferDateDesc() {
 
         // given
-        Player saka =
-                savePlayer(
-                        "Bukayo Saka",
-                        10L
-                );
+        Player saka = savePlayer(
+                "Bukayo Saka",
+                10L
+        );
 
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        1L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
 
-        Team chelsea =
-                saveTeam(
-                        "Chelsea",
-                        2L
-                );
+        Team chelsea = saveTeam(
+                "Chelsea",
+                49L
+        );
 
-        Team barcelona =
-                saveTeam(
-                        "Barcelona",
-                        3L
-                );
+        Team barcelona = saveTeam(
+                "Barcelona",
+                529L
+        );
 
 
         saveTransfer(
                 saka,
+                arsenal,
                 barcelona,
-                chelsea,
-                "Transfer",
+                "2022 Transfer",
                 LocalDate.of(2022, 7, 1)
         );
 
@@ -292,15 +161,15 @@ class PlayerTransfersTest {
                 saka,
                 chelsea,
                 arsenal,
-                "Transfer",
+                "2026 Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
         saveTransfer(
                 saka,
-                arsenal,
                 barcelona,
-                "Transfer",
+                chelsea,
+                "2024 Transfer",
                 LocalDate.of(2024, 7, 1)
         );
 
@@ -314,9 +183,7 @@ class PlayerTransfersTest {
 
         // then
         assertThat(response.getPlayerTransfers())
-                .extracting(
-                        PlayerTransferItemResponseDto::getDate
-                )
+                .extracting(PlayerTransferItemResponseDto::getDate)
                 .containsExactly(
                         LocalDate.of(2026, 7, 1),
                         LocalDate.of(2024, 7, 1),
@@ -325,60 +192,49 @@ class PlayerTransfersTest {
     }
 
 
-    /*
-     * Repository ORDER BY:
-     *
-     * transferDate DESC,
-     * id DESC
-     */
     @Test
-    @DisplayName("이적 날짜가 같으면 나중에 저장된 이적 정보가 먼저 조회된다.")
+    @DisplayName("이적 날짜가 같으면 ID가 큰 이적 정보가 먼저 조회된다.")
     void getPlayerTransfers_sameDate_sortByIdDesc() {
 
         // given
-        Player saka =
-                savePlayer(
-                        "Bukayo Saka",
-                        10L
-                );
+        Player saka = savePlayer(
+                "Bukayo Saka",
+                10L
+        );
 
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        1L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
 
-        Team chelsea =
-                saveTeam(
-                        "Chelsea",
-                        2L
-                );
+        Team chelsea = saveTeam(
+                "Chelsea",
+                49L
+        );
 
-        Team barcelona =
-                saveTeam(
-                        "Barcelona",
-                        3L
-                );
+        Team barcelona = saveTeam(
+                "Barcelona",
+                529L
+        );
+
 
         LocalDate sameDate =
                 LocalDate.of(2026, 7, 1);
 
 
-        // 먼저 저장 → 작은 ID
         saveTransfer(
                 saka,
                 chelsea,
                 arsenal,
-                "First Transfer",
+                "First",
                 sameDate
         );
 
-        // 나중 저장 → 큰 ID
         saveTransfer(
                 saka,
                 barcelona,
                 chelsea,
-                "Second Transfer",
+                "Second",
                 sameDate
         );
 
@@ -392,67 +248,53 @@ class PlayerTransfersTest {
 
         // then
         assertThat(response.getPlayerTransfers())
-                .extracting(
-                        PlayerTransferItemResponseDto::getType
-                )
+                .extracting(PlayerTransferItemResponseDto::getType)
                 .containsExactly(
-                        "Second Transfer",
-                        "First Transfer"
-                );
-
-        assertThat(response.getPlayerTransfers())
-                .extracting(
-                        PlayerTransferItemResponseDto::getInTeamName
-                )
-                .containsExactly(
-                        "Barcelona",
-                        "Chelsea"
+                        "Second",
+                        "First"
                 );
     }
 
 
     @Test
-    @DisplayName("다른 선수의 이적 정보는 포함하지 않는다.")
+    @DisplayName("요청한 선수 이외의 이적 정보는 포함하지 않는다.")
     void getPlayerTransfers_onlyRequestedPlayer() {
 
         // given
-        Player saka =
-                savePlayer(
-                        "Bukayo Saka",
-                        10L
-                );
+        Player saka = savePlayer(
+                "Bukayo Saka",
+                10L
+        );
 
-        Player son =
-                savePlayer(
-                        "Son Heung-min",
-                        20L
-                );
+        Player son = savePlayer(
+                "Son Heung-min",
+                20L
+        );
 
-        Team arsenal =
-                saveTeam(
-                        "Arsenal",
-                        1L
-                );
 
-        Team chelsea =
-                saveTeam(
-                        "Chelsea",
-                        2L
-                );
+        Team arsenal = saveTeam(
+                "Arsenal",
+                42L
+        );
+
+        Team chelsea = saveTeam(
+                "Chelsea",
+                49L
+        );
 
 
         saveTransfer(
                 saka,
-                chelsea,
                 arsenal,
+                chelsea,
                 "Saka Transfer",
                 LocalDate.of(2026, 7, 1)
         );
 
         saveTransfer(
                 son,
-                arsenal,
                 chelsea,
+                arsenal,
                 "Son Transfer",
                 LocalDate.of(2026, 8, 1)
         );
@@ -470,81 +312,64 @@ class PlayerTransfersTest {
                 .hasSize(1);
 
         assertThat(response.getPlayerTransfers())
-                .extracting(
-                        PlayerTransferItemResponseDto::getType
-                )
+                .extracting(PlayerTransferItemResponseDto::getType)
                 .containsExactly(
                         "Saka Transfer"
                 );
     }
 
 
-    /*
-     * PlayerTransfersResponseDto
-     *      → Player.getDisplayName()
-     *
-     * PlayerTransferItemResponseDto
-     *      → Team.getDisplayName()
-     *
-     * 을 사용하는지 함께 검증한다.
-     */
     @Test
-    @DisplayName("한글 선수명과 한글 팀명이 존재하면 한글 이름을 반환한다.")
+    @DisplayName("한글 선수명과 팀명이 존재하면 displayName을 반환한다.")
     void getPlayerTransfers_withKoreanNames() {
 
         // given
-        Player son =
-                Player.of(
-                        "Son Heung-min",
-                        20L
-                );
+        Player son = Player.of(
+                "Son Heung-min",
+                20L
+        );
 
         son.assignKoPlayerName(
                 "손흥민"
         );
 
-        son =
-                playerRepository.save(
-                        son
-                );
+        son = playerRepository.save(
+                son
+        );
 
 
-        Team tottenham =
-                Team.of(
-                        "Tottenham",
-                        1L
-                );
+        Team tottenham = Team.of(
+                "Tottenham Hotspur",
+                47L
+        );
 
         tottenham.assignKoTeamName(
                 "토트넘"
         );
 
-        tottenham =
-                teamRepository.save(
-                        tottenham
-                );
+        tottenham = teamRepository.save(
+                tottenham
+        );
 
 
-        Team lafc =
-                Team.of(
-                        "Los Angeles FC",
-                        2L
-                );
+        Team lafc = Team.of(
+                "Los Angeles FC",
+                1616L
+        );
 
         lafc.assignKoTeamName(
                 "LAFC"
         );
 
-        lafc =
-                teamRepository.save(
-                        lafc
-                );
+        lafc = teamRepository.save(
+                lafc
+        );
 
 
         saveTransfer(
                 son,
-                tottenham,
                 lafc,
+                tottenham,
                 "Transfer",
                 LocalDate.of(2026, 8, 1)
         );
@@ -559,43 +384,34 @@ class PlayerTransfersTest {
 
         // then
         assertThat(response.getPlayerName())
-                .isEqualTo(
-                        "손흥민"
-                );
+                .isEqualTo("손흥민");
+
 
         PlayerTransferItemResponseDto transfer =
                 response.getPlayerTransfers().get(0);
 
+
         assertThat(transfer.getInTeamName())
-                .isEqualTo(
-                        "토트넘"
-                );
+                .isEqualTo("LAFC");
 
         assertThat(transfer.getOutTeamName())
-                .isEqualTo(
-                        "LAFC"
-                );
+                .isEqualTo("토트넘");
     }
 
 
     // ==================================================
-    // 경계 상황
+    // 경계
     // ==================================================
 
-    /*
-     * Player는 존재하지만 Transfer가 하나도 없는 것은
-     * 정상적인 상태다.
-     */
     @Test
     @DisplayName("선수는 존재하지만 이적 기록이 없으면 빈 리스트를 반환한다.")
     void getPlayerTransfers_emptyTransfers() {
 
         // given
-        Player saka =
-                savePlayer(
-                        "Bukayo Saka",
-                        10L
-                );
+        Player saka = savePlayer(
+                "Bukayo Saka",
+                10L
+        );
 
 
         // when
@@ -607,9 +423,7 @@ class PlayerTransfersTest {
 
         // then
         assertThat(response.getPlayerName())
-                .isEqualTo(
-                        "Bukayo Saka"
-                );
+                .isEqualTo("Bukayo Saka");
 
         assertThat(response.getPlayerTransfers())
                 .isEmpty();
@@ -617,19 +431,13 @@ class PlayerTransfersTest {
 
 
     // ==================================================
-    // 실패 상황
+    // 실패
     // ==================================================
 
-    /*
-     * DB 접근이 필요 없는 validation.
-     *
-     * TransferOrchestrationService에서 차단된다.
-     */
     @Test
-    @DisplayName("playerId가 null이면 선수 이적 정보를 조회할 수 없다.")
+    @DisplayName("playerId가 null이면 예외가 발생한다.")
     void getPlayerTransfers_nullPlayerId() {
 
-        // when & then
         assertThatThrownBy(() ->
                 transferQueryOrchestrationService.getPlayerTransfers(
                         null
@@ -641,14 +449,8 @@ class PlayerTransfersTest {
     }
 
 
-    /*
-     * playerId는 유효한 형태지만
-     * 실제 DB에 Player가 존재하지 않는다.
-     *
-     * TransferTxService에서 실패한다.
-     */
     @Test
-    @DisplayName("존재하지 않는 선수의 이적 정보는 조회할 수 없다.")
+    @DisplayName("존재하지 않는 선수의 이적 정보를 조회하면 예외가 발생한다.")
     void getPlayerTransfers_playerNotFound() {
 
         // given
