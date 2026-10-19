@@ -37,6 +37,7 @@ public class TransferQueryController {
         return ResponseEntity.ok(response);
     }
 
+
     @GetMapping("/api/transfers/{transferId}")
     public ResponseEntity<TransferDetailResponseDto> getTransfer(@PathVariable Long transferId) {
         TransferDetailResponseDto response = transferQueryOrchestrationService.getTransfer(transferId);
@@ -50,5 +51,8 @@ public class TransferQueryController {
 
         return ResponseEntity.ok(response);
     }
+
+
+
 
 }

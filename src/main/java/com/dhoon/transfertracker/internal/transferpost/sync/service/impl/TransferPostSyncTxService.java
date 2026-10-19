@@ -4,7 +4,6 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transferpost.sync.service.TransferPostSyncTxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,11 +18,10 @@ import java.util.Map;
 @Slf4j
 @Transactional
 @Service
-public class TransferPostSyncTxServiceImpl implements TransferPostSyncTxService {
+public class TransferPostSyncTxService {
 
     private final TransferPostRepository transferPostRepository;
 
-    @Override
     public TransferPostItemResponseDto saveTransferPost(TransferPostSource source, JsonNode post, Map<String, String> mediaUrlByKey) {
         String content = post.get("text").asString();
         boolean transferRelated = isTransferRelated(content);

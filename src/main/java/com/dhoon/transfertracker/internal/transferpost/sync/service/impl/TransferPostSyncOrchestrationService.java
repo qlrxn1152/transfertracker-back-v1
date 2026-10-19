@@ -5,12 +5,9 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidSourcerException;
-import com.dhoon.transfertracker.internal.transferpost.sync.service.TransferPostSyncService;
-import com.dhoon.transfertracker.internal.transferpost.sync.service.TransferPostSyncTxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
@@ -21,12 +18,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 @Service
-public class TransferPostSyncServiceImpl implements TransferPostSyncService {
+public class TransferPostSyncOrchestrationService {
 
     private final TransferPostSyncTxService txService;
     private final XClient xClient;
 
-    @Override
     public TransferPostsResponseDto syncPosts(TransferPostSource source) {
         JsonNode response = xClient.callExternalApi(source);
 

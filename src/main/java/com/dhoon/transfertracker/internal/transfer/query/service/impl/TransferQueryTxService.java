@@ -12,6 +12,7 @@ import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTran
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.TransferDetailResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.TransferResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.projection.TransferSearchProjection;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import com.dhoon.transfertracker.internal.transfer.query.service.TransferService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -47,10 +49,26 @@ public class TransferQueryTxService implements TransferService {
         return PlayerTransfersResponseDto.of(player, playerTransfers);
     }
 
+
+
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
-        Slice<Transfer> transferSlice = transferRepository.findTransfers(keyWord, pageable, leagueCode, teamId);
+        if (keyWord.isBlank()) {
+            Slice<Transfer> transferSlice = transferRepository.findTransfersWithoutKeyword(pageable, leagueCode, teamId);
+
+            List<TransferResponseDto> list = transferSlice.getContent()
+                    .stream()
+                    .map(TransferResponseDto::of)
+                    .toList();
+
+            return AllTransfersResponseDto.of(list, transferSlice.hasNext(), transferSlice.hasPrevious());
+
+        }
+
+        String leagueCodeValue = leagueCode == null ? null : leagueCode.name();
+
+        Slice<TransferSearchProjection> transferSlice = transferRepository.findTransfersByFullText(keyWord, leagueCodeValue, teamId, pageable);
 
         List<TransferResponseDto> transfers = transferSlice.getContent()
                 .stream()
@@ -60,11 +78,15 @@ public class TransferQueryTxService implements TransferService {
         return AllTransfersResponseDto.of(transfers,transferSlice.hasNext(), transferSlice.hasPrevious());
     }
 
+
+
+
+
+
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTeamTransfers(Long teamId, Pageable pageable, String keyWord) {
-        teamRepository.findById(teamId)
-                .orElseThrow(NotFoundTeamException::new);
+        teamRepository.findById(teamId).orElseThrow(NotFoundTeamException::new); // 쿼리 1번.
 
         Slice<Transfer> transferSlice;
 

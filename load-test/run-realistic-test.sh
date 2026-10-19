@@ -201,6 +201,19 @@ case "${PROFILE}" in
 
         ;;
 
+    local-100-200)
+
+        ENVIRONMENT="local"
+
+        BASE_URL="http://localhost:8080"
+
+        SCENARIO="100-200-vu"
+
+        VU_1=100
+        VU_2=150
+        VU_3=200
+
+        ;;
 
     *)
 

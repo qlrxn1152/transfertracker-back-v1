@@ -34,8 +34,8 @@ import static org.mockito.Mockito.times;
 
 @DataJpaTest
 @Import({
-        TransferPostSyncServiceImpl.class,
-        TransferPostSyncTxServiceImpl.class
+        TransferPostSyncOrchestrationService.class,
+        TransferPostSyncTxService.class
 })
 @ActiveProfiles("test")
 
@@ -78,7 +78,7 @@ import static org.mockito.Mockito.times;
 class TransferPostSyncServiceTest {
 
     @Autowired
-    TransferPostSyncServiceImpl transferPostSyncService;
+    TransferPostSyncOrchestrationService transferPostSyncService;
 
     @Autowired
     TransferPostRepository transferPostRepository;

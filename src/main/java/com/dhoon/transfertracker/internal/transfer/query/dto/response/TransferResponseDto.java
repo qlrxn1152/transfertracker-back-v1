@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.transfer.query.dto.response;
 
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
+import com.dhoon.transfertracker.internal.transfer.query.projection.TransferSearchProjection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,6 +42,27 @@ public class TransferResponseDto {
 
                 transfer.getOutTeam().getId(),
                 transfer.getOutTeam().getDisplayName(),
+
+                transfer.getTransferDate(),
+                transfer.getTransferType()
+        );
+    }
+
+    public static TransferResponseDto of(TransferSearchProjection transfer) {
+        return new TransferResponseDto(
+                transfer.getTransferId(),
+
+                transfer.getPlayerId(),
+                transfer.getPlayerName(),
+                "https://media.api-sports.io/football/players/"
+                        + transfer.getPlayerApiFootballId()
+                        + ".png",
+
+                transfer.getInTeamId(),
+                transfer.getInTeamName(),
+
+                transfer.getOutTeamId(),
+                transfer.getOutTeamName(),
 
                 transfer.getTransferDate(),
                 transfer.getTransferType()

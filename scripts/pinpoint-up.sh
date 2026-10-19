@@ -55,6 +55,20 @@ wait_for_hbase_schema() {
   return 1
 }
 
+wait_for_mysql() {
+  local service="pinpoint-mysql"
+
+  for _ in {1..30}; do
+    if compose exec -T "${service}" mysqladmin ping -h 127.0.0.1 --silent >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 2
+  done
+
+  echo "MySQL did not become ready: ${service}" >&2
+  return 1
+}
+
 compose up -d zoo1 zoo2 zoo3
 wait_for_zookeeper zoo1
 wait_for_zookeeper zoo2
@@ -65,6 +79,7 @@ compose up -d pinpoint-mysql redis
 
 echo "Waiting for HBase bootstrap. First startup can take several minutes."
 wait_for_hbase_schema
+wait_for_mysql
 
 compose up -d pinpoint-collector pinpoint-web
 
