@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-        indexes = @Index(name = "idx_player_player_name", columnList = "playerName")
+        indexes =
+            @Index(name = "idx_player_player_name", columnList = "playerName")
 )
 public class Player {
 
