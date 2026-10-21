@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.transfer.query.service.impl;
 
+import com.dhoon.transfertracker.config.QueryDslConfig;
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
@@ -9,6 +10,7 @@ import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferSearchPageValueException;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.TransferResponseDto;
+import com.dhoon.transfertracker.internal.transfer.query.repository.TransferQueryRepository;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +31,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 @Import({
         TransferQueryOrchestrationService.class,
-        TransferQueryTxService.class
+        TransferQueryTxService.class,
+        TransferQueryRepository.class,
+        QueryDslConfig.class
 })
 @ActiveProfiles("test")
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -47,7 +51,6 @@ class TransferSearchQueryTest {
 
     @Autowired
     TeamRepository teamRepository;
-
 
     @AfterEach
     void clearDatabase() {

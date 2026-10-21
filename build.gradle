@@ -6,6 +6,7 @@ plugins {
 
 group = 'com.dhoon'
 version = '0.0.1-SNAPSHOT'
+def querydslVersion = '7.7'
 
 java {
 	toolchain {
@@ -39,12 +40,22 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
+	implementation "io.github.openfeign.querydsl:querydsl-jpa:${querydslVersion}"
+
+	annotationProcessor "io.github.openfeign.querydsl:querydsl-apt:${querydslVersion}:jpa"
+
+	annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+	annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-restclient-test'
+
+	testImplementation 'org.testcontainers:testcontainers'
+	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+	testImplementation 'org.testcontainers:testcontainers-mysql'
 
 	testRuntimeOnly 'com.h2database:h2'
 
