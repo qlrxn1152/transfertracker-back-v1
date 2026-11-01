@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(uniqueConstraints = @UniqueConstraint(name = "uk_member", columnNames = {"login_id"}))
+@Table(
+        uniqueConstraints = @UniqueConstraint(name = "uk_member", columnNames = {"login_id"})
+)
 public class Member {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +24,7 @@ public class Member {
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "member_grade", nullable = false)
     private MemberGrade memberGrade;
 
     private Member(String loginId, String password) {

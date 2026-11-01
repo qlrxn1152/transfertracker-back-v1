@@ -23,7 +23,7 @@ public class TransferPostQueryController {
 
     private final TransferPostQueryOrchestrationService queryOrchestrationService;
 
-    @GetMapping("/api/transfer/post-sources")
+    @GetMapping("/api/transfer-posts/post-sources")
     public ResponseEntity<TransferPostSourcesResponseDto> getPostSources() {
         List<TransferPostSourceItemResponseDto> sources = Arrays.stream(TransferPostSource.values())
                 .map(TransferPostSourceItemResponseDto::of)
@@ -32,28 +32,28 @@ public class TransferPostQueryController {
         return ResponseEntity.ok(TransferPostSourcesResponseDto.of(sources));
     }
 
-    @GetMapping("/api/transfer/post/{postId}")
+    @GetMapping("/api/transfer-posts/{postId}")
     public ResponseEntity<TransferPostDetailResponseDto> getTransferPost(@PathVariable Long postId) {
         TransferPostDetailResponseDto response = queryOrchestrationService.getTransferPost(postId);
 
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/transfer/posts/{sourcer}")
+    @GetMapping("/api/transfer-posts/{sourcer}")
     public ResponseEntity<TransferPostsResponseDto> getSourcerAllPosts(@PathVariable TransferPostSource sourcer) {
         TransferPostsResponseDto response = queryOrchestrationService.getSourcerAllPosts(sourcer);
 
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/transfer/posts/team/{teamId}")
+    @GetMapping("/api/transfer-posts/team/{teamId}")
     public ResponseEntity<TransferPostsResponseDto> getTeamTransferPosts(@PathVariable Long teamId) {
         TransferPostsResponseDto response = queryOrchestrationService.getTeamTransferPosts(teamId);
 
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/transfer/posts")
+    @GetMapping("/api/transfer-posts")
     public ResponseEntity<TransferPostsResponseDto> getAllTransferPosts() {
         TransferPostsResponseDto response = queryOrchestrationService.getAllTransferPosts();
 

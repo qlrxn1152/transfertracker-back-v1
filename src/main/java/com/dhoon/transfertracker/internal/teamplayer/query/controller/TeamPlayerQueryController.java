@@ -17,7 +17,7 @@ public class TeamPlayerQueryController {
     private final TeamPlayerQueryOrchestrationService teamPlayerQueryOrchestrationService;
 
 
-    @GetMapping("/api/team/player/{teamId}")
+    @GetMapping("/api/team-players/{teamId}")
     public ResponseEntity<TeamPlayersResponseDto> getTeamPlayers(@PathVariable Long teamId) {
         TeamPlayersResponseDto response = teamPlayerQueryOrchestrationService.getTeamPlayers(teamId);
 

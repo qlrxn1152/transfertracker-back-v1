@@ -21,7 +21,7 @@ public class TeamQueryController {
 
     private final TeamQueryOrchestrationService teamQueryOrchestrationService;
 
-    @GetMapping("/api/team/{teamId}")
+    @GetMapping("/api/teams/{teamId}")
     public ResponseEntity<TeamItemResponseDto> getTeam(@PathVariable Long teamId) {
         TeamItemResponseDto response = teamQueryOrchestrationService.getTeam(teamId);
 
@@ -42,7 +42,7 @@ public class TeamQueryController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/api/team/test/{teamId}")
+    @GetMapping("/api/teams/test/{teamId}")
     public ResponseEntity<TeamPageInfosResponseDto> getTeamInfo(@PathVariable Long teamId) {
         TeamPageInfosResponseDto response = teamQueryOrchestrationService.getTeamInfo(teamId);
 

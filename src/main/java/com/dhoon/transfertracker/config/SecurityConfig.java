@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.config;
 
+import com.dhoon.transfertracker.internal.member.auth.MemberJwtAuthenticationConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,15 +24,10 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    @Value("${admin.username}")
-    private String adminUsername;
-
-    @Value("${admin.password}")
-    private String adminPassword;
-
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
+            HttpSecurity http,
+            MemberJwtAuthenticationConverter memberJwtAuthenticationConverter
     ) throws Exception {
 
         http
@@ -50,12 +46,6 @@ public class SecurityConfig {
                         )
                         .permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/analytics/page-view")
-                        .permitAll()
-
-                        .requestMatchers(HttpMethod.GET, "/api/guide-posts", "/api/guide-posts/*")
-                        .permitAll()
-
                         // Health Check
                         .requestMatchers(
                                 "/actuator/health"
@@ -68,77 +58,38 @@ public class SecurityConfig {
                         )
                         .hasRole("ADMIN")
 
-                        // 관리자 API
-                        .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
-
                         // 외부 데이터 동기화
                         .requestMatchers(
                                 "/external/**"
                         )
                         .hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET,"/api/member/me", "/api/member/favorite-teams")
-                        .authenticated()
-
-                        .requestMatchers(HttpMethod.POST,"/api/member/favorite-teams")
-                        .authenticated()
-
-                        .requestMatchers(HttpMethod.DELETE, "/api/member/favorite-teams/**")
-                        .authenticated()
-
-                        .requestMatchers("/api/member/notifications", "/api/member/notifications/**")
-                        .authenticated()
-
-                        .requestMatchers("/api/member/push/**")
-                        .authenticated()
-
-                        .requestMatchers(HttpMethod.POST, "/api/guide-posts")
-                        .authenticated()
-
-                        .requestMatchers(HttpMethod.PUT, "/api/guide-posts/**")
-                        .authenticated()
-
-                        .requestMatchers(HttpMethod.DELETE, "/api/guide-posts/**")
-                        .authenticated()
-
-
-                        // 일반 조회 API
+                        // 일반 API
                         .requestMatchers(
-                                "/api/**"
+                                "/api/teams/**",
+                                "/api/members/**",
+                                "/api/players/**",
+                                "/api/team-players/**",
+                                "/api/transfers/**",
+                                "/api/transfer-posts/**"
                         )
                         .permitAll()
 
                         .anyRequest()
-                        .denyAll()
+                        .authenticated()
                 )
 
                 .oauth2ResourceServer(oauth2 ->
                         oauth2.jwt(
-                                Customizer.withDefaults()
+                                jwt -> jwt
+                                        .jwtAuthenticationConverter(memberJwtAuthenticationConverter)
                         )
-                )
-
-                .httpBasic(
-                        Customizer.withDefaults()
                 );
+
 
         return http.build();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService(
-            PasswordEncoder passwordEncoder
-    ) {
-
-        UserDetails admin = User.builder()
-                .username(adminUsername)
-                .password(passwordEncoder.encode(adminPassword))
-                .roles("ADMIN")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin);
-    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -159,4 +110,6 @@ public class SecurityConfig {
 
         return source;
     }
+
+
 }

@@ -13,10 +13,13 @@ import java.time.Instant;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_transfer_post",
-                        columnNames = {"sourcer_name", "content"}
-                )
+                @UniqueConstraint(name = "uk_transfer_post_sourcer_content", columnNames = {"sourcer_name", "content"}),
+                @UniqueConstraint(name = "uk_transfer_post_external_post_id", columnNames = "external_post_id")
+        },
+
+        indexes = {
+                @Index(name = "idx_transfer_post_related", columnList = "is_transfer_related"),
+                @Index(name = "idx_transfer_post_status", columnList = "translate_status")
         }
 )
 public class TransferPost {
@@ -26,7 +29,7 @@ public class TransferPost {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "sourcer_name")
+    @Column(name = "sourcer_name", nullable = false)
     private TransferPostSource sourcer;
 
     @Column(name = "content", nullable = false, length = 500)
@@ -35,10 +38,10 @@ public class TransferPost {
     @Column(name = "external_post_id", nullable = false, unique = true)
     private String externalPostId;
 
-    @Column(name = "contentCreatedAt")
+    @Column(name = "content_created_at", nullable = false)
     private Instant contentCreatedAt;
 
-    @Column(name = "is_transfer_related")
+    @Column(name = "is_transfer_related", nullable = false)
     private boolean transferRelated;
 
     @Column(name = "photo_url", length = 1000)
@@ -48,7 +51,7 @@ public class TransferPost {
     private String translatedContent;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "translate_status")
+    @Column(name = "translate_status", nullable = false)
     private TranslateStatus translateStatus;
 
     @Column(name = "translated_at")
@@ -90,25 +93,6 @@ public class TransferPost {
 
     public void assignTeam(Team team) {
         this.team = team;
-    }
-
-    public void importFromLocal(String content, Instant contentCreatedAt, boolean transferRelated, String photoUrl, String translatedContent, Team team) {
-        this.content = content;
-        this.contentCreatedAt = contentCreatedAt;
-        this.transferRelated = transferRelated;
-        this.photoUrl = photoUrl;
-
-        if (translatedContent != null && !translatedContent.isBlank()) {
-            this.translatedContent = translatedContent;
-            this.translateStatus = TranslateStatus.COMPLETED;
-            if (this.translatedAt == null) {
-                this.translatedAt = Instant.now();
-            }
-        }
-
-        if (team != null) {
-            this.team = team;
-        }
     }
 
 

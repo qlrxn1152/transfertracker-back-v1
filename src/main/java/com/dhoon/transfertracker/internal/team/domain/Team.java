@@ -7,7 +7,11 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-        indexes = @Index(name = "idx_team_league_api_code", columnList = "leagueApiCode")
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_team_api_football_id", columnNames = "api_football_id"),
+                @UniqueConstraint(name = "uk_team_name", columnNames = "team_name"),
+                @UniqueConstraint(name = "uk_team_name_ko", columnNames = "team_name_ko"),
+        }
 )
 public class Team {
 
@@ -15,7 +19,7 @@ public class Team {
     @Column(name = "team_id")
     private Long id;
 
-    @Column(name = "team_name", nullable = false)
+    @Column(name = "team_name", nullable = false, unique = true)
     private String teamName;
 
     @Column(name = "api_football_id", nullable = false, unique = true)

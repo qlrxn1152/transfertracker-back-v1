@@ -21,7 +21,7 @@ public class PlayerQueryController {
     private final PlayerQueryOrchestrationService playerQueryOrchestrationService;
 
 
-    @GetMapping("/api/player/{playerId}")
+    @GetMapping("/api/players/{playerId}")
     public ResponseEntity<PlayerItemResponseDto> getPlayer(@PathVariable Long playerId) {
         PlayerItemResponseDto response = playerQueryOrchestrationService.getPlayer(playerId);
 

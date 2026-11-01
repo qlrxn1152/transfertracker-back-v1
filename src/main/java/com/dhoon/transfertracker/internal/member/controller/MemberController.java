@@ -21,21 +21,21 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("/api/member/signup")
+    @PostMapping("/api/members/signup")
     public ResponseEntity<MemberSignUpResponseDto> signUp(@Valid @RequestBody MemberSignUpRequestDto request) {
         MemberSignUpResponseDto response = memberService.singUp(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/api/member/login")
+    @PostMapping("/api/members/login")
     public ResponseEntity<MemberLoginResponseDto> login(@Valid @RequestBody MemberLoginRequestDto request) {
         MemberLoginResponseDto response = memberService.login(request);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/api/member/me")
+    @GetMapping("/api/members/me")
     public ResponseEntity<Long> getMyMemberId(@AuthenticationPrincipal Jwt jwt) {
         Long memberId = Long.valueOf(jwt.getSubject());
 

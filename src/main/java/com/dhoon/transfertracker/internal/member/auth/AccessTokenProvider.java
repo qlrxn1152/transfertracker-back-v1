@@ -20,35 +20,19 @@ public class AccessTokenProvider {
     private long accessTokenExpirationSeconds;
 
 
-    public String createAccessToken(
-            Long memberId
-    ) {
-
-        Instant now =
-                Instant.now();
+    public String createAccessToken(Long memberId) {
+        Instant now = Instant.now();
 
         JwtClaimsSet claims =
                 JwtClaimsSet.builder()
-                        .subject(
-                                memberId.toString()
-                        )
-                        .issuedAt(
-                                now
-                        )
-                        .expiresAt(
-                                now.plusSeconds(
-                                        accessTokenExpirationSeconds
-                                )
-                        )
+                        .subject(memberId.toString())
+                        .issuedAt(now)
+                        .expiresAt(now.plusSeconds(accessTokenExpirationSeconds))
                         .build();
 
 
         return jwtEncoder
-                .encode(
-                        JwtEncoderParameters.from(
-                                claims
-                        )
-                )
+                .encode(JwtEncoderParameters.from(claims))
                 .getTokenValue();
     }
 }

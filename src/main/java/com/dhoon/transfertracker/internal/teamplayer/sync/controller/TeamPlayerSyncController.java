@@ -17,7 +17,7 @@ public class TeamPlayerSyncController {
 
     private final TeamPlayerSyncOrchestrationService teamPlayerSyncOrchestrationService;
 
-    @PostMapping("/external/api/team/players/{teamApiId}")
+    @PostMapping("/external/api/team-players/{teamApiId}")
     public ResponseEntity<TeamPlayersSaveResponseDto> saveTeamPlayers(@PathVariable Long teamApiId) {
         TeamPlayersSaveResponseDto response = teamPlayerSyncOrchestrationService.syncTeamPlayers(teamApiId);
 
