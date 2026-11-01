@@ -10,7 +10,6 @@ import com.dhoon.transfertracker.internal.member.exception.DuplicateLoginIdExcep
 import com.dhoon.transfertracker.internal.member.exception.LoginFailException;
 import com.dhoon.transfertracker.internal.member.repository.MemberRepository;
 import com.dhoon.transfertracker.internal.member.service.MemberService;
-import com.dhoon.transfertracker.etc.notification.service.MemberNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
