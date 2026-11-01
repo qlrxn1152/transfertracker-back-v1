@@ -26,7 +26,6 @@ public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccessTokenProvider accessTokenProvider;
-    private final MemberNotificationService memberNotificationService;
 
     @Override
     public MemberSignUpResponseDto singUp(MemberSignUpRequestDto request) {
@@ -37,7 +36,6 @@ public class MemberServiceImpl implements MemberService {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         Member savedMember = memberRepository.save(Member.signUp(request.getLoginId(), encodedPassword));
-        memberNotificationService.notifyMemberSignup(savedMember);
 
         return MemberSignUpResponseDto.of(savedMember);
     }

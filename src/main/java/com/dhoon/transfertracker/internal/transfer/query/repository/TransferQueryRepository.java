@@ -5,7 +5,9 @@ import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.QTeam;
 import com.dhoon.transfertracker.internal.transfer.domain.QTransfer;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +41,7 @@ public class TransferQueryRepository {
                 .where(
                         teamEq(teamId),
                         leagueCodeEq(leagueCode),
-                        keywordContains(keyWord)
+                        fullTextMatch(keyWord)
                 )
                 .orderBy(
                         transfer.transferDate.desc(),
@@ -58,7 +60,7 @@ public class TransferQueryRepository {
                 .where(
                         teamEq(teamId),
                         leagueCodeEq(leagueCode),
-                        keywordContains(keyWord)
+                        fullTextMatch(keyWord)
                 )
                 .fetchOne();
 
@@ -68,6 +70,21 @@ public class TransferQueryRepository {
                 total == null ? 0L : total
         );
 
+    }
+
+    private BooleanExpression fullTextMatch(String keyWord) {
+        if (keyWord == null || keyWord.isBlank()) {
+            return null;
+        }
+
+        return Expressions.numberTemplate(
+                        Double.class,
+                        "match_against({0}, {1}, {2})",
+                        player.playerName,
+                        player.playerNameKo,
+                        keyWord
+                )
+                .gt(0);
     }
 
     private BooleanExpression teamEq(Long teamId) {

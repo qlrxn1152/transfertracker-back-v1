@@ -39,20 +39,9 @@ out/
 # Local application config
 src/main/resources/application-local.properties
 
-# Local DB dump
-transfer_v1_data.sql
-transfer_v1_data_complete.sql
-
 # env
 .env
-
-# k6 performance test results
-load-test/results/
 
 # Local tool state
 .gradle-home/
 infra/pinpoint/logs/
-
-# Admin local exports / snapshots
-admin-snapshots/
-*.admin-snapshot.json

@@ -70,17 +70,6 @@ public class TransferQueryTxService implements TransferService {
         return AllTransfersResponseDto.of(transfers, transferPage.hasNext(), transferPage.hasPrevious());
     }
 
-
-
-
-
-
-
-
-
-
-
-
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTeamTransfers(Long teamId, Pageable pageable, String keyWord) {
