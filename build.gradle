@@ -68,6 +68,8 @@ dependencies {
 	// Junit Platform
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	// Spring Test Security
+	testImplementation 'org.springframework.security:spring-security-test'
 
 
 	// . . .
