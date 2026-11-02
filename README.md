@@ -96,145 +96,40 @@ src/main/java/com/dhoon/transfertracker/
 
 ## 6. 시작하기 (Getting Started)
 
-### 6.1 사전 요구사항
+### 실행 환경
 
-로컬 개발 환경에서 다음 도구가 필요합니다.
+- Java 21 / Spring Boot 4.1.1
+- Docker / MySQL 8.4
+- Gradle Wrapper
 
-| 도구 | 버전 |
-|---|---|
-| Java | JDK 21 |
-| Docker | Docker Compose 사용 가능 버전 |
-| Git | 최신 안정 버전 |
-| Gradle | 프로젝트의 Gradle Wrapper 사용 |
-| MySQL | Docker Compose로 MySQL 8.4 실행 |
+### 로컬 실행
 
-Spring Boot 애플리케이션은 로컬 환경에서 실행하며, MySQL은 Docker 컨테이너로 실행합니다.
-
-### 6.2 프로젝트 클론
+**1. 프로젝트 클론**
 
 ```bash
 git clone https://github.com/qlrxn1152/transfertracker-back-v1.git
 cd transfertracker-back-v1
 ```
 
-### 6.3 Docker 환경변수 설정
+**2. 환경변수 설정**
 
-프로젝트 루트에 `.env` 파일을 생성합니다.
+MySQL 접속 정보, JWT Secret 및 외부 API 인증 정보를 설정합니다.
 
-```dotenv
-MYSQL_ROOT_PASSWORD=<로컬_ROOT_비밀번호>
-MYSQL_USER=transfer_user
-MYSQL_PASSWORD=<로컬_DB_비밀번호>
-```
-
-해당 값은 Docker Compose가 MySQL 컨테이너를 초기화할 때 사용합니다.
-
-`.env` 파일은 Git에 커밋하지 않습니다.
-
-### 6.4 MySQL 실행
-
-프로젝트 루트에서 다음 명령어를 실행합니다.
+**3. MySQL 실행**
 
 ```bash
 docker compose up -d
 ```
 
-MySQL 컨테이너 상태를 확인합니다.
-
-```bash
-docker compose ps
-```
-
-현재 Compose 구성에서는 로컬 `3307` 포트를 MySQL 컨테이너의 `3306` 포트에 연결합니다.
-
-```text
-localhost:3307 → Docker MySQL:3306
-```
-
-### 6.5 Spring Boot 로컬 설정
-
-`src/main/resources/application-local.properties` 파일을 생성합니다.
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3307/transfertracker
-spring.datasource.username=${MYSQL_USER}
-spring.datasource.password=${MYSQL_PASSWORD}
-
-spring.jpa.hibernate.ddl-auto=validate
-```
-
-추가로 애플리케이션 실행 시 다음 환경변수를 설정해야 합니다.
-
-| 환경변수 | 용도 |
-|---|---|
-| `MYSQL_USER` | MySQL 접속 계정 |
-| `MYSQL_PASSWORD` | MySQL 접속 비밀번호 |
-| `API_FOOTBALL_KEY` | API-Football 인증 |
-| `X_API_BEARER_TOKEN` | X API 인증 |
-| `OPENAI_API_KEY` | OpenAI API 인증 |
-| `JWT_SECRET` | JWT 서명 및 검증용 Base64 인코딩 비밀 키 |
-
-`JWT_SECRET`은 HS256에 적합한 충분히 긴 무작위 키를 사용해야 합니다.
-
-Docker Compose의 `.env` 값이 Spring Boot 프로세스에 자동으로 전달되는 것은 아니므로, IntelliJ 실행 설정 또는 터미널 환경변수에서 별도로 지정해야 합니다.
-
-### 6.6 Spring Boot 실행
-
-환경변수 설정을 완료한 후 실행합니다.
+**4. Spring Boot 실행**
 
 ```bash
 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
 
-또는 IntelliJ에서 `local` 프로필을 활성화한 후 애플리케이션을 실행할 수 있습니다.
+애플리케이션 실행 시 Flyway를 통해 DB 마이그레이션을 적용합니다.
 
-### 6.7 Flyway 마이그레이션 확인
-
-애플리케이션 실행 시 Flyway가 다음 경로의 SQL 마이그레이션을 적용합니다.
-
-```text
-src/main/resources/db/migration/
-└── V1__initial_schema.sql
-```
-
-Docker MySQL에 접속합니다.
-
-```bash
-docker compose exec mysql sh -c 'exec mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" transfertracker'
-```
-
-마이그레이션 적용 결과를 확인합니다.
-
-```sql
-SELECT installed_rank, version, description, success
-FROM flyway_schema_history;
-
-SHOW TABLES;
-```
-
-`success = 1`이면 해당 마이그레이션이 성공적으로 적용된 것입니다.
-
-또한 Hibernate의 `ddl-auto=validate` 설정으로 엔티티와 실제 DB 스키마의 매핑을 검증합니다.
-
-### 6.8 애플리케이션 상태 확인
-
-```bash
-curl -i http://localhost:8080/actuator/health
-```
-
-애플리케이션과 필요한 구성요소가 정상 상태라면 HTTP 200과 Health 응답을 확인할 수 있습니다.
-
-### 6.9 개발 환경 종료
-
-MySQL 컨테이너를 종료합니다.
-
-```bash
-docker compose down
-```
-
-Docker Volume은 유지되므로 MySQL 데이터가 보존됩니다.
-
-**주의:** `docker compose down -v`는 데이터 볼륨도 제거하므로 DB 초기화가 필요한 상황에서만 사용합니다.
+> 상세 환경변수 설정 및 실행 방법은 [로컬 개발 환경 가이드](docs/getting-started.md)를 참고하세요.
 
 ## 7. 테스트
 
