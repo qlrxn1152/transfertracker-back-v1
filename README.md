@@ -155,7 +155,3 @@ JUnit 5, Mockito, AssertJ를 활용하여 비즈니스 로직을 검증합니다
 
 - [ADR-001: 외부 API 호출과 DB 트랜잭션 분리](docs/decisions/ADR-001-transaction-boundary.md)
 
-## 9. 협업 / 기여 방법 
-
-## 10. 관련 문서 
-
