@@ -36,13 +36,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(HttpMethod.OPTIONS, "/**")
-                        .permitAll()
-
                         // 회원가입 / 로그인
                         .requestMatchers(
-                                "/api/member/signup",
-                                "/api/member/login"
+                                "/api/members/signup",
+                                "/api/members/login"
                         )
                         .permitAll()
 
