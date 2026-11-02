@@ -22,8 +22,6 @@ public class MemberJwtAuthenticationConverter implements Converter<Jwt, Abstract
 
     private final MemberRepository memberRepository;
 
-
-
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         Long memberId;
@@ -38,7 +36,6 @@ public class MemberJwtAuthenticationConverter implements Converter<Jwt, Abstract
                 .orElseThrow(() -> new BadCredentialsException("유효하지 않은 인증 정보"));
 
         String memberRole = "ROLE_" +  member.getMemberGrade().name();
-
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(memberRole);
 
         return new JwtAuthenticationToken(jwt, List.of(authority), memberId.toString());
