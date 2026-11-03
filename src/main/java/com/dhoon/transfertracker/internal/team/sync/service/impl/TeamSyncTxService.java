@@ -48,6 +48,7 @@ public class TeamSyncTxService {
 
     private TeamItemResponseDto getOrCreateTeamAndAssignLeague(JsonNode teamData, LeagueCode leagueCode) {
         Team team = getOrCreateTeam(teamData);
+
         team.assignTeamLeague(leagueCode);
 
         return TeamItemResponseDto.of(team);

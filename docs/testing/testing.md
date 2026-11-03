@@ -23,7 +23,6 @@ Spring Security 인가 정책은 `@WebMvcTest`와 MockMvc로 검증합니다.
 - `verify()`로 Repository 및 비밀번호 인코더 호출 확인
 - `verifyNoInteractions()`로 로그인 실패 시 JWT 미발급 확인
 
-
 ---
 
 ## 2. MemberJwtAuthenticationConverterTest
@@ -44,7 +43,6 @@ Spring Security 인가 정책은 `@WebMvcTest`와 MockMvc로 검증합니다.
 
 ---
 
-
 ## 3. SecurityConfigTest
 
 **테스트 범위:** 관리자 API 인증·인가 정책
@@ -60,7 +58,6 @@ Spring Security 인가 정책은 `@WebMvcTest`와 MockMvc로 검증합니다.
 - `@WithMockUser`로 사용자 권한별 접근 제어 확인
 
 ---
-
 
 ## 4. TeamQueryTxServiceTest
 
@@ -83,8 +80,27 @@ Spring Security 인가 정책은 `@WebMvcTest`와 MockMvc로 검증합니다.
 - AssertJ `extracting()`, `containsExactlyInAnyOrder()`, `isEmpty()`로 컬렉션 검증
 - 여러 Repository의 반환값을 최종 응답 DTO로 조합하는 로직 검증
 
+---
+
+## 5. TeamSyncTxServiceTest
+
+**테스트 범위:** 외부 팀 데이터 기반 기존 팀 조회, 신규 팀 생성 및 리그 할당
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `getOrCreateTeam_success` | 기존 팀 조회 및 중복 저장 방지 |
+| `getOrCreateTeam_success_notExistTeam` | 팀 미존재 시 생성·저장 및 응답 DTO 검증 |
+| `getOrCreateTeamAndAssignLeague_success` | 기존 팀에 지정 리그 할당 및 중복 저장 방지 |
+| `getOrCreateTeamAndAssignLeague_success_notFoundTeam` | 신규 팀 생성·저장 후 리그 할당 및 DTO 검증 |
+
+**주요 검증**
+- `given().willReturn()`, `willAnswer()`로 Repository 조회·저장 동작 모방
+- `verify(never())`로 기존 팀의 불필요한 중복 저장 방지 확인
+- `ArgumentCaptor`로 신규 저장 대상 Team의 이름 및 API ID 검증
+- `ReflectionTestUtils`로 Mock 저장 과정의 ID 할당을 모방하고, 리그 변경 상태 확인
+
 ## 향후 개선
 
-- `TeamSyncTxService` 및 Player 도메인 Service 테스트 추가
+- Player 도메인 Service 단위 테스트 추가
 - Testcontainers 기반 JPA / MySQL 통합 테스트 추가
 - 실제 DB 조회 조건, 엔티티 매핑 및 쿼리 동작 검증
