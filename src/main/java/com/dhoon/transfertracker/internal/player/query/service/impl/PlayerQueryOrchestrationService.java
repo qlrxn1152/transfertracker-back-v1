@@ -20,8 +20,12 @@ public class PlayerQueryOrchestrationService {
 
     public PlayerItemResponseDto getPlayer(Long playerId) {
         validatePlayerIdIsNotNull(playerId);
+
         return txService.getPlayer(playerId);
     }
+
+
+
 
 
 

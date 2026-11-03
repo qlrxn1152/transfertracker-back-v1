@@ -99,8 +99,77 @@ Spring Security 인가 정책은 `@WebMvcTest`와 MockMvc로 검증합니다.
 - `ArgumentCaptor`로 신규 저장 대상 Team의 이름 및 API ID 검증
 - `ReflectionTestUtils`로 Mock 저장 과정의 ID 할당을 모방하고, 리그 변경 상태 확인
 
-## 향후 개선
 
-- Player 도메인 Service 단위 테스트 추가
-- Testcontainers 기반 JPA / MySQL 통합 테스트 추가
-- 실제 DB 조회 조건, 엔티티 매핑 및 쿼리 동작 검증
+---
+## 6. PlayerQueryTxServiceTest
+
+**테스트 범위:** 선수 단건 조회, FA 선수 조회, 선수 목록 조회 및 Slice 기반 페이징 처리
+
+**테스트 대상:** `PlayerQueryTxService`
+
+**Mock 의존성:** `PlayerRepository`, `TeamPlayerRepository`
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `getPlayer_success_teamPlayer` | 팀에 소속된 선수 조회 시 선수 ID, 이름 및 소속팀 정보가 정상 반환되는지 검증 |
+| `getPlayer_success_freeAgent` | 소속팀이 없는 FA 선수 조회 시 선수 정보가 반환되고 팀 이름은 `null`인지 검증 |
+| `getPlayer_notFound` | 존재하지 않는 선수 ID 조회 시 `NotFoundPlayerException`이 발생하고 `TeamPlayerRepository`가 호출되지 않는지 검증 |
+| `getPlayers_success` | 선수 목록 조회 시 DTO 목록이 정상 변환되고 첫 페이지의 `hasNext=true`, `hasPrevious=false`가 반환되는지 검증 |
+| `getPlayers_empty` | 조회 결과가 없을 때 빈 목록과 `hasNext=false`, `hasPrevious=false`가 반환되는지 검증 |
+| `getPlayers_lastPage` | 마지막 페이지 조회 시 선수 목록이 반환되고 `hasNext=false`, `hasPrevious=true`가 반환되는지 검증 |
+
+### 주요 검증 사항
+
+- `PlayerRepository.findById()`로 선수 존재 여부 확인
+- `TeamPlayerRepository.findByPlayerId()`로 선수의 팀 소속 여부 조회
+- 팀 소속 선수와 FA 선수에 따른 응답 DTO 생성
+- 존재하지 않는 선수 조회 시 예외 처리 및 불필요한 Repository 호출 방지
+- `Slice<TeamPlayer>`의 데이터와 페이징 정보를 응답 DTO로 변환
+- 첫 페이지, 마지막 페이지, 빈 결과에 대한 페이징 동작 검증
+
+---
+
+## 7. PlayerQueryOrchestrationServiceTest
+
+**테스트 범위:** 선수 조회 요청의 입력값 검증, 검색어 정규화, 페이징 및 정렬 조건 생성, TxService 호출 위임
+
+**테스트 대상:** `PlayerQueryOrchestrationService`
+
+**Mock 의존성:** `PlayerQueryTxService`
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `getPlayer_success_FreeAgent` | 정상 선수 ID 조회 시 TxService가 반환한 FA 선수 DTO를 동일한 객체로 반환하고 조회 메서드를 한 번 호출하는지 검증 |
+| `getPlayer_success_teamPlayer` | 정상 선수 ID 조회 시 TxService가 반환한 팀 소속 선수 DTO를 동일한 객체로 반환하고 조회 메서드를 한 번 호출하는지 검증 |
+| `getPlayer_invalidId` | 선수 ID가 `null`이면 `InvalidPlayerIdException`이 발생하고 TxService가 호출되지 않는지 검증 |
+| `getPlayers_success` | 검색어 앞뒤 공백 제거, 리그·팀 ID 전달, 페이지 번호·크기 및 정렬 조건 생성, 반환 DTO의 동일성 검증 |
+| `getPlayers_invalidPage` | 페이지 번호가 음수이면 `InvalidPlayerSearchPageValueException`이 발생하고 TxService가 호출되지 않는지 검증 |
+| `getPlayers_nullKeyword` | 검색어가 `null`이면 빈 문자열 `""`로 변환하여 TxService에 전달하는지 검증 |
+
+### 주요 검증 사항
+
+- 선수 ID에 대한 `null` 검증
+- 음수 페이지 번호에 대한 예외 처리
+- 검색어 정규화: `trim()` 및 `null` → `""`
+- `PageRequest`의 페이지 번호와 기본 페이지 크기 `50` 검증
+- `player.playerName ASC`, `player.id ASC` 순서의 정렬 조건 검증
+- `ArgumentCaptor<Pageable>`을 활용한 실제 전달 인자 확인
+- Mockito의 `verify()`, `eq()`, `isNull()`을 활용한 TxService 호출 인자 검증
+- `verifyNoInteractions()`를 활용한 유효하지 않은 요청의 TxService 호출 차단 확인
+- `isSameAs()`를 활용한 TxService 응답 객체의 동일성 검증
+
+
+---
+
+## 전체 테스트 현황
+
+| 테스트 클래스                                | 테스트 수 |
+|----------------------------------------|---:|
+| `MemberServiceImplTest`                | 5 |
+| `MemberJwtAuthenticationConverterTest` | 4 |
+| `SecurityConfigTest`                   | 3 |
+| `TeamQueryTxServiceTest`               | 8 |
+| `TeamSyncTxServiceTest`                | 4 |
+| `PlayerQueryTxServiceTest`             | 6 |
+| `PlayerQueryOrchestrationServiceTest` | 6 |
+| **합계**                                 | **36** |
