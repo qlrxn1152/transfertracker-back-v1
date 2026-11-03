@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.player.query.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
+import com.dhoon.transfertracker.internal.player.exception.NotFoundTeamPlayerException;
 import com.dhoon.transfertracker.internal.player.query.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.player.query.dto.response.PlayersResponseDto;
 import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
@@ -27,16 +28,16 @@ public class PlayerQueryTxService {
     private final TeamPlayerRepository teamPlayerRepository;
 
     @Transactional(readOnly = true)
-    public PlayerItemResponseDto getPlayerResponse(Long playerId) {
-        return teamPlayerRepository.findByPlayerId(playerId)
-                .map(PlayerItemResponseDto::of)
-                .orElseGet(() -> {
-                    Player player = playerRepository.findById(playerId)
-                            .orElseThrow(NotFoundPlayerException::new);
+    public PlayerItemResponseDto getPlayer(Long playerId) {
+        // 팀에속한선수 , 팀에 속하지 않은 선수. ( FA )
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(NotFoundPlayerException::new);
 
-                    return PlayerItemResponseDto.of(player);
-                });
+        return teamPlayerRepository.findByPlayerId(playerId)
+                .map(PlayerItemResponseDto::of) // teamPlayer
+                .orElseGet(() -> PlayerItemResponseDto.of(player));
     }
+
 
     @Transactional(readOnly = true)
     public PlayersResponseDto getPlayers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
