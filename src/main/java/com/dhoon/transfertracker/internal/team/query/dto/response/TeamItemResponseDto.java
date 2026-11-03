@@ -22,4 +22,5 @@ public class TeamItemResponseDto {
                 "https://media.api-sports.io/football/teams/" + team.getApiFootballId() + ".png"
                 );
     }
+
 }

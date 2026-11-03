@@ -84,4 +84,5 @@ public class TeamQueryTxService {
 
         return TeamPageInfosResponseDto.of(teams, players, posts);
     }
+
 }
