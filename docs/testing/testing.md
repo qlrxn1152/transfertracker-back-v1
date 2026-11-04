@@ -161,15 +161,119 @@ Spring Security 인가 정책은 `@WebMvcTest`와 MockMvc로 검증합니다.
 
 ---
 
+## 8. TeamPlayerQueryTxServiceTest
+
+**테스트 범위:** 팀 소속 선수 목록 조회, 빈 목록 반환, 팀 미존재 예외 처리
+
+**테스트 대상:** `TeamPlayerQueryTxService`
+
+**Mock 의존성:** `TeamRepository`, `TeamPlayerRepository`
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `getTeamPlayers_success` | 팀에 소속된 선수 3명의 정보가 응답 DTO로 정상 변환되는지 검증 |
+| `getTeamPlayers_empty` | 팀은 존재하지만 소속 선수가 없으면 빈 목록을 반환하는지 검증 |
+| `getTeamPlayers_notFoundTeam` | 팀이 존재하지 않으면 `NotFoundTeamException`이 발생하고 TeamPlayerRepository가 호출되지 않는지 검증 |
+
+### 주요 검증 사항
+
+- `TeamRepository.findById()`를 이용한 팀 존재 여부 확인
+- `TeamPlayerRepository.findAllByTeamIdWithLazyEntity()` 조회 결과의 DTO 변환
+- AssertJ `extracting()`, `containsExactlyInAnyOrder()`, `isEmpty()`를 활용한 목록 검증
+- `verifyNoInteractions()`를 이용한 불필요한 Repository 호출 방지
+
+---
+
+## 9. TeamPlayerQueryOrchestrationServiceTest
+
+**테스트 범위:** 팀 ID 입력값 검증 및 TxService 조회 위임
+
+**테스트 대상:** `TeamPlayerQueryOrchestrationService`
+
+**Mock 의존성:** `TeamPlayerService`
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `getTeamPlayers_success` | 정상적인 팀 ID를 TxService에 전달하고 반환 DTO를 동일한 객체로 반환하는지 검증 |
+| `getTeamPlayers_invalidTeamId` | 팀 ID가 `null`이면 `InvalidTeamIdException`이 발생하고 TxService가 호출되지 않는지 검증 |
+
+### 주요 검증 사항
+
+- 팀 ID에 대한 `null` 검증
+- `isSameAs()`를 활용한 TxService 반환 객체의 동일성 검증
+- `verify(times(1))`을 이용한 조회 메서드 호출 검증
+- `verifyNoInteractions()`를 이용한 유효하지 않은 요청의 TxService 호출 차단 검증
+
+---
+
+## 10. TeamPlayerSyncTxServiceTest
+
+**테스트 범위:** 외부 API 데이터 기반 Player, Team, TeamPlayer의 조회·생성 및 기존 데이터 재사용
+
+**테스트 대상:** `TeamPlayerSyncTxService`
+
+**Mock 의존성:** `PlayerRepository`, `TeamRepository`, `TeamPlayerRepository`
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `getOrCreateTeamPlayerResponse_success_existing` | 선수·팀·소속 관계가 모두 존재하면 기존 엔티티를 재사용하고 저장 메서드를 호출하지 않는지 검증 |
+| `getOrCreateTeamPlayerResponse_success_newPlayer` | 기존 팀에 신규 선수를 생성하고 소속 관계를 저장하는지 검증 |
+| `getOrCreateTeamPlayerResponse_success_newTeam` | 기존 선수에 신규 팀을 생성하고 소속 관계를 저장하는지 검증 |
+| `getOrCreateTeamPlayerResponse_success_newAll` | 선수·팀·소속 관계가 모두 없으면 각각 생성하고 올바르게 연결하는지 검증 |
+| `getOrCreateTeamPlayerResponse_success_newRelation` | 기존 선수와 팀 사이에 소속 관계만 없는 경우 TeamPlayer만 저장하는지 검증 |
+
+### 주요 검증 사항
+
+- Jackson `JsonMapper`와 `JsonNode`를 이용한 외부 API 데이터 구성
+- API Football ID 기반 기존 Player·Team 조회
+- `Optional.orElseGet()`에 따른 기존 엔티티 재사용 및 신규 저장 분기 검증
+- Mockito `willAnswer()`와 `ReflectionTestUtils`를 이용한 신규 엔티티의 DB PK 할당 모방
+- `ArgumentCaptor`를 이용한 Repository 저장 대상 엔티티 검증
+- 신규 엔티티의 이름과 API Football ID 검증
+- `isSameAs()`를 이용한 TeamPlayer의 Player·Team 연관관계 검증
+- `verify(never())`를 이용한 기존 엔티티의 불필요한 중복 저장 방지
+- 최종 응답 DTO의 Player ID와 Team ID 검증
+
+---
+
+## 11. TeamPlayerSyncOrchestrationServiceTest
+
+**테스트 범위:** 외부 API 호출, JSON 응답 처리, 선수별 동기화 위임 및 최종 응답 생성
+
+**테스트 대상:** `TeamPlayerSyncOrchestrationService`
+
+**Mock 의존성:** `ApiFootballHttpClient`, `TeamPlayerSyncTxService`
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `syncTeamPlayers_success` | 외부 API로 선수 목록을 조회하고 선수별 TxService 호출 결과를 하나의 응답 DTO로 반환하는지 검증 |
+| `syncTeamPlayers_empty` | 외부 API의 선수 목록이 비어 있으면 TxService를 호출하지 않고 빈 목록을 반환하는지 검증 |
+
+### 주요 검증 사항
+
+- `ApiFootballHttpClient.callExternalTeamPlayersApi()` 호출 검증
+- JSON의 `response[0].team`, `response[0].players` 데이터 추출
+- 선수별 `TeamPlayerSyncTxService.getOrCreateTeamPlayerResponse()` 호출 검증
+- `extracting()`을 이용한 선수 이름 및 팀 이름 검증
+- `verify(times(1))`을 이용한 외부 API 호출 및 선수별 TxService 위임 검증
+- `verifyNoInteractions()`를 이용한 빈 선수 목록의 불필요한 동기화 호출 방지
+
+---
+
+
 ## 전체 테스트 현황
 
-| 테스트 클래스                                | 테스트 수 |
-|----------------------------------------|---:|
-| `MemberServiceImplTest`                | 5 |
+| 테스트 클래스 | 테스트 수 |
+|---|---:|
+| `MemberServiceImplTest` | 5 |
 | `MemberJwtAuthenticationConverterTest` | 4 |
-| `SecurityConfigTest`                   | 3 |
-| `TeamQueryTxServiceTest`               | 8 |
-| `TeamSyncTxServiceTest`                | 4 |
-| `PlayerQueryTxServiceTest`             | 6 |
+| `SecurityConfigTest` | 3 |
+| `TeamQueryTxServiceTest` | 8 |
+| `TeamSyncTxServiceTest` | 4 |
+| `PlayerQueryTxServiceTest` | 6 |
 | `PlayerQueryOrchestrationServiceTest` | 6 |
-| **합계**                                 | **36** |
+| `TeamPlayerQueryTxServiceTest` | 3 |
+| `TeamPlayerQueryOrchestrationServiceTest` | 2 |
+| `TeamPlayerSyncTxServiceTest` | 5 |
+| `TeamPlayerSyncOrchestrationServiceTest` | 2 |
+| **합계** | **48** |
