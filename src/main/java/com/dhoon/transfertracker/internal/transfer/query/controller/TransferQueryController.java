@@ -21,7 +21,7 @@ public class TransferQueryController {
 
     private final TransferQueryOrchestrationService transferQueryOrchestrationService;
 
-    @GetMapping("/api/transfers/{playerId}")
+    @GetMapping("/api/players/{playerId}/transfers")
     public ResponseEntity<PlayerTransfersResponseDto> getPlayerTransfers(@PathVariable Long playerId) {
         PlayerTransfersResponseDto response = transferQueryOrchestrationService.getPlayerTransfers(playerId);
 

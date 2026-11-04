@@ -39,7 +39,7 @@ public class TransferPostQueryController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/transfer-posts/{sourcer}")
+    @GetMapping("/api/transfer-posts/source/{sourcer}")
     public ResponseEntity<TransferPostsResponseDto> getSourcerAllPosts(@PathVariable TransferPostSource sourcer) {
         TransferPostsResponseDto response = queryOrchestrationService.getSourcerAllPosts(sourcer);
 

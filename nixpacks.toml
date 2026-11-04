@@ -1,7 +1,5 @@
+[phases.build]
+cmds = ["./gradlew bootJar --no-daemon -x test"]
+
 [start]
-cmd = '''
-mkdir -p /app/newrelic \
-  && curl -fsSL https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip -o /tmp/newrelic-java.zip \
-  && (cd /app && jar xf /tmp/newrelic-java.zip) \
-  && java $JAVA_OPTS -Dnewrelic.config.license_key=$NEW_RELIC_LICENSE_KEY -Dnewrelic.config.app_name=$NEW_RELIC_APP_NAME -Dnewrelic.config.log_file_name=STDOUT -Dnewrelic.config.distributed_tracing.enabled=true -Dserver.port=$PORT -javaagent:/app/newrelic/newrelic.jar -jar $(ls -1 build/libs/*jar | grep -v plain)
-'''
+cmd = "java $JAVA_OPTS -Dserver.port=$PORT -jar $(find build/libs -maxdepth 1 -name '*.jar' ! -name '*plain.jar' | head -n 1)"
