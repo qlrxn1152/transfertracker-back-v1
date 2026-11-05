@@ -507,28 +507,7 @@ MySQL InnoDB FULLTEXT는 같은 트랜잭션의 미커밋 INSERT 데이터를 �
 - 파라미터화 테스트의 개별 실행을 포함하면 총 **94회 호출**로 예상된다(다른 파라미터화 테스트가 없다는 전제).
 - 전체 테스트 통과 여부는 아직 별도로 확인하지 않았다.
 
-### 테스트 실행
 
-전체 테스트 실행:
-
-```bash
-./gradlew clean test
-```
-
-Transfer 도메인 단위 테스트:
-
-```bash
-./gradlew test --tests '*TransferQueryTxServiceTest'
-./gradlew test --tests '*TransferQueryOrchestrationServiceTest'
-./gradlew test --tests '*TransferSyncOrchestrationServiceTest'
-./gradlew test --tests '*TransferSyncTxServiceTest'
-```
-
-Transfer Repository 통합 테스트:
-
-```bash
-./gradlew test --tests '*TransferQueryRepositoryIntegrationTest'
-```
 
 ### 향후 테스트 계획
 
