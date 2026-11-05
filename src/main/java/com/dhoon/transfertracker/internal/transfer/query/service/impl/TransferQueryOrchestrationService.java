@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.transfer.query.service.impl;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
+import com.dhoon.transfertracker.internal.transfer.exception.InvalidTransferIdException;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.TransferDetailResponseDto;
@@ -57,7 +58,7 @@ public class TransferQueryOrchestrationService {
 
     public TransferDetailResponseDto getTransfer(Long transferId) {
         if (transferId == null) {
-            throw new IllegalArgumentException("이적 ID를 확인해 주세요.");
+            throw new InvalidTransferIdException();
         }
 
         return txService.getTransfer(transferId);

@@ -32,7 +32,7 @@ public class TransferQueryRepository {
     private final QTeam inTeam = new QTeam("inTeam");
     private final QTeam outTeam = new QTeam("outTeam");
 
-    public Page<Transfer> findTransfers(Long teamId, LeagueCode leagueCode, String keyWord, Pageable pageable) {
+    public Page<Transfer> findTransfers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
         List<Transfer> transfers = queryFactory
                 .selectFrom(transfer)
                 .join(transfer.player, player).fetchJoin()

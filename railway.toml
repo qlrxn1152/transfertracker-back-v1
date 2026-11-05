@@ -1,0 +1,10 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "./gradlew bootJar --no-daemon -x test"
+
+[deploy]
+startCommand = "java $JAVA_OPTS -Dserver.port=$PORT -jar $(find build/libs -maxdepth 1 -name '*.jar' ! -name '*plain.jar' | head -n 1)"
+healthcheckPath = "/actuator/health"
+healthcheckTimeout = 180
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

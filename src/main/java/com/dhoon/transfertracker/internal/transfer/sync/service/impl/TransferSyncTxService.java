@@ -64,12 +64,12 @@ public class TransferSyncTxService {
             String transferType = transferData.get("type").asString();
             LocalDate transferDate = LocalDate.parse(transferData.get("date").asString());
 
-            Team inTeam = getOrCreateTeam(teamData.get("in"));
-            Team outTeam = getOrCreateTeam(teamData.get("out"));
+            Team inTeam = getOrCreateTeam(teamData.get("in")); // 팀 존재 안하면 생성
+            Team outTeam = getOrCreateTeam(teamData.get("out")); // ""
 
-            Transfer transfer = transferRepository.findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(inTeam.getId(), outTeam.getId(), player.getId(), transferDate)
+            Transfer transfer = transferRepository.findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(inTeam.getId(), outTeam.getId(), player.getId(), transferDate) // 중복 데이터 없는지 확인
                     .orElseGet(() -> transferRepository.save(Transfer.of(
-                            player, inTeam, outTeam, transferType, transferDate
+                            player, inTeam, outTeam, transferType, transferDate // 없으면 저장
                     )));
 
             playerTransfers.add(PlayerTransferItemResponseDto.of(transfer));
@@ -79,7 +79,7 @@ public class TransferSyncTxService {
     }
 
     private Player getOrCreatePlayer(JsonNode playerData) {
-        long playerApiId = playerData.get("id").asLong();
+        long playerApiId = playerData.get("id").asLong(); // 외부 API ID
 
         return playerRepository.findByApiFootballId(playerApiId)
                 .orElseGet(() -> playerRepository.save(

@@ -7,6 +7,7 @@ import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
+import com.dhoon.transfertracker.internal.transfer.exception.NotFoundTransferException;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.AllTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransferItemResponseDto;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransfersResponseDto;
@@ -59,8 +60,7 @@ public class TransferQueryTxService implements TransferService {
     @Override
     @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
-
-        Page<Transfer> transferPage = transferQueryRepository.findTransfers(teamId, leagueCode, keyWord, pageable);
+        Page<Transfer> transferPage = transferQueryRepository.findTransfers(pageable, keyWord, leagueCode, teamId);
 
         List<TransferResponseDto> transfers = transferPage.getContent()
                 .stream()
@@ -75,7 +75,7 @@ public class TransferQueryTxService implements TransferService {
     public AllTransfersResponseDto getTeamTransfers(Long teamId, Pageable pageable, String keyWord) {
         teamRepository.findById(teamId).orElseThrow(NotFoundTeamException::new); // 쿼리 1번.
 
-        Page<Transfer> transferPage = transferQueryRepository.findTransfers(teamId, null, keyWord, pageable);
+        Page<Transfer> transferPage = transferQueryRepository.findTransfers(pageable, keyWord, null, teamId);
 
         List<TransferResponseDto> transfers = transferPage.getContent()
                 .stream()
@@ -90,7 +90,7 @@ public class TransferQueryTxService implements TransferService {
     @Transactional(readOnly = true)
     public TransferDetailResponseDto getTransfer(Long transferId) {
         Transfer transfer = transferRepository.findByIdWithLazyEntities(transferId)
-                .orElseThrow(() -> new IllegalArgumentException("이적 기록을 찾을 수 없습니다."));
+                .orElseThrow(NotFoundTransferException::new);
 
         return TransferDetailResponseDto.of(TransferResponseDto.of(transfer));
     }
