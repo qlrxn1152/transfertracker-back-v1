@@ -11,6 +11,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ import java.util.List;
 
 import static com.dhoon.transfertracker.internal.transfer.domain.QTransfer.*;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class TransferQueryRepository {

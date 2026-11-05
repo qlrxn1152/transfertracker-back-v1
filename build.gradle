@@ -55,7 +55,6 @@ dependencies {
 	// Spring Integration Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testRuntimeOnly 'com.h2database:h2'
 
 	// TestContainers: MySQL integration tests
 	testImplementation 'org.testcontainers:testcontainers'

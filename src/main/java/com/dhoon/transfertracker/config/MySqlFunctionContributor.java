@@ -19,7 +19,7 @@ public class MySqlFunctionContributor implements FunctionContributor {
         functionContributions
                 .getFunctionRegistry()
                 .registerPattern(
-                        "match_aginst",
+                        "match_against",
                         "match(?1, ?2) against (?3 in boolean mode)",
                         doubleType
                 );

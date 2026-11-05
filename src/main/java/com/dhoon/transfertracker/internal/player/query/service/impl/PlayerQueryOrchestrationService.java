@@ -26,11 +26,9 @@ public class PlayerQueryOrchestrationService {
 
 
 
-
-
-
     public PlayersResponseDto getPlayers(int page, String keyWord, LeagueCode leagueCode, Long teamId) {
         validatePageValue(page);
+
 
         PageRequest pageable = PageRequest.of(
                 page,
@@ -61,5 +59,6 @@ public class PlayerQueryOrchestrationService {
             throw new InvalidPlayerSearchPageValueException();
         }
     }
+
 
 }
