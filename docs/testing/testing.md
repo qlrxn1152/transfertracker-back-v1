@@ -6,8 +6,9 @@ JUnit 5, Mockito, AssertJ를 활용하여 Service 단위 테스트를 작성합�
 Repository 및 인증 관련 의존성을 Mock으로 격리하여 정상 흐름, 예외 처리, 반환 데이터와 상호작용을 검증합니다.
 Spring Security 인가 정책은 `@WebMvcTest`와 MockMvc로 검증합니다.
 
-Repository 통합 테스트는 `@DataJpaTest`, Testcontainers MySQL 8.4, Flyway, Hibernate, QueryDSL을 사용합니다.
-Mock이 아닌 실제 데이터베이스에서 조회 조건, 정렬, 페이지네이션, FULLTEXT 검색 및 쿼리 결과를 검증합니다.
+Repository 및 조회 Service 통합 테스트는 `@DataJpaTest`, Testcontainers MySQL 8.4, Flyway, Hibernate, QueryDSL을 사용합니다.
+Mock이 아닌 실제 Spring Bean과 데이터베이스를 통해 조회 조건, 정렬, 페이지네이션, FULLTEXT 검색 및 DTO 변환을 검증합니다.
+단, `@DataJpaTest`의 테스트 트랜잭션에 Service가 참여하는 구조이므로 Service 자체의 커밋·롤백 경계를 독립적으로 검증하는 테스트와는 구분합니다.
 
 ## 1. MemberServiceImplTest
 
@@ -480,6 +481,62 @@ MySQL InnoDB FULLTEXT는 같은 트랜잭션의 미커밋 INSERT 데이터를 �
 
 ---
 
+## 17. TransferQueryTxServiceIntegrationTest
+
+**테스트 범위:** 실제 Spring Service Bean과 JPA/QueryDSL Repository 및 MySQL을 연동한 이적 기록 조회, DTO 변환, 빈 목록, 검색 조건, 페이징 및 예외 처리
+
+**테스트 대상:** `TransferQueryTxService`
+
+**테스트 환경:** JUnit Jupiter, `@DataJpaTest`, Testcontainers(MySQL 8.4), Flyway, Hibernate/JPA, QueryDSL, AssertJ
+
+**Bean 구성:** `TransferQueryTxService`, `TransferQueryRepository`, `QueryDslConfig`를 `@Import`하고 실제 Repository를 주입받아 사용한다. 테스트 환경에서 설정 클래스 탐색 문제가 발생하여 `@ContextConfiguration(classes = TransferTrackerApplication.class)`를 명시하였다.
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `getPlayerTransfers_success` | 선수별 이적 기록 2건의 실제 DB 조회, 선수 이름, 입단·방출팀, 이적일 및 DTO 반환 순서 검증 |
+| `getPlayerTransfers_empty` | 선수는 존재하지만 이적 이력이 없을 때 빈 목록 반환 |
+| `getPlayerTransfers_notFound` | 존재하지 않는 선수 ID 조회 시 `NotFoundPlayerException` 발생 |
+| `getTransfer_success` | 단건 이적 기록의 Transfer·Player·입단팀·방출팀 ID, 날짜, 이적 유형 DTO 매핑 검증 |
+| `getTransfer_notFound` | 존재하지 않는 이적 ID 조회 시 `NotFoundTransferException` 발생 |
+| `getTransfers_success` | 전체 이적 목록의 첫 페이지 2건 조회, ID 순서, `hasNext=true`, `hasPrevious=false` 검증 |
+| `getTransfers_empty` | 전체 이적 기록이 없을 때 빈 DTO 목록 및 이전·다음 페이지 없음 검증 |
+| `getTransfers_withFilters` | FULLTEXT 검색어·리그·팀 ID 복합 조건 조회 후 DTO 반환 순서 및 페이지 정보 검증 |
+| `getTeamTransfers_success` | 지정 팀의 입단·방출 이적 기록만 2건 반환하고 관련 없는 기록 제외 |
+| `getTeamTransfers_empty` | 팀은 존재하지만 이적 기록이 없으면 빈 목록 및 페이지 정보 반환 |
+| `getTeamTransfers_notFoundTeam` | 존재하지 않는 팀 ID 조회 시 `NotFoundTeamException` 발생 |
+
+### 주요 검증 사항
+
+- Mockito의 `given()` 및 `verify()` 대신 실제 Repository로 데이터를 저장하고 Service의 DTO 반환 결과와 예외를 검증
+- `em.flush()` 및 `em.clear()`로 저장된 엔티티를 분리한 뒤 실제 DB 조회 및 DTO 매핑 경로 확인
+- 선수별 이적 기록의 최신 날짜 순서, 입단팀·방출팀 및 연관 ID의 올바른 변환 검증
+- 전체·팀별 목록 조회에서 `hasNext`, `hasPrevious`가 `AllTransfersResponseDto`에 전달되는지 확인
+- 선수가 없는 경우와 선수가 존재하지만 이적 기록이 없는 경우를 구분
+- 팀이 없는 경우와 팀은 존재하지만 이적 기록이 없는 경우를 구분
+- 이적 상세 조회에서 연관 엔티티 조회 결과를 `TransferDetailResponseDto`로 변환하는 동작 확인
+
+### FULLTEXT 복합 검색 테스트
+
+`getTransfers_withFilters`에서는 Repository 통합 테스트에서 사용한 `fulltext-combined-setup.sql` 및 `fulltext-combined-cleanup.sql`을 재사용한다.
+
+- `@Sql`의 `ISOLATED` 설정으로 선수·팀·이적 데이터 INSERT와 사후 DELETE를 각각 커밋
+- 검색 조건: `Messi` + `LA_LIGA` + Barcelona 팀 ID
+- 기대 결과: 최신 날짜 순으로 이적 기록 2건 반환, `hasNext=false`, `hasPrevious=false`
+
+### 트랜잭션과 테스트 범위
+
+`TransferQueryTxService`의 조회 전용 메서드는 클래스 수준의 `@Transactional(readOnly = true)` 정책으로 정리하였다(로컬 리팩토링 기준).
+
+`@DataJpaTest`는 테스트 자체의 트랜잭션을 열고 기본적으로 종료 시 롤백하므로, 본 테스트의 주목적은 **실제 Service → Repository → DB 조회 및 DTO 변환**이다. 서비스의 독립적인 트랜잭션 시작·커밋·롤백이나 영속성 컨텍스트 종료 이후의 지연 로딩 예외까지 검증했다고 간주하지 않는다.
+
+또한 조회 테스트에서 `@Sql(ISOLATED)`로 커밋된 데이터는 기본 테스트 롤백으로 제거되지 않으므로 사후 정리 SQL을 유지해야 한다.
+
+**작성한 테스트 메서드:** 11개
+
+※ 본 항목은 대화에서 공유된 테스트 코드에 근거하며, 전체 Gradle 테스트 실행 및 통과 여부는 별도 확인이 필요하다.
+
+---
+
 ## 전체 테스트 현황
 
 | 테스트 클래스 | 테스트 메서드 수 |
@@ -500,18 +557,46 @@ MySQL InnoDB FULLTEXT는 같은 트랜잭션의 미커밋 INSERT 데이터를 �
 | `TransferSyncOrchestrationServiceTest` | 2 |
 | `TransferSyncTxServiceTest` | 8 |
 | `TransferQueryRepositoryIntegrationTest` | 11 |
-| **합계** | **92** |
+| `TransferQueryTxServiceIntegrationTest` | 11 |
+| **합계** | **103** |
 
 - 기존 단위·Security 테스트: **81개 메서드**
 - Repository 통합 테스트: **11개 메서드**
-- 파라미터화 테스트의 개별 실행을 포함하면 총 **94회 호출**로 예상된다(다른 파라미터화 테스트가 없다는 전제).
+- Service 통합 테스트: **11개 메서드**
+- 파라미터화 테스트의 개별 실행을 포함하면 총 **105회 호출**로 예상된다(다른 파라미터화 테스트가 없다는 전제).
 - 전체 테스트 통과 여부는 아직 별도로 확인하지 않았다.
 
+### 테스트 실행
 
+전체 테스트 실행:
+
+```bash
+./gradlew clean test
+```
+
+Transfer 도메인 단위 테스트:
+
+```bash
+./gradlew test --tests '*TransferQueryTxServiceTest'
+./gradlew test --tests '*TransferQueryOrchestrationServiceTest'
+./gradlew test --tests '*TransferSyncOrchestrationServiceTest'
+./gradlew test --tests '*TransferSyncTxServiceTest'
+```
+
+Transfer Repository 통합 테스트:
+
+```bash
+./gradlew test --tests '*TransferQueryRepositoryIntegrationTest'
+```
+
+Transfer Query Service 통합 테스트:
+
+```bash
+./gradlew test --tests '*TransferQueryTxServiceIntegrationTest'
+```
 
 ### 향후 테스트 계획
 
-- `TransferQueryTxService` 등 Service 계층의 실제 Bean·Repository 연동 통합 테스트
 - `TransferSyncTxService` 신규 저장 및 중복 동기화 통합 테스트
 - Flyway 스키마 및 MySQL UNIQUE 제약 조건 검증
 - 예외 발생 시 실제 트랜잭션 롤백 검증
@@ -519,4 +604,4 @@ MySQL InnoDB FULLTEXT는 같은 트랜잭션의 미커밋 INSERT 데이터를 �
 
 **통합 테스트 환경:** Testcontainers + MySQL 8.4 + Flyway
 
-**현재 상태:** 단위 테스트 81개 및 Transfer Repository 통합 테스트 11개 작성 내역 반영. 전체 테스트 실행 성공 여부는 별도 확인 필요.
+**현재 상태:** 기존 테스트 81개, Transfer Repository 통합 테스트 11개, Transfer Query Service 통합 테스트 11개의 작성 내역을 반영. 전체 테스트 실행 성공 여부는 별도 확인 필요.

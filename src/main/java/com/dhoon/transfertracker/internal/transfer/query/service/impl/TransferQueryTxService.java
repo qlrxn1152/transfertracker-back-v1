@@ -30,7 +30,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
+@Transactional(readOnly = true)
 @Service
 public class TransferQueryTxService implements TransferService {
 
@@ -42,7 +42,6 @@ public class TransferQueryTxService implements TransferService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public PlayerTransfersResponseDto getPlayerTransfers(Long playerId) {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(NotFoundPlayerException::new);
@@ -58,7 +57,6 @@ public class TransferQueryTxService implements TransferService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public AllTransfersResponseDto getTransfers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
         Page<Transfer> transferPage = transferQueryRepository.findTransfers(pageable, keyWord, leagueCode, teamId);
 
@@ -71,7 +69,6 @@ public class TransferQueryTxService implements TransferService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public AllTransfersResponseDto getTeamTransfers(Long teamId, Pageable pageable, String keyWord) {
         teamRepository.findById(teamId).orElseThrow(NotFoundTeamException::new); // 쿼리 1번.
 
@@ -87,7 +84,6 @@ public class TransferQueryTxService implements TransferService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public TransferDetailResponseDto getTransfer(Long transferId) {
         Transfer transfer = transferRepository.findByIdWithLazyEntities(transferId)
                 .orElseThrow(NotFoundTransferException::new);
