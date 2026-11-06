@@ -61,6 +61,7 @@ public class TransferSyncOrchestrationService {
     private JsonNode callExternalTeamTransferApiAndReturnResponse(Long teamApiId) {
         JsonNode node = apiFootballHttpClient.callExternalTeamTransfersApi(teamApiId);
 
+
         if (node == null || !node.isObject()) {
             throw new InvalidExternalApiResponseException();
         }
