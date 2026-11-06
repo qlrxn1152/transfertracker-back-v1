@@ -2,7 +2,6 @@ package com.dhoon.transfertracker.internal.transfer.sync.service.impl;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
 import com.dhoon.transfertracker.internal.player.domain.Player;
-import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTransfersResponseDto;
 import com.dhoon.transfertracker.internal.transfer.sync.dto.response.TeamTransfersSaveResponseDto;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
