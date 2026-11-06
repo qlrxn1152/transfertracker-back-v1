@@ -537,6 +537,40 @@ MySQL InnoDB FULLTEXT는 같은 트랜잭션의 미커밋 INSERT 데이터를 �
 
 ---
 
+## 18. TransferSyncTxServiceIntegrationTest
+
+**테스트 범위:** 실제 MySQL에서 외부 API JSON을 기반으로 한 신규 Player·Team·Transfer 생성과 기존 데이터 재사용을 검증한다. `@DataJpaTest` + Testcontainers(MySQL 8.4) + Flyway, 실제 `TransferSyncTxService` Bean을 사용한다.
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `getOrCreatePlayerTransfersResponse_newPlayer_emptyTransfers` | 빈 이적 배열로 동기화했을 때 신규 Player만 저장하고 이적 목록은 비어 있는지 검증 |
+| `getOrCreatePlayerTransfersResponse_newPlayerAndTransfer` | Player 1명·Team 2개·Transfer 1개 저장, DB 연관관계, 날짜, 유형, DTO 매핑 검증 |
+| `getOrCreatePlayerTransfersResponse_existingTransfer` | 이미 존재하는 이적을 재동기화해도 Player·Team·Transfer 건수 및 Transfer PK 유지 검증 |
+
+- `em.flush()`와 `em.clear()`를 사용하여 저장 후 조회 검증
+- IDENTITY PK 값을 `1L`로 가정하지 않고 저장 결과로 획득
+- 현재는 순차적인 재동기화 검증이며 동시성·독립적인 커밋 및 롤백은 검증하지 않음
+
+**작성한 테스트 메서드:** 3개 (실행 성공 여부 확인 전)
+
+---
+
+## 19. TransferRepositoryIntegrationTest
+
+**테스트 범위:** 실제 MySQL의 `uk_transfer(player_id, in_team_id, out_team_id, transfer_date)` UNIQUE 제약 조건 검증
+
+| 테스트 메서드 | 검증 내용 |
+|---|---|
+| `save_duplicateTransfer_throwsException` | 이적 유형이 달라도 유니크 키가 동일한 Transfer 두 번째 INSERT를 거부하는지 검증 |
+
+- 첫 Transfer를 `saveAndFlush`로 저장한 후 동일 유니크 키를 가진 두 번째 Transfer에서 `DataIntegrityViolationException` 기대
+- `GenerationType.IDENTITY` 때문에 INSERT는 `save()` 시점에 실행될 수도 있음
+- 이 검증은 동시성 테스트가 아니며, 제약 위반 후 같은 트랜잭션에서 추가 DB 작업을 수행하지 않음
+
+**작성한 테스트 메서드:** 1개 (실행 성공 여부 확인 전)
+
+---
+
 ## 전체 테스트 현황
 
 | 테스트 클래스 | 테스트 메서드 수 |
@@ -558,50 +592,25 @@ MySQL InnoDB FULLTEXT는 같은 트랜잭션의 미커밋 INSERT 데이터를 �
 | `TransferSyncTxServiceTest` | 8 |
 | `TransferQueryRepositoryIntegrationTest` | 11 |
 | `TransferQueryTxServiceIntegrationTest` | 11 |
-| **합계** | **103** |
+| `TransferSyncTxServiceIntegrationTest` | 3 |
+| `TransferRepositoryIntegrationTest` | 1 |
+| **합계** | **107** |
 
 - 기존 단위·Security 테스트: **81개 메서드**
 - Repository 통합 테스트: **11개 메서드**
-- Service 통합 테스트: **11개 메서드**
-- 파라미터화 테스트의 개별 실행을 포함하면 총 **105회 호출**로 예상된다(다른 파라미터화 테스트가 없다는 전제).
+- Service 통합 테스트: **14개 메서드** (조회 11개 + 동기화 3개)
+- Transfer Repository UNIQUE 제약 테스트: **1개 메서드**
+- 파라미터화 테스트의 개별 실행을 포함하면 총 **109회 호출**로 예상된다(다른 파라미터화 테스트가 없다는 전제).
 - 전체 테스트 통과 여부는 아직 별도로 확인하지 않았다.
 
-### 테스트 실행
+---
 
-전체 테스트 실행:
-
-```bash
-./gradlew clean test
-```
-
-Transfer 도메인 단위 테스트:
-
-```bash
-./gradlew test --tests '*TransferQueryTxServiceTest'
-./gradlew test --tests '*TransferQueryOrchestrationServiceTest'
-./gradlew test --tests '*TransferSyncOrchestrationServiceTest'
-./gradlew test --tests '*TransferSyncTxServiceTest'
-```
-
-Transfer Repository 통합 테스트:
-
-```bash
-./gradlew test --tests '*TransferQueryRepositoryIntegrationTest'
-```
-
-Transfer Query Service 통합 테스트:
-
-```bash
-./gradlew test --tests '*TransferQueryTxServiceIntegrationTest'
-```
 
 ### 향후 테스트 계획
 
-- `TransferSyncTxService` 신규 저장 및 중복 동기화 통합 테스트
-- Flyway 스키마 및 MySQL UNIQUE 제약 조건 검증
+- UNIQUE 충돌 상황에 대한 Service 수준 예외 정책 및 동시성 검증
 - 예외 발생 시 실제 트랜잭션 롤백 검증
 - Transfer API HTTP 응답 및 예외 처리 검증
 
 **통합 테스트 환경:** Testcontainers + MySQL 8.4 + Flyway
 
-**현재 상태:** 기존 테스트 81개, Transfer Repository 통합 테스트 11개, Transfer Query Service 통합 테스트 11개의 작성 내역을 반영. 전체 테스트 실행 성공 여부는 별도 확인 필요.
