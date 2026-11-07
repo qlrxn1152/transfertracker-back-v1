@@ -24,25 +24,34 @@ public class TransferPostSyncOrchestrationService {
     private final XClient xClient;
 
     public TransferPostsResponseDto syncPosts(TransferPostSource source) {
-        JsonNode response = xClient.callExternalApi(source);
-
-        JsonNode userPosts = response.get("data");
-
-        if (userPosts == null) {
-            throw new InvalidSourcerException();
-        }
-
-        Map<String, String> mediaUrlByKey = mapMediaUrlByKey(response);
+        String nextToken = null;
         List<TransferPostItemResponseDto> posts = new ArrayList<>();
 
-        userPosts.forEach(post -> {
-            TransferPostItemResponseDto saveTransferPost = txService.saveTransferPost(source, post, mediaUrlByKey);
-            posts.add(saveTransferPost);
-        });
+        do {
+            JsonNode response = xClient.callExternalApi(source, nextToken); // null -> 첫페이지.
+
+            JsonNode userPosts = response.get("data");
+
+            if (userPosts == null) {
+                throw new InvalidSourcerException();
+            }
+
+            Map<String, String> mediaUrlByKey = mapMediaUrlByKey(response);
+
+            userPosts.forEach(post -> {
+                TransferPostItemResponseDto saveTransferPost = txService.saveTransferPost(source, post, mediaUrlByKey);
+                posts.add(saveTransferPost);
+            });
+
+            nextToken = extractNextToken(response);
+        }
+        while (nextToken != null && !nextToken.isBlank());
 
         return TransferPostsResponseDto.of(posts);
     }
 
+
+    //  ============================ //
 
     private Map<String, String> mapMediaUrlByKey(JsonNode response) {
         Map<String, String> mediaUrlByKey = new HashMap<>();
@@ -90,5 +99,16 @@ public class TransferPostSyncOrchestrationService {
         return value.asString();
     }
 
+    private String extractNextToken(JsonNode response) {
+        JsonNode meta = response.get("meta");
+
+        String nextToken = null;
+
+        if (meta != null && meta.hasNonNull("next_token")) {
+            nextToken = meta.get("next_token").asString();
+        }
+
+        return nextToken;
+    }
 
 }

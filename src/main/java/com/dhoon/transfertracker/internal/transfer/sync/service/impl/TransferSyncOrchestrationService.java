@@ -57,7 +57,7 @@ public class TransferSyncOrchestrationService {
     }
 
 
-    //// ====================== ////
+    // ====================== //
     private JsonNode callExternalTeamTransferApiAndReturnResponse(Long teamApiId) {
         JsonNode node = apiFootballHttpClient.callExternalTeamTransfersApi(teamApiId);
 
@@ -76,7 +76,7 @@ public class TransferSyncOrchestrationService {
     }
 
 
-    ////  ================================================== ////
+    //  ================================================== //
     private void syncTeamPlayerTransfers(Long teamApiId, JsonNode responses, List<PlayerTransfersResponseDto> successesPlayerTransfers, Set<Long> failedPlayerIds) {
         // playerTransfer -> 1명의 선수의 이적 데이터.
         responses.forEach(playerTransfer -> {

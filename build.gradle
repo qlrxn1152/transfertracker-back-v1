@@ -49,6 +49,9 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	// Spring Batch
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+
 	// Unit Test: JUnit Jupiter, Mockito, AssertJ
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 

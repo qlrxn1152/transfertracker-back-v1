@@ -65,7 +65,7 @@ public class TransferSyncTxService {
             LocalDate transferDate = LocalDate.parse(transferData.get("date").asString());
 
             Team inTeam = getOrCreateTeam(teamData.get("in")); // 팀 존재 안하면 생성
-            Team outTeam = getOrCreateTeam(teamData.get("out")); // ""
+            Team outTeam = getOrCreateTeam(teamData.get("out"));
 
             Transfer transfer = transferRepository.findByInTeamIdAndOutTeamIdAndPlayerIdAndTransferDate(inTeam.getId(), outTeam.getId(), player.getId(), transferDate) // 중복 데이터 없는지 확인
                     .orElseGet(() -> transferRepository.save(Transfer.of(
