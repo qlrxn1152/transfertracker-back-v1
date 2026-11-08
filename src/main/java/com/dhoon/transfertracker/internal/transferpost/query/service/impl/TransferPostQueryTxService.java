@@ -38,13 +38,15 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
 
         long totalPostCount = sourcerAllPostPage.getTotalElements();
         int totalPageCount = sourcerAllPostPage.getTotalPages();
+        boolean hasNext = sourcerAllPostPage.hasNext();
+        boolean hasPrevious = sourcerAllPostPage.hasPrevious();
 
         List<TransferPostItemResponseDto> posts = sourcerAllPostPage.getContent()
                 .stream()
                 .map(TransferPostItemResponseDto::of)
                 .toList();
 
-        return TransferPostsPageResponseDto.of(posts, totalPostCount, totalPageCount);
+        return TransferPostsPageResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
     }
 
 

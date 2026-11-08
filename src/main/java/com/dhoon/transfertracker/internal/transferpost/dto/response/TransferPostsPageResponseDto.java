@@ -17,8 +17,11 @@ public class TransferPostsPageResponseDto {
     private long totalPostCount;
     private int totalPageCount;
 
-    public static TransferPostsPageResponseDto of(List<TransferPostItemResponseDto> posts, long totalPostCount, int totalPageCount) {
-        return new TransferPostsPageResponseDto(posts, totalPostCount, totalPageCount);
+    private boolean hasNext;
+    private boolean hasPrevious;
+
+    public static TransferPostsPageResponseDto of(List<TransferPostItemResponseDto> posts, long totalPostCount, int totalPageCount, boolean hasNext, boolean hasPrevious) {
+        return new TransferPostsPageResponseDto(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
     }
 
 }
