@@ -34,7 +34,7 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
     @Override
     public TransferPostsPageResponseDto getSourcerAllPosts(TransferPostSource sourcer, Pageable pageable) {
 
-        Page<TransferPost> sourcerAllPostPage = transferPostRepository.findAllBySourcerWithPageAndLazyTeam(sourcer, pageable);
+        Page<TransferPost> sourcerAllPostPage = transferPostRepository.findAllBySourcerWithTeam(sourcer, pageable);
 
         long totalPostCount = sourcerAllPostPage.getTotalElements();
         int totalPageCount = sourcerAllPostPage.getTotalPages();

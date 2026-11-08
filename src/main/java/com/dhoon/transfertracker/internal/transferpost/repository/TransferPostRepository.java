@@ -37,7 +37,7 @@ public interface TransferPostRepository extends JpaRepository<TransferPost, Long
         WHERE tp.sourcer = :sourcer
         """
     )
-    Page<TransferPost> findAllBySourcerWithPageAndLazyTeam(TransferPostSource sourcer, Pageable pageable);
+    Page<TransferPost> findAllBySourcerWithTeam(TransferPostSource sourcer, Pageable pageable);
 
 
 
