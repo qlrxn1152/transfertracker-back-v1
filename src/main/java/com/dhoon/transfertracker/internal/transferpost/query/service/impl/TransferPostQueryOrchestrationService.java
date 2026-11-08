@@ -1,13 +1,18 @@
 package com.dhoon.transfertracker.internal.transferpost.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsPageResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidPostIdException;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidSourcerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,12 +22,26 @@ public class TransferPostQueryOrchestrationService {
 
     private final TransferPostQueryTxService txService;
 
-    public TransferPostsResponseDto getSourcerAllPosts(TransferPostSource sourcer) {
+    public TransferPostsPageResponseDto getSourcerAllPosts(TransferPostSource sourcer, int page) {
         validateSourcerIsNotNull(sourcer);
 
-        return txService.getSourcerAllPosts(sourcer);
-    }
+        if (page < 0) {
+            throw new IllegalArgumentException("페이지 값은 0보다 작을 수 없습니다.");
+        }
 
+        // 가장 최근에 저장된 게시물을 20개 단위로.
+        Pageable pageable = PageRequest.of(
+                page,
+                20,
+                Sort.by(
+                        Sort.Order.desc("contentCreatedAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+
+        return txService.getSourcerAllPosts(sourcer, pageable);
+    }
 
     public TransferPostsResponseDto getTeamTransferPosts(Long teamId) {
         validateTeamIdIsNotNull(teamId);
@@ -39,6 +58,8 @@ public class TransferPostQueryOrchestrationService {
 
         return txService.getTransferPost(postId);
     }
+
+
 
 
 

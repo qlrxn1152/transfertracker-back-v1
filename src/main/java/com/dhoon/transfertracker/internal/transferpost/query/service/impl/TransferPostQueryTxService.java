@@ -6,12 +6,15 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsPageResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidPostIdException;
 import com.dhoon.transfertracker.internal.transferpost.query.service.TransferPostQueryService;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +22,7 @@ import java.util.List;
 
 @Service
 @Slf4j
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class TransferPostQueryTxService implements TransferPostQueryService {
 
@@ -27,19 +30,27 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
     private final TeamRepository teamRepository;
 
 
+    // 특정 기자의 모든 게시물들을 조회
     @Override
-    @Transactional(readOnly = true)
-    public TransferPostsResponseDto getSourcerAllPosts(TransferPostSource sourcer) {
-        List<TransferPostItemResponseDto> posts = transferPostRepository.findAllBySourcer(sourcer)
+    public TransferPostsPageResponseDto getSourcerAllPosts(TransferPostSource sourcer, Pageable pageable) {
+
+        Page<TransferPost> zz = transferPostRepository.findAllBySourcer(sourcer, pageable);
+
+        long totalPostCount = zz.getTotalElements();
+        int totalPageCount = zz.getTotalPages();
+
+        List<TransferPostItemResponseDto> posts = transferPostRepository.findAllBySourcer(sourcer, pageable)
+                .getContent()
                 .stream()
                 .map(TransferPostItemResponseDto::of)
                 .toList();
 
-        return TransferPostsResponseDto.of(posts);
+        return TransferPostsPageResponseDto.of(posts, totalPostCount, totalPageCount);
     }
 
+
+
     @Override
-    @Transactional(readOnly = true)
     public TransferPostsResponseDto getTeamTransferPosts(Long teamId) {
         teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
@@ -55,7 +66,6 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public TransferPostsResponseDto getAllTransferPosts() {
         List<TransferPostItemResponseDto> allPosts = transferPostRepository.findAll()
                 .stream()
@@ -66,7 +76,6 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public TransferPostDetailResponseDto getTransferPost(Long postId) {
         TransferPost transferPost = transferPostRepository.findByIdWithTeam(postId)
                 .orElseThrow(InvalidPostIdException::new);

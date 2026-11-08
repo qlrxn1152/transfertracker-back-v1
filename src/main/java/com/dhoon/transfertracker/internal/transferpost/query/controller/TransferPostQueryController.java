@@ -1,16 +1,14 @@
 package com.dhoon.transfertracker.internal.transferpost.query.controller;
 
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostDetailResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostSourceItemResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostSourcesResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.dto.response.*;
 import com.dhoon.transfertracker.internal.transferpost.query.service.impl.TransferPostQueryOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
@@ -22,6 +20,28 @@ import java.util.List;
 public class TransferPostQueryController {
 
     private final TransferPostQueryOrchestrationService queryOrchestrationService;
+
+    @GetMapping("/api/transfer-posts/source/{sourcer}")
+    public ResponseEntity<TransferPostsPageResponseDto> getSourcerAllPosts(
+            @PathVariable TransferPostSource sourcer,
+            @RequestParam(defaultValue = "0") int page) {
+        TransferPostsPageResponseDto response = queryOrchestrationService.getSourcerAllPosts(sourcer, page);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @GetMapping("/api/transfer-posts/post-sources")
     public ResponseEntity<TransferPostSourcesResponseDto> getPostSources() {
@@ -35,13 +55,6 @@ public class TransferPostQueryController {
     @GetMapping("/api/transfer-posts/{postId}")
     public ResponseEntity<TransferPostDetailResponseDto> getTransferPost(@PathVariable Long postId) {
         TransferPostDetailResponseDto response = queryOrchestrationService.getTransferPost(postId);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/api/transfer-posts/source/{sourcer}")
-    public ResponseEntity<TransferPostsResponseDto> getSourcerAllPosts(@PathVariable TransferPostSource sourcer) {
-        TransferPostsResponseDto response = queryOrchestrationService.getSourcerAllPosts(sourcer);
 
         return ResponseEntity.ok(response);
     }

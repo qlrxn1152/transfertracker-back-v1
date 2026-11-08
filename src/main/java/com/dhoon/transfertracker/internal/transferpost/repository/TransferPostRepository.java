@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.transferpost.repository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.domain.TranslateStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -24,7 +25,13 @@ public interface TransferPostRepository extends JpaRepository<TransferPost, Long
 
     Optional<TransferPost> findBySourcerAndContent(TransferPostSource sourcer, String content);
 
-    List<TransferPost> findAllBySourcer(TransferPostSource sourcer);
+
+
+
+    Page<TransferPost> findAllBySourcer(TransferPostSource sourcer, Pageable pageable);
+
+
+
 
     List<TransferPost> findAllByTeamId(Long teamId);
 
