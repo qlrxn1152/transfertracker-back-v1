@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,44 +22,31 @@ public interface TransferPostRepository extends JpaRepository<TransferPost, Long
 
     Optional<TransferPost> findByExternalPostId(String externalPostId);
 
-    Optional<TransferPost> findBySourcerAndContent(TransferPostSource sourcer, String content);
 
 
-
-
-    Page<TransferPost> findAllBySourcer(TransferPostSource sourcer, Pageable pageable);
+    @Query(
+            value = """
+        SELECT tp
+        FROM TransferPost tp
+        LEFT JOIN FETCH tp.team
+        WHERE tp.sourcer = :sourcer
+        """,
+            countQuery = """
+        SELECT COUNT(tp)
+        FROM TransferPost tp
+        WHERE tp.sourcer = :sourcer
+        """
+    )
+    Page<TransferPost> findAllBySourcerWithPageAndLazyTeam(TransferPostSource sourcer, Pageable pageable);
 
 
 
 
     List<TransferPost> findAllByTeamId(Long teamId);
 
-    @Query("""
-            select p from TransferPost p
-                        join fetch p.team t
-            where t.id in :teamIds
-            order by p.contentCreatedAt desc, p.id desc
-            """)
-    List<TransferPost> findAllNotificationCandidatesByTeamIds(List<Long> teamIds);
-
-    @Query("""
-            select p from TransferPost p
-                        join fetch p.team t
-            where t.id in :teamIds
-              and p.transferRelated = true
-            order by p.contentCreatedAt desc, p.id desc
-            """)
-    List<TransferPost> findRecentTransferRelatedByTeamIds(List<Long> teamIds, Pageable pageable);
 
     List<TransferPost> findTop20ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus translateStatus);
 
     List<TransferPost> findAllByTeamIsNull();
 
-    long countByContentCreatedAtBetween(Instant startInclusive, Instant endExclusive);
-
-    long countByTranslateStatus(TranslateStatus translateStatus);
-
-    long countByTeamIsNull();
-
-    long countBySourcer(TransferPostSource sourcer);
 }

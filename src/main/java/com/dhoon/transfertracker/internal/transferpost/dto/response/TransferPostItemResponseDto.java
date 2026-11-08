@@ -35,8 +35,12 @@ public class TransferPostItemResponseDto {
                 transferPost.isTransferRelated(),
                 transferPost.getTranslatedContent() == null ? null : transferPost.getTranslatedContent(),
                 transferPost.getPhotoUrl() == null ? null : transferPost.getPhotoUrl(),
+
+
+                // 어떤팀에 관한 게시물
                 transferPost.getTeam() == null ? null : transferPost.getTeam().getId(),
                 transferPost.getTeam() == null ? null : transferPost.getTeam().getDisplayName()
+
         );
     }
 
