@@ -3,7 +3,9 @@ package com.dhoon.transfertracker.internal.transferpost.command.service.impl;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
+import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,10 +21,15 @@ public class TransferPostCommandTxService {
 
     private final TransferPostRepository transferPostRepository;
     private final TeamRepository teamRepository;
+    private final TransferPostTeamRepository transferPostTeamRepository;
 
 
     public String postAssignTeam() {
-        List<TransferPost> teamNotAssignPosts = transferPostRepository.findAllByTeamIsNull();
+
+        List<TransferPost> teamNotAssignPosts = transferPostRepository.findAll().stream()
+                .filter(post -> !transferPostTeamRepository.existsByPostId(post.getId()))
+                .toList();
+
         List<Team> allLeagueTeams = teamRepository.findAllByLeagueCodeIsNotNull();
 
         teamNotAssignPosts.forEach(post -> {
@@ -32,8 +39,9 @@ public class TransferPostCommandTxService {
                 String lowerTeamName = team.getTeamName().toLowerCase();
 
                 if (lowerContent.contains(lowerTeamName)) {
-                    post.assignTeam(team);
+                    TransferPostTeam.postAssignTeam(team, post);
                 }
+
             });
         });
 

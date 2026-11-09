@@ -57,10 +57,6 @@ public class TransferPost {
     @Column(name = "translated_at")
     private Instant translatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "team_id")
-    private Team team;
-
     private TransferPost(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated, String photoUrl) {
         this.sourcer = sourcer;
         this.content = content;
@@ -89,10 +85,6 @@ public class TransferPost {
 
     public void failTranslate() {
         this.translateStatus = TranslateStatus.FAILED;
-    }
-
-    public void assignTeam(Team team) {
-        this.team = team;
     }
 
 

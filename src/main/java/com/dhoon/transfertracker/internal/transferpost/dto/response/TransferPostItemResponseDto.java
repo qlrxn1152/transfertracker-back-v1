@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.transferpost.dto.response;
 
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,8 +23,26 @@ public class TransferPostItemResponseDto {
     private boolean isRelateTransfer;
     private String translatedContent;
     private String photoUrl;
+
     private Long teamId;
     private String teamName;
+
+
+    public static TransferPostItemResponseDto of(TransferPostTeam transferPostTeam) {
+        return new TransferPostItemResponseDto(
+                transferPostTeam.getPost().getId(),
+                transferPostTeam.getPost().getExternalPostId(),
+                transferPostTeam.getPost().getContent(),
+                transferPostTeam.getPost().getSourcer(),
+                transferPostTeam.getPost().getContentCreatedAt(),
+                transferPostTeam.getPost().isTransferRelated(),
+                transferPostTeam.getPost().getTranslatedContent() == null ? null : transferPostTeam.getPost().getTranslatedContent(),
+                transferPostTeam.getPost().getPhotoUrl() == null ? null : transferPostTeam.getPost().getPhotoUrl(),
+
+                transferPostTeam.getTeam().getId(),
+                transferPostTeam.getTeam().getTeamName()
+        );
+    }
 
     public static TransferPostItemResponseDto of(TransferPost transferPost) {
         return new TransferPostItemResponseDto(
@@ -35,11 +54,9 @@ public class TransferPostItemResponseDto {
                 transferPost.isTransferRelated(),
                 transferPost.getTranslatedContent() == null ? null : transferPost.getTranslatedContent(),
                 transferPost.getPhotoUrl() == null ? null : transferPost.getPhotoUrl(),
+                null,
+                null
 
-
-                // 어떤팀에 관한 게시물
-                transferPost.getTeam() == null ? null : transferPost.getTeam().getId(),
-                transferPost.getTeam() == null ? null : transferPost.getTeam().getDisplayName()
 
         );
     }

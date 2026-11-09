@@ -14,6 +14,7 @@ import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerReposi
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
+import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class TeamQueryTxService {
     private final TeamRepository teamRepository;
     private final TeamPlayerRepository teamPlayerRepository;
     private final TransferPostRepository transferPostRepository;
+    private final TransferPostTeamRepository transferPostTeamRepository;
 
     @Transactional(readOnly = true)
     public TeamItemResponseDto getTeam(Long teamId) {
@@ -71,7 +73,7 @@ public class TeamQueryTxService {
                 .map(TeamPlayerItemResponseDto::of)
                 .toList();
 
-        List<TransferPostItemResponseDto> postsData = transferPostRepository.findAllByTeamId(teamId)
+        List<TransferPostItemResponseDto> postsData = transferPostTeamRepository.findAllByTeamId(teamId)
                 .stream()
                 .map(TransferPostItemResponseDto::of)
                 .toList();

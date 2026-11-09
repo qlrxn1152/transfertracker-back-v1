@@ -11,6 +11,7 @@ import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPost
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidPostIdException;
 import com.dhoon.transfertracker.internal.transferpost.query.service.TransferPostQueryService;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
+import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,13 +29,14 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
 
     private final TransferPostRepository transferPostRepository;
     private final TeamRepository teamRepository;
+    private final TransferPostTeamRepository transferPostTeamRepository;
 
 
     // 특정 기자의 모든 게시물들을 조회
     @Override
     public TransferPostsPageResponseDto getSourcerAllPosts(TransferPostSource sourcer, Pageable pageable) {
 
-        Page<TransferPost> sourcerAllPostPage = transferPostRepository.findAllBySourcerWithTeam(sourcer, pageable);
+        Page<TransferPost> sourcerAllPostPage = transferPostRepository.findAllBySourcer(sourcer, pageable);
 
         long totalPostCount = sourcerAllPostPage.getTotalElements();
         int totalPageCount = sourcerAllPostPage.getTotalPages();
@@ -57,7 +59,7 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
                 .orElseThrow(NotFoundTeamException::new);
 
 
-        List<TransferPostItemResponseDto> teamPosts = transferPostRepository.findAllByTeamId(teamId)
+        List<TransferPostItemResponseDto> teamPosts = transferPostTeamRepository.findAllByTeamId(teamId)
                 .stream()
                 .map(TransferPostItemResponseDto::of)
                 .toList();
@@ -78,7 +80,7 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
 
     @Override
     public TransferPostDetailResponseDto getTransferPost(Long postId) {
-        TransferPost transferPost = transferPostRepository.findByIdWithTeam(postId)
+        TransferPost transferPost = transferPostRepository.findById(postId)
                 .orElseThrow(InvalidPostIdException::new);
 
         return TransferPostDetailResponseDto.of(TransferPostItemResponseDto.of(transferPost));

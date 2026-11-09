@@ -5,10 +5,8 @@ import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import jakarta.persistence.EntityManager;
-import org.assertj.core.api.Assertions;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +59,7 @@ public class TransferPostRepositoryPagingTest {
 
     @Test
     @DisplayName("특정 기자의 게시물만 페이지 단위로 조회한다")
-    void findAllBySourcerWithTeam_paging() {
+    void findAllBySourcer_paging() {
         // given
         Instant now = Instant.parse("2026-11-08T12:00:00Z");
 
@@ -126,7 +124,7 @@ public class TransferPostRepositoryPagingTest {
         );
 
         // when
-        Page<TransferPost> response = transferPostRepository.findAllBySourcerWithTeam(TransferPostSource.FABRIZIO_ROMANO, pageable);
+        Page<TransferPost> response = transferPostRepository.findAllBySourcer(TransferPostSource.FABRIZIO_ROMANO, pageable);
 
         // then
         assertThat(response.getTotalPages()).isEqualTo(1);
@@ -143,7 +141,7 @@ public class TransferPostRepositoryPagingTest {
 
     @Test
     @DisplayName("기자별 게시물 조회 시 페이지 분할과 마지막 페이지를 검증한다")
-    void findAllBySourcerWithTeam_lastPage() {
+    void findAllBySourcer_lastPage() {
         // given
         Instant now = Instant.parse("2026-11-08T12:00:00Z");
 
@@ -198,10 +196,10 @@ public class TransferPostRepositoryPagingTest {
         Pageable secondPageable = PageRequest.of(1, 2, sort); // 3
 
         // when
-        Page<TransferPost> romanoFirstResponse = transferPostRepository.findAllBySourcerWithTeam(TransferPostSource.FABRIZIO_ROMANO, firstPageable);
-        Page<TransferPost> romanoSecondResponse = transferPostRepository.findAllBySourcerWithTeam(TransferPostSource.FABRIZIO_ROMANO, secondPageable);
+        Page<TransferPost> romanoFirstResponse = transferPostRepository.findAllBySourcer(TransferPostSource.FABRIZIO_ROMANO, firstPageable);
+        Page<TransferPost> romanoSecondResponse = transferPostRepository.findAllBySourcer(TransferPostSource.FABRIZIO_ROMANO, secondPageable);
 
-        Page<TransferPost> ornsteinFirstResponse = transferPostRepository.findAllBySourcerWithTeam(TransferPostSource.DAVID_ORNSTEIN, firstPageable);
+        Page<TransferPost> ornsteinFirstResponse = transferPostRepository.findAllBySourcer(TransferPostSource.DAVID_ORNSTEIN, firstPageable);
 
 
         // then
@@ -229,7 +227,7 @@ public class TransferPostRepositoryPagingTest {
 
     @Test
     @DisplayName("기자별 조회 시 Team이 없는 게시물도 포함하고 Team을 함께 로딩한다")
-    void findAllBySourcerWithTeam_fetchJoin() {
+    void findAllBySourcer_fetchJoin() {
         // given
         Team savedTeam = teamRepository.save(Team.of("testTeam", 111L));
 
@@ -269,7 +267,7 @@ public class TransferPostRepositoryPagingTest {
         );
 
         // when
-        Page<TransferPost> response = transferPostRepository.findAllBySourcerWithTeam(TransferPostSource.FABRIZIO_ROMANO, pageable);
+        Page<TransferPost> response = transferPostRepository.findAllBySourcer(TransferPostSource.FABRIZIO_ROMANO, pageable);
 
 
         // then
