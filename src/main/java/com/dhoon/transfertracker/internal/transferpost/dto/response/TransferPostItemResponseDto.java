@@ -56,8 +56,6 @@ public class TransferPostItemResponseDto {
                 transferPost.getPhotoUrl() == null ? null : transferPost.getPhotoUrl(),
                 null,
                 null
-
-
         );
     }
 

@@ -192,8 +192,6 @@ public class TeamQueryTxServiceTest {
                 .willReturn(1L);
         given(teamPlayerRepository.findAllByTeamIdWithLazyEntity(1L))
                 .willReturn(List.of(teamPlayer));
-        given(transferPostRepository.findAllByTeamId(1L))
-                .willReturn(List.of(transferPost1));
 
         // when
         TeamPageInfosResponseDto response = teamQueryTxService.getTeamInfo(1L);
@@ -202,7 +200,6 @@ public class TeamQueryTxServiceTest {
         verify(teamRepository, times(1)).findById(1L);
         verify(teamPlayerRepository, times(1)).countByTeamId(1L);
         verify(teamPlayerRepository, times(1)).findAllByTeamIdWithLazyEntity(1L);
-        verify(transferPostRepository, times(1)).findAllByTeamId(1L);
 
         assertThat(response.getTeams().getTeamId()).isEqualTo(1L);
         assertThat(response.getTeams().getTeamName()).isEqualTo("testTeam");

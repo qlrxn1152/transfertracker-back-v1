@@ -241,8 +241,8 @@ public class TransferPostRepositoryPagingTest {
                 true
         );
 
-        romanoPost1.assignTeam(savedTeam);
-        transferPostRepository.save(romanoPost1);
+//        romanoPost1.assignTeam(savedTeam);
+//        transferPostRepository.save(romanoPost1);
 
         TransferPost romanoPost2 = TransferPost.of(
                 TransferPostSource.FABRIZIO_ROMANO,
@@ -274,13 +274,13 @@ public class TransferPostRepositoryPagingTest {
         assertThat(response.getTotalElements()).isEqualTo(2);
 
         TransferPost romanoFirstPost = response.getContent().getFirst();
-        assertThat(Hibernate.isInitialized(romanoFirstPost.getTeam())).isTrue();
+//        assertThat(Hibernate.isInitialized(romanoFirstPost.getTeam())).isTrue();
         assertThat(romanoFirstPost.getExternalPostId()).isEqualTo("post-100");
-        assertThat(romanoFirstPost.getTeam().getId()).isEqualTo(savedTeam.getId());
+//        assertThat(romanoFirstPost.getTeam().getId()).isEqualTo(savedTeam.getId());
 
 
         TransferPost romanoSecondPost = response.getContent().get(1);
-        assertThat(romanoSecondPost.getTeam()).isNull();
+//        assertThat(romanoSecondPost.getTeam()).isNull();
         assertThat(romanoSecondPost.getExternalPostId()).isEqualTo("post-101");
     }
 

@@ -31,8 +31,27 @@ public class TransferPostQueryController {
     }
 
 
+    @GetMapping("/api/transfer-posts")
+    public ResponseEntity<TransferPostsResponseDto> getAllTransferPosts(
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        TransferPostsResponseDto response = queryOrchestrationService.getAllTransferPosts(page);
+
+        return ResponseEntity.ok(response);
+    }
 
 
+
+
+    @GetMapping("/api/transfer-posts/team/{teamId}")
+    public ResponseEntity<TransferPostsResponseDto> getTeamTransferPosts(
+            @PathVariable Long teamId,
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        TransferPostsResponseDto response = queryOrchestrationService.getTeamTransferPosts(teamId, page);
+
+        return ResponseEntity.ok(response);
+    }
 
 
 
@@ -55,20 +74,6 @@ public class TransferPostQueryController {
     @GetMapping("/api/transfer-posts/{postId}")
     public ResponseEntity<TransferPostDetailResponseDto> getTransferPost(@PathVariable Long postId) {
         TransferPostDetailResponseDto response = queryOrchestrationService.getTransferPost(postId);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/api/transfer-posts/team/{teamId}")
-    public ResponseEntity<TransferPostsResponseDto> getTeamTransferPosts(@PathVariable Long teamId) {
-        TransferPostsResponseDto response = queryOrchestrationService.getTeamTransferPosts(teamId);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/api/transfer-posts")
-    public ResponseEntity<TransferPostsResponseDto> getAllTransferPosts() {
-        TransferPostsResponseDto response = queryOrchestrationService.getAllTransferPosts();
 
         return ResponseEntity.ok(response);
     }

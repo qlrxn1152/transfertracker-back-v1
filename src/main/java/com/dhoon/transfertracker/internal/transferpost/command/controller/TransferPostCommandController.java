@@ -14,8 +14,6 @@ public class TransferPostCommandController {
 
     private final TransferPostCommandOrchestrationService transferPostCommandOrchestrationService;
 
-
-
     @PostMapping("/external/api/post/assign")
     public ResponseEntity<String> postAssignTeam() {
         String response = transferPostCommandOrchestrationService.postAssignTeam();

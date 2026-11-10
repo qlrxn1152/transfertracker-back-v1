@@ -15,7 +15,13 @@ public class TransferPostsResponseDto {
 
     private List<TransferPostItemResponseDto> posts = new ArrayList<>();
 
-    public static TransferPostsResponseDto of(List<TransferPostItemResponseDto> posts) {
-        return new TransferPostsResponseDto(posts);
+    private long totalPostCount;
+    private int totalPageCount;
+
+    private boolean hasNext;
+    private boolean hasPrevious;
+
+    public static TransferPostsResponseDto of(List<TransferPostItemResponseDto> posts, long totalPostCount, int totalPageCount, boolean hasNext, boolean hasPrevious) {
+        return new TransferPostsResponseDto(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
     }
 }

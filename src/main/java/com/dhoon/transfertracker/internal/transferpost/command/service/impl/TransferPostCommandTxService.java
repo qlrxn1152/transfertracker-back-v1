@@ -39,7 +39,7 @@ public class TransferPostCommandTxService {
                 String lowerTeamName = team.getTeamName().toLowerCase();
 
                 if (lowerContent.contains(lowerTeamName)) {
-                    TransferPostTeam.postAssignTeam(team, post);
+                    transferPostTeamRepository.save(TransferPostTeam.postAssignTeam(team, post));
                 }
 
             });
@@ -47,4 +47,6 @@ public class TransferPostCommandTxService {
 
         return "OK";
     }
+
+
 }

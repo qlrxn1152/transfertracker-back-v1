@@ -10,9 +10,9 @@ public interface TransferPostQueryService {
 
     TransferPostsPageResponseDto getSourcerAllPosts(TransferPostSource sourcer, Pageable pageable);
 
-    TransferPostsResponseDto getTeamTransferPosts(Long teamId);
+    TransferPostsResponseDto getTeamTransferPosts(Long teamId, Pageable pageable);
 
-    TransferPostsResponseDto getAllTransferPosts();
+    TransferPostsResponseDto getAllTransferPosts(Pageable pageable);
 
     TransferPostDetailResponseDto getTransferPost(Long postId);
 

@@ -39,18 +39,48 @@ public class TransferPostQueryOrchestrationService {
                 )
         );
 
-
         return txService.getSourcerAllPosts(sourcer, pageable);
     }
 
-    public TransferPostsResponseDto getTeamTransferPosts(Long teamId) {
-        validateTeamIdIsNotNull(teamId);
+    public TransferPostsResponseDto getAllTransferPosts(int page) {
 
-        return txService.getTeamTransferPosts(teamId);
+        if (page < 0) {
+            throw new IllegalArgumentException("페이지 값은 0보다 작을 수 없습니다.");
+        }
+
+        // 가장 최근에 저장된 게시물을 20개 단위로.
+        Pageable pageable = PageRequest.of(
+                page,
+                20,
+                Sort.by(
+                        Sort.Order.desc("contentCreatedAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        return txService.getAllTransferPosts(pageable);
+
     }
 
-    public TransferPostsResponseDto getAllTransferPosts() {
-        return txService.getAllTransferPosts();
+    public TransferPostsResponseDto getTeamTransferPosts(Long teamId, int page) {
+        validateTeamIdIsNotNull(teamId);
+
+        if (page < 0) {
+            throw new IllegalArgumentException("페이지 값은 0보다 작을 수 없습니다.");
+        }
+
+        // 가장 최근에 저장된 게시물을 20개 단위로.
+        Pageable pageable = PageRequest.of(
+                page,
+                20,
+                Sort.by(
+                        Sort.Order.desc("contentCreatedAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+
+        return txService.getTeamTransferPosts(teamId, pageable);
     }
 
     public TransferPostDetailResponseDto getTransferPost(Long postId) {
