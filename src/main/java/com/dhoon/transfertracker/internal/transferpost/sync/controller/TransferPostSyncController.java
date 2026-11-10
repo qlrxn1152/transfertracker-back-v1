@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.transferpost.sync.controller;
 
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.transferpost.sync.dto.response.TransferPostSyncResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.sync.service.impl.TransferPostSyncOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,8 @@ public class TransferPostSyncController {
     private final TransferPostSyncOrchestrationService transferPostSyncService;
 
     @PostMapping("/external/api/posts/{source}")
-    public ResponseEntity<TransferPostsResponseDto> syncPosts(@PathVariable TransferPostSource source) {
-        TransferPostsResponseDto responseDto = transferPostSyncService.syncPosts(source);
+    public ResponseEntity<TransferPostSyncResponseDto> syncPosts(@PathVariable TransferPostSource source) {
+        TransferPostSyncResponseDto responseDto = transferPostSyncService.syncPosts(source);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }

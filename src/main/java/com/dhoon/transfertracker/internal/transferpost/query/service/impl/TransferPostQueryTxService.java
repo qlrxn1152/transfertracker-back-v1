@@ -20,8 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -56,7 +54,7 @@ public class TransferPostQueryTxService implements TransferPostQueryService {
 
     @Override
     public TransferPostsResponseDto getAllTransferPosts(Pageable pageable) {
-        Page<TransferPost> posts = transferPostRepository.findAllWithPageable(pageable);
+        Page<TransferPost> posts = transferPostRepository.findAll(pageable);
 
         long totalPostCount = posts.getTotalElements();
         int totalPageCount = posts.getTotalPages();

@@ -21,21 +21,5 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransferPostTranslationBatchConfig {
 
-    @Bean
-    public Step transferPostTranslationStep(
-            JobRepository jobRepository,
-            PlatformTransactionManager transactionManager,
-            TransferPostTranslationItemReader reader,
-            TransferPostTranslationItemProcessor processor,
-            TransferPostTranslationItemWriter writer
-    ) {
-        return new StepBuilder("transferPostTranslateStep", jobRepository)
-                .<RepositoryItemReader<TransferPost>, TransferPost>chunk(50)
-                .transactionManager(transactionManager)
-                .reader(reader)
-                .processor(processor)
-                .writer(writer)
-                .build();
 
-    }
 }

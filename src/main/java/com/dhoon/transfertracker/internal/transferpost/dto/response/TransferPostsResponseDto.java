@@ -24,4 +24,5 @@ public class TransferPostsResponseDto {
     public static TransferPostsResponseDto of(List<TransferPostItemResponseDto> posts, long totalPostCount, int totalPageCount, boolean hasNext, boolean hasPrevious) {
         return new TransferPostsResponseDto(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
     }
+
 }

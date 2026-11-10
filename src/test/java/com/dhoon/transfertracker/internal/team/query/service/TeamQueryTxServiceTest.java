@@ -21,6 +21,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
@@ -169,6 +172,14 @@ public class TeamQueryTxServiceTest {
     @DisplayName("팀이 존재하면 팀 상세 정보를 반환한다.")
     void getTeamInfo_success() {
         // given
+        Pageable pageable = PageRequest.of(
+                0,
+                20,
+                Sort.by(
+                        Sort.Order.desc("contentCreatedAt"),
+                        Sort.Order.desc("id")
+                )
+        );
         Team team = Team.of("testTeam", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
@@ -194,7 +205,7 @@ public class TeamQueryTxServiceTest {
                 .willReturn(List.of(teamPlayer));
 
         // when
-        TeamPageInfosResponseDto response = teamQueryTxService.getTeamInfo(1L);
+        TeamPageInfosResponseDto response = teamQueryTxService.getTeamInfo(1L, pageable);
 
         // then
         verify(teamRepository, times(1)).findById(1L);

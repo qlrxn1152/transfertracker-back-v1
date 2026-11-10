@@ -8,6 +8,9 @@ import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueE
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,9 +35,24 @@ public class TeamQueryOrchestrationService {
         return txService.getLeagueTeams(leagueCode);
     }
 
-    public TeamPageInfosResponseDto getTeamInfo(Long teamId) {
+    public TeamPageInfosResponseDto getTeamInfo(Long teamId, int page) {
         validateTeamId(teamId);
-        return txService.getTeamInfo(teamId);
+
+        if (page < 0) {
+            throw new IllegalArgumentException("페이지 값은 0보다 작을 수 없습니다.");
+        }
+
+        // 가장 최근에 저장된 게시물을 20개 단위로.
+        Pageable pageable = PageRequest.of(
+                page,
+                20,
+                Sort.by(
+                        Sort.Order.desc("createdAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        return txService.getTeamInfo(teamId, pageable);
     }
 
 

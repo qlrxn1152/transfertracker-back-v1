@@ -5,6 +5,7 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.exception.InvalidSourcerException;
+import com.dhoon.transfertracker.internal.transferpost.sync.dto.response.TransferPostSyncResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class TransferPostSyncOrchestrationService {
     private final TransferPostSyncTxService txService;
     private final XClient xClient;
 
-    public TransferPostsResponseDto syncPosts(TransferPostSource source) {
+    public TransferPostSyncResponseDto syncPosts(TransferPostSource source) {
         String nextToken = null;
         List<TransferPostItemResponseDto> posts = new ArrayList<>();
 
@@ -47,7 +48,7 @@ public class TransferPostSyncOrchestrationService {
         }
         while (nextToken != null && !nextToken.isBlank());
 
-        return TransferPostsResponseDto.of(posts);
+        return TransferPostSyncResponseDto.of(posts);
     }
 
 
