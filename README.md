@@ -43,6 +43,12 @@ TransferTracker 는 여러 외부 데이터 소스에 분산된 축구 관련 �
 
 [상세 아키텍처 및 클래스 의존성](docs/architecture.md)
 
+## Database ERD
+
+![TransferTracker ERD](docs/images/erd.png)
+
+자세한 도메인 설계는 [도메인 설계 문서](docs/domain-design.md)를 참고하세요.
+
 
 
 

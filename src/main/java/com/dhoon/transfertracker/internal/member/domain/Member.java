@@ -37,7 +37,4 @@ public class Member {
         return new Member(loginId, password);
     }
 
-    public MemberGrade getMemberGrade() {
-        return memberGrade == null ? MemberGrade.USER : memberGrade;
-    }
 }
