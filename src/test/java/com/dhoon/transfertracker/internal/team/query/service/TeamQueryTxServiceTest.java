@@ -231,7 +231,7 @@ public class TeamQueryTxServiceTest {
                 .willReturn(Optional.empty());
 
         // when && then
-        assertThatThrownBy(() -> teamQueryTxService.getTeamInfo(1L))
+        assertThatThrownBy(() -> teamQueryTxService.getTeamInfo(1L, Pageable.unpaged()))
                 .isInstanceOf(NotFoundTeamException.class);
 
         verify(teamRepository, times(1)).findById(1L);

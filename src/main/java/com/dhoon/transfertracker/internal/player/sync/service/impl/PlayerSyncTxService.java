@@ -28,7 +28,7 @@ public class PlayerSyncTxService {
      * 해당 선수가 이미 DB에 존재하는것이므로, 기존 정보를 변경하지 않고 반환한다.
      * 존재하지 않는 경우에만 새로운 선수를 저장하고, 반환한다.</p>
      *
-     * @param playerData 외부 API에서 조회한 선수 데이터
+     * @param playerSyncData 외부 API에서 조회한 선수 데이터
      * @return 기존 또는 신규 생성된 선수의 정보
      */
     public PlayerSaveResponseDto getOrCreatePlayerResponse(PlayerSyncData playerSyncData) {
@@ -49,6 +49,7 @@ public class PlayerSyncTxService {
                                 playerSyncData.apiFootballId()
                         ))
                 );
+
     }
 
 }
