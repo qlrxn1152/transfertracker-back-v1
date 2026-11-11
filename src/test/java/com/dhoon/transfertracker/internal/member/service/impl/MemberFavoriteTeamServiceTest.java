@@ -276,6 +276,43 @@ public class MemberFavoriteTeamServiceTest {
         verify(transferPostTeamRepository, times(1)).findAllByTeamId(55L, pageable);
     }
 
+    @Test
+    @DisplayName(value = "관심팀을 등록한 회원은 특정 관심팀을 삭제할 수 있다.")
+    void delete_favorite_team() throws Exception {
+        // given
+        Member member = Member.signUp("testMember", "password123!");
+        ReflectionTestUtils.setField(member, "id", 1L);
+        given(memberRepository.findById(1L))
+                .willReturn(Optional.of(member));
+
+        Team team = Team.of("testTeam", 100L);
+        ReflectionTestUtils.setField(team, "id", 55L);
+        given(teamRepository.findById(55L))
+                .willReturn(Optional.of(team));
+
+        MemberFavoriteTeam memberFavoriteTeam = MemberFavoriteTeam.of(member, team);
+        ReflectionTestUtils.setField(memberFavoriteTeam, "id", 11L);
+        given(memberFavoriteTeamRepository.findByMemberIdAndTeamId(1L, 55L))
+                .willReturn(Optional.of(memberFavoriteTeam));
+
+        // when
+        memberFavoriteTeamService.deleteFavoriteTeam(1L, 55L);
+
+        // then
+
+        verify(teamRepository, times(1)).findById(55L);
+
+        verify(memberRepository, times(1)).findById(1L);
+
+        verify(memberFavoriteTeamRepository, times(1)).findByMemberIdAndTeamId(1L, 55L);
+        verify(memberFavoriteTeamRepository, times(1)).delete(memberFavoriteTeam);
+
+        assertThat(memberFavoriteTeamRepository.findByMemberIdAndTeamId(1L, 55L))
+                .isPresent();
+    }
+
+
+
 
 
 
