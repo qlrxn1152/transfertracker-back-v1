@@ -74,7 +74,7 @@ public class TransferPostQueryOrchestrationService {
                 page,
                 20,
                 Sort.by(
-                        Sort.Order.desc("contentCreatedAt"),
+                        Sort.Order.desc("post.contentCreatedAt"),
                         Sort.Order.desc("id")
                 )
         );

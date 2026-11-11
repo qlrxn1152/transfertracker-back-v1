@@ -11,4 +11,6 @@ public interface MemberFavoriteTeamRepository extends JpaRepository<MemberFavori
     Optional<MemberFavoriteTeam> findByMemberIdAndTeamId(Long memberId, Long teamId);
 
     List<MemberFavoriteTeam> findAllByMemberId(Long memberId);
+
+    List<MemberFavoriteTeam> findAllByTeamId(Long teamId);
 }

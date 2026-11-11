@@ -2,12 +2,14 @@ package com.dhoon.transfertracker.internal.transferpost.command.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
+import com.dhoon.transfertracker.internal.transferpost.command.event.TransferPostTeamAssignedEvent;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,14 +25,16 @@ public class TransferPostCommandTxService {
     private final TeamRepository teamRepository;
     private final TransferPostTeamRepository transferPostTeamRepository;
 
+    private final ApplicationEventPublisher eventPublisher;
+
 
     public String postAssignTeam() {
 
         List<TransferPost> teamNotAssignPosts = transferPostRepository.findAll().stream()
                 .filter(post -> !transferPostTeamRepository.existsByPostId(post.getId()))
                 .toList();
-
         List<Team> allLeagueTeams = teamRepository.findAllByLeagueCodeIsNotNull();
+
 
         teamNotAssignPosts.forEach(post -> {
             String lowerContent = post.getContent().toLowerCase();
@@ -40,6 +44,11 @@ public class TransferPostCommandTxService {
 
                 if (lowerContent.contains(lowerTeamName)) {
                     transferPostTeamRepository.save(TransferPostTeam.postAssignTeam(team, post));
+
+                    eventPublisher.publishEvent(
+                            new TransferPostTeamAssignedEvent(post.getId(), team.getId())
+                    );
+
                 }
 
             });
