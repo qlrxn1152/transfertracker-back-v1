@@ -53,6 +53,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-batch'
 	implementation 'org.springframework.boot:spring-boot-starter-batch-jdbc'
 
+	// Firebase
+	implementation 'com.google.firebase:firebase-admin:9.11.0'
+
 	// Unit Test: JUnit Jupiter, Mockito, AssertJ
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
