@@ -5,6 +5,7 @@ import com.dhoon.transfertracker.internal.member.domain.MemberFavoriteTeam;
 import com.dhoon.transfertracker.internal.member.dto.request.MemberFavoriteTeamRegisterRequestDto;
 import com.dhoon.transfertracker.internal.member.dto.response.*;
 import com.dhoon.transfertracker.internal.member.exception.NotFoundMemberException;
+import com.dhoon.transfertracker.internal.member.exception.NotFoundMemberFavoriteTeamException;
 import com.dhoon.transfertracker.internal.member.repository.MemberFavoriteTeamRepository;
 import com.dhoon.transfertracker.internal.member.repository.MemberRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
@@ -106,6 +107,18 @@ public class MemberFavoriteTeamService {
         MemberFavoriteTeamDetailMemberResponseDto memberDetail = MemberFavoriteTeamDetailMemberResponseDto.of(member);
 
         return MemberFavoriteTeamDetailResponseDto.of(memberDetail, teamDetails, postDetails);
+    }
+
+    public void deleteFavoriteTeam(Long memberId, Long teamId) {
+        memberRepository.findById(memberId)
+                .orElseThrow(NotFoundMemberException::new);
+        teamRepository.findById(teamId)
+                .orElseThrow(NotFoundTeamException::new);
+
+        MemberFavoriteTeam memberFavoriteTeam = memberFavoriteTeamRepository.findByMemberIdAndTeamId(memberId, teamId)
+                .orElseThrow(NotFoundMemberFavoriteTeamException::new);
+
+        memberFavoriteTeamRepository.delete(memberFavoriteTeam);
     }
 
 

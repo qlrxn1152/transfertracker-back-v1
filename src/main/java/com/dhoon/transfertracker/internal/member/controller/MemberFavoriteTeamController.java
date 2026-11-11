@@ -38,4 +38,13 @@ public class MemberFavoriteTeamController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @DeleteMapping("/api/members/favorite-teams/{teamId}")
+    public ResponseEntity<Void> deleteFavoriteTeam(@AuthenticationPrincipal Jwt jwt, @PathVariable Long teamId) {
+        Long memberId = Long.valueOf(jwt.getSubject());
+
+        memberFavoriteTeamService.deleteFavoriteTeam(memberId, teamId);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }
