@@ -4,12 +4,17 @@ import com.dhoon.transfertracker.internal.member.domain.Member;
 import com.dhoon.transfertracker.internal.member.domain.MemberFavoriteTeam;
 import com.dhoon.transfertracker.internal.member.dto.request.MemberFavoriteTeamRegisterRequestDto;
 import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoriteTeamCreateResponseDto;
+import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoriteTeamDetailPostResponseDto;
+import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoriteTeamDetailResponseDto;
 import com.dhoon.transfertracker.internal.member.exception.NotFoundMemberException;
 import com.dhoon.transfertracker.internal.member.repository.MemberFavoriteTeamRepository;
 import com.dhoon.transfertracker.internal.member.repository.MemberRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
+import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,8 +23,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +39,9 @@ public class MemberFavoriteTeamServiceTest {
     
     @Mock
     private MemberFavoriteTeamRepository memberFavoriteTeamRepository;
+
+    @Mock
+    private TransferPostTeamRepository transferPostTeamRepository;
 
     @Mock
     private TeamRepository teamRepository;
@@ -191,6 +201,79 @@ public class MemberFavoriteTeamServiceTest {
 
         assertThat(response.getTeams().get(30L)).isEqualTo("testTeam");
         assertThat(response.getTeams().get(40L)).isEqualTo("testTeam2");
+    }
+
+    @Test
+    @DisplayName(value = "회원가입한 유저는, 내 관심팀 목록에서 자신이 등록한 관심팀에 대한 팀들과 해당팀들의 소식들을 확인할 수 있다.")
+    void getMyFavoriteTeams() throws Exception {
+        // given
+
+        // 멤버 설정
+        Member member = Member.signUp("testMember", "password123!");
+        ReflectionTestUtils.setField(member, "id", 1L);
+        given(memberRepository.findById(1L))
+                .willReturn(Optional.of(member));
+
+        // 팀 설정
+        Team t1 = Team.of("team-1", 100L);
+        ReflectionTestUtils.setField(t1, "id", 55L);
+
+        given(teamRepository.findById(55L))
+                .willReturn(Optional.of(t1));
+
+
+        // 게시물 설정
+        TransferPost postMock1 = mock(TransferPost.class);
+        TransferPost postMock2 = mock(TransferPost.class);
+        TransferPost postMock3 = mock(TransferPost.class);
+
+        TransferPostTeam tpt1 = TransferPostTeam.postAssignTeam(t1, postMock1);
+        TransferPostTeam tpt2 = TransferPostTeam.postAssignTeam(t1, postMock2);
+        TransferPostTeam tpt3 = TransferPostTeam.postAssignTeam(t1, postMock3);
+
+        MemberFavoriteTeam memberFavoriteTeam = MemberFavoriteTeam.of(member, t1);
+
+        given(memberFavoriteTeamRepository.findAllByMemberId(1L))
+                .willReturn(List.of(memberFavoriteTeam));
+
+        // 페이징
+        Pageable pageable = PageRequest.of(
+                0,
+                20,
+                Sort.by(
+                        Sort.Order.desc("contentCreatedAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        Page<TransferPostTeam> pageReturn = new PageImpl<>(
+                List.of(tpt1, tpt2, tpt3),
+                pageable,
+                3
+        );
+
+        given(transferPostTeamRepository.findAllByTeamId(55L, pageable))
+                .willReturn(pageReturn);
+
+        // when
+        MemberFavoriteTeamDetailResponseDto response = memberFavoriteTeamService.getMyFavoriteTeams(1L, 0);
+
+        // then
+        assertThat(response.getMemberDetail().getMemberId()).isEqualTo(1L);
+        assertThat(response.getMemberDetail().getUsername()).isEqualTo("testMember");
+
+        assertThat(response.getTeamDetails()).hasSize(1);
+        assertThat(response.getTeamDetails().getFirst().getTeamId()).isEqualTo(55L);
+        assertThat(response.getTeamDetails().getFirst().getTeamName()).isEqualTo("team-1");
+
+
+        assertThat(response.getPostDetails()).hasSize(3);
+        assertThat(response.getPostDetails()).extracting(MemberFavoriteTeamDetailPostResponseDto::getTeamId)
+                .containsOnly(55L);
+
+        verify(memberRepository, times(1)).findById(1L);
+        verify(teamRepository, times(1)).findById(55L);
+        verify(transferPostTeamRepository, times(1)).findAllByTeamId(55L, pageable);
     }
 
 

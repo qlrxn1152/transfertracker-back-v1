@@ -79,27 +79,27 @@ public class MemberFavoriteTeamService {
                 )
         );
 
-        List<MemberFavoriteTeamDetailPostResponseDto> postDetails = new ArrayList<>();
         List<MemberFavoriteTeamDetailTeamResponseDto> teamDetails = new ArrayList<>();
+
+        List<MemberFavoriteTeamDetailPostResponseDto> postDetails = new ArrayList<>();
+
 
         List<MemberFavoriteTeam> memberAllFavoriteTeams = memberFavoriteTeamRepository.findAllByMemberId(memberId);
 
         for (MemberFavoriteTeam memberAllFavoriteTeam : memberAllFavoriteTeams) {
             Long teamId = memberAllFavoriteTeam.getTeam().getId();
-
             Team team = teamRepository.findById(teamId)
                     .orElseThrow(NotFoundTeamException::new); // 관심팀에 대한 팀
+            teamDetails.add(MemberFavoriteTeamDetailTeamResponseDto.of(team));
 
 
             Page<TransferPostTeam> teamPostPage = transferPostTeamRepository.findAllByTeamId(teamId, pageable);
 
-            List<TransferPostTeam> teamPosts = teamPostPage.getContent();
+            teamPostPage.getContent()
+                    .stream()
+                    .map(MemberFavoriteTeamDetailPostResponseDto::of)
+                    .forEach(postDetails::add);
 
-            for (TransferPostTeam teamPost : teamPosts) {
-                postDetails.add(MemberFavoriteTeamDetailPostResponseDto.of(teamPost));
-            }
-
-            teamDetails.add(MemberFavoriteTeamDetailTeamResponseDto.of(team));
         }
 
 
@@ -107,5 +107,7 @@ public class MemberFavoriteTeamService {
 
         return MemberFavoriteTeamDetailResponseDto.of(memberDetail, teamDetails, postDetails);
     }
+
+
 
 }

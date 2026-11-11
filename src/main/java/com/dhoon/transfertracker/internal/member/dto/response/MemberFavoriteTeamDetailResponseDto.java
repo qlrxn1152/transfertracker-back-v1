@@ -18,11 +18,16 @@ public class MemberFavoriteTeamDetailResponseDto {
 
     private List<MemberFavoriteTeamDetailPostResponseDto> postDetails;
 
+
     public static MemberFavoriteTeamDetailResponseDto of(
             MemberFavoriteTeamDetailMemberResponseDto memberDetail,
             List<MemberFavoriteTeamDetailTeamResponseDto> teamDetails,
             List<MemberFavoriteTeamDetailPostResponseDto> postDetails) {
-        return new MemberFavoriteTeamDetailResponseDto(memberDetail, teamDetails, postDetails);
+        return new MemberFavoriteTeamDetailResponseDto(
+                memberDetail,
+                teamDetails,
+                postDetails
+        );
     }
 
 
