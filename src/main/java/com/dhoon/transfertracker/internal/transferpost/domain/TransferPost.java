@@ -57,6 +57,14 @@ public class TransferPost {
     @Column(name = "translated_at")
     private Instant translatedAt;
 
+    public String getDisplayContent() {
+        if (translatedContent == null || translatedContent.isBlank()) {
+            return content;
+        }
+
+        return translatedContent;
+    }
+
     private TransferPost(TransferPostSource sourcer, String content, String externalPostId, Instant contentCreatedAt, boolean transferRelated, String photoUrl) {
         this.sourcer = sourcer;
         this.content = content;

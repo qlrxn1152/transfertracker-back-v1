@@ -15,4 +15,5 @@ public class MemberFavoriteTeamRegisterRequestDto {
 
     @NotEmpty
     private List<@NotNull Long> teamIds;
+
 }
