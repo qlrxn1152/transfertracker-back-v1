@@ -4,7 +4,6 @@ import com.dhoon.transfertracker.internal.member.domain.Member;
 import com.dhoon.transfertracker.internal.member.exception.NotFoundMemberException;
 import com.dhoon.transfertracker.internal.member.repository.MemberRepository;
 import com.dhoon.transfertracker.internal.notification.domain.FcmPlatform;
-import com.dhoon.transfertracker.internal.notification.domain.MemberFcmToken;
 import com.dhoon.transfertracker.internal.notification.dto.request.MemberFcmTokenRequestDto;
 import com.dhoon.transfertracker.internal.notification.repository.MemberFcmTokenRepository;
 import com.dhoon.transfertracker.internal.notification.service.MemberFcmTokenService;
@@ -31,12 +30,6 @@ public class MemberFcmTokenServiceImpl implements MemberFcmTokenService {
         FcmPlatform platform = requestDto.platform();
         String token = requestDto.token();
 
-        memberFcmTokenRepository.findByToken(token)
-                .ifPresentOrElse(
-                        fcmToken -> fcmToken.changeMemberFcmToken(member, platform),
-                        () -> memberFcmTokenRepository.save(
-                                MemberFcmToken.of(member, platform, token)
-                        )
-                );
+        memberFcmTokenRepository.upsertByToken(member.getId(), platform.name(), token);
     }
 }

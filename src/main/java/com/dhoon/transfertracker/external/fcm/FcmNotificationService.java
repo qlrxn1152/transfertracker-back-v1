@@ -5,30 +5,25 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FcmNotificationService {
 
-    private final FirebaseMessaging firebaseMessaging;
+    private final ObjectProvider<FirebaseMessaging> firebaseMessagingProvider;
 
-    public String sendTestNotification(String token) throws FirebaseMessagingException {
-
-        Notification notification = Notification.builder()
-                .setTitle("TransferTracker")
-                .setBody("관심 팀의 새로운 이적 소식이 등록되었습니다!")
-                .build();
-
-        Message message = Message.builder()
-                .setToken(token)
-                .setNotification(notification)
-                .build();
-
-        return firebaseMessaging.send(message);
-    }
 
     public String sendTransferPostNotification(String token, String teamName) throws FirebaseMessagingException {
+        FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
+        if (firebaseMessaging == null) {
+            log.warn("FCM is disabled. Skipping push notification for teamName={}", teamName);
+            return null;
+        }
+
         Notification notification = Notification.builder()
                 .setTitle("TransferTracker")
                 .setBody("[" + teamName + "] 팀에 새로운 소식이 등록되었습니다!")
@@ -39,6 +34,14 @@ public class FcmNotificationService {
                 .setNotification(notification)
                 .build();
 
-        return firebaseMessaging.send(message);
+        String messageId = firebaseMessaging.send(message);
+
+        log.info(
+                "FCM 발송 요청 성공. teamName={}, messageId={}",
+                teamName,
+                messageId
+        );
+
+        return messageId;
     }
 }

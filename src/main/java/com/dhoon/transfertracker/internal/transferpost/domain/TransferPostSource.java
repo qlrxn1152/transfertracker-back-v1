@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum TransferPostSource {
+
     FABRIZIO_ROMANO("FabrizioRomano", "330262748"),
     DAVID_ORNSTEIN("David_Ornstein", "46875124"),
     MATTEO_MORETTO("MatteMoretto", "975909216824254464"),

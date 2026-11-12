@@ -30,35 +30,21 @@ public class MemberNotificationService {
     private final MemberFavoriteTeamRepository memberFavoriteTeamRepository;
     private final TeamRepository teamRepository;
 
-    public void sendTestNotification(Long memberId) {
-        List<MemberFcmToken> memberTokens = memberFcmTokenRepository.findAllByMemberId(memberId);
-
-        memberTokens.forEach(memberFcmToken -> {
-            try {
-                fcmNotificationService.sendTestNotification(memberFcmToken.getToken());
-            } catch (FirebaseMessagingException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public void sendTransferPostNotification(Long postId, Long teamId) {
-        List<MemberFavoriteTeam> teamFavoriteMembers = memberFavoriteTeamRepository.findAllByTeamId(teamId);
-
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
 
+        List<MemberFavoriteTeam> teamFavoriteMembers = memberFavoriteTeamRepository.findAllByTeamId(teamId); // 해당 팀을 관심팀으로 등록한 멤버들 조회.
+
         teamFavoriteMembers.forEach(memberFavoriteTeam -> {
-            Member member = memberFavoriteTeam.getMember();
+            Member member = memberFavoriteTeam.getMember(); // 해당 팀을 관심팀으로 등록한 멤버
 
-            List<MemberFcmToken> memberTokens = memberFcmTokenRepository.findAllByMemberId(member.getId());
+            List<MemberFcmToken> memberTokens = memberFcmTokenRepository.findAllByMemberId(member.getId()); // 해당 멤버가 알림을 받는것을 허용한 ..
 
-            memberTokens.forEach(memberFcmToken -> {
+            memberTokens.forEach(memberFcmToken -> { // 1개의 기기
                 try {
-
-                    fcmNotificationService.sendTransferPostNotification(memberFcmToken.getToken(), team.getDisplayName());
-
+                    fcmNotificationService.sendTransferPostNotification(memberFcmToken.getToken(), team.getDisplayName()); // 알림발송
                 } catch (FirebaseMessagingException e) {
                     throw new RuntimeException(e);
                 }

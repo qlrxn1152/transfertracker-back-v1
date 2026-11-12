@@ -16,6 +16,8 @@ public interface TransferPostRepository extends JpaRepository<TransferPost, Long
 
     Page<TransferPost> findAllBySourcer(TransferPostSource sourcer, Pageable pageable);
 
+    List<TransferPost> findAllByExternalPostIdStartingWith(String externalPostIdPrefix);
+
     List<TransferPost> findTop20ByTranslateStatusOrderByContentCreatedAtDescIdDesc(TranslateStatus translateStatus);
 
 
