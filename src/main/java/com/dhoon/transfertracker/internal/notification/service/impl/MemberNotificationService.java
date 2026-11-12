@@ -43,9 +43,9 @@ public class MemberNotificationService {
 
     public void sendTransferPostNotification(Long postId, Long teamId) {
         List<MemberFavoriteTeam> teamFavoriteMembers = memberFavoriteTeamRepository.findAllByTeamId(teamId);
+
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
-
 
         teamFavoriteMembers.forEach(memberFavoriteTeam -> {
             Member member = memberFavoriteTeam.getMember();
@@ -56,7 +56,6 @@ public class MemberNotificationService {
                 try {
 
                     fcmNotificationService.sendTransferPostNotification(memberFcmToken.getToken(), team.getDisplayName());
-
 
                 } catch (FirebaseMessagingException e) {
                     throw new RuntimeException(e);
