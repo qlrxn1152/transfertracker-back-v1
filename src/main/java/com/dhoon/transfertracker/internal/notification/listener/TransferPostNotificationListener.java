@@ -15,7 +15,7 @@ public class TransferPostNotificationListener {
 
     private final MemberNotificationService memberNotificationService;
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT) // 커밋이후 알림발송
     public void handle(TransferPostTeamAssignedEvent event) {
         log.info("관심 팀 알림 이벤트 수신 postId = {}, teamId = {}", event.transferPostId(), event.teamId());
 
