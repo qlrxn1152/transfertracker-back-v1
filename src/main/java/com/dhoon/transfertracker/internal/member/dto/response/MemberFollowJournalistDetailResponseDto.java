@@ -14,11 +14,13 @@ public class MemberFollowJournalistDetailResponseDto {
 
     private Long memberId;
     private TransferPostSource journalist;
+    private String displayName;
 
     public static MemberFollowJournalistDetailResponseDto of(MemberFavoriteSourcer memberFavoriteSourcer) {
         return new MemberFollowJournalistDetailResponseDto(
                 memberFavoriteSourcer.getMember().getId(),
-                memberFavoriteSourcer.getJournalist()
+                memberFavoriteSourcer.getJournalist(),
+                memberFavoriteSourcer.getJournalist().getDisplayerName()
         );
     }
 

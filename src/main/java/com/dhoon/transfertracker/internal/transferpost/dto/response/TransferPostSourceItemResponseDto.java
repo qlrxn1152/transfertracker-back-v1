@@ -13,8 +13,13 @@ public class TransferPostSourceItemResponseDto {
 
     private TransferPostSource source;
     private String xUsername;
+    private String displayName;
 
     public static TransferPostSourceItemResponseDto of(TransferPostSource source) {
-        return new TransferPostSourceItemResponseDto(source, source.getXUsername());
+        return new TransferPostSourceItemResponseDto(
+                source,
+                source.getXUsername(),
+                source.getDisplayerName()
+        );
     }
 }
