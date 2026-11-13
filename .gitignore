@@ -45,3 +45,6 @@ src/main/resources/application-local.properties
 # Local tool state
 .gradle-home/
 infra/pinpoint/logs/
+
+# Local database backups (may contain member and token data)
+backups/

@@ -2,13 +2,16 @@ package com.dhoon.transfertracker.internal.notification.service.impl;
 
 import com.dhoon.transfertracker.external.fcm.FcmNotificationService;
 import com.dhoon.transfertracker.internal.member.domain.Member;
+import com.dhoon.transfertracker.internal.member.domain.MemberFavoriteSourcer;
 import com.dhoon.transfertracker.internal.member.domain.MemberFavoriteTeam;
+import com.dhoon.transfertracker.internal.member.repository.MemberFavoriteSourcerRepository;
 import com.dhoon.transfertracker.internal.member.repository.MemberFavoriteTeamRepository;
 import com.dhoon.transfertracker.internal.notification.domain.MemberFcmToken;
 import com.dhoon.transfertracker.internal.notification.repository.MemberFcmTokenRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,7 @@ public class MemberNotificationService {
 
     private final MemberFavoriteTeamRepository memberFavoriteTeamRepository;
     private final TeamRepository teamRepository;
+    private final MemberFavoriteSourcerRepository memberFavoriteSourcerRepository;
 
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public void sendTransferPostNotification(Long postId, Long teamId) {
@@ -50,6 +54,26 @@ public class MemberNotificationService {
                 }
             });
 
+        });
+    }
+
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+    public void sendTransferPostCreatedNotification(Long postId, TransferPostSource journalist) {
+        List<MemberFavoriteSourcer> journalistFollowMembers = memberFavoriteSourcerRepository.findAllByJournalist(journalist);
+
+        journalistFollowMembers.forEach(journalistFollowMember -> {
+            Member member = journalistFollowMember.getMember();
+            TransferPostSource followJournalist = journalistFollowMember.getJournalist();
+
+            List<MemberFcmToken> memberTokens = memberFcmTokenRepository.findAllByMemberId(member.getId());
+
+            memberTokens.forEach(memberToken -> {
+                try {
+                    fcmNotificationService.sendTransferPostCreatedNotification(followJournalist, memberToken.getToken());
+                } catch (FirebaseMessagingException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         });
     }
 

@@ -4,8 +4,10 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
+import com.dhoon.transfertracker.internal.transferpost.sync.event.TransferPostCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
@@ -21,6 +23,7 @@ import java.util.Map;
 public class TransferPostSyncTxService {
 
     private final TransferPostRepository transferPostRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public TransferPostItemResponseDto saveTransferPost(TransferPostSource source, JsonNode post, Map<String, String> mediaUrlByKey) {
         String content = post.get("text").asString();
@@ -30,9 +33,16 @@ public class TransferPostSyncTxService {
         String photoUrl = findPhotoUrl(post, mediaUrlByKey);
 
         TransferPost transferPost = transferPostRepository.findByExternalPostId(postId)
-                .orElseGet(() ->
-                        transferPostRepository.save(TransferPost.of(source, content, postId, createdAt, transferRelated, photoUrl))
-                );
+                .orElseGet(() -> {
+                    TransferPost savedPost = transferPostRepository.save(TransferPost.of(source, content, postId, createdAt, transferRelated, photoUrl));
+                    eventPublisher.publishEvent(new TransferPostCreatedEvent(
+                            savedPost.getId(),
+                            savedPost.getSourcer()
+                    ));
+
+                    return savedPost;
+                });
+
 
         return TransferPostItemResponseDto.of(transferPost);
     }

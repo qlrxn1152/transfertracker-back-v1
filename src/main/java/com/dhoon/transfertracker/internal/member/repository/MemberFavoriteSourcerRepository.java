@@ -14,4 +14,6 @@ public interface MemberFavoriteSourcerRepository extends JpaRepository<MemberFav
     List<MemberFavoriteSourcer> findAllByMemberId(Long memberId);
 
     List<MemberFavoriteSourcer> findAllByMemberIdAndJournalist(Long memberId, TransferPostSource journalist);
+
+    List<MemberFavoriteSourcer> findAllByJournalist(TransferPostSource journalist);
 }

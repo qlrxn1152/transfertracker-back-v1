@@ -111,7 +111,7 @@ public class MemberFavoriteSourcerService {
         memberRepository.findById(memberId)
                 .orElseThrow(NotFoundMemberException::new);
 
-        List<MemberFavoriteSourcer> aa = memberFavoriteSourcerRepository.findAllByMemberId(memberId);
+        List<MemberFavoriteSourcer> memberFollowingJournalists = memberFavoriteSourcerRepository.findAllByMemberId(memberId);
 
         PageRequest pageable = PageRequest.of(
                 page,
@@ -122,7 +122,7 @@ public class MemberFavoriteSourcerService {
         List<TransferPostsPageResponseDto> allJournalistsPosts = new ArrayList<>();
 
 
-        for (MemberFavoriteSourcer favoriteSourcer : aa) {
+        for (MemberFavoriteSourcer favoriteSourcer : memberFollowingJournalists) {
             TransferPostSource journalist = favoriteSourcer.getJournalist();
 
             Page<TransferPost> journalistAllPosts = transferPostRepository.findAllBySourcer(journalist, pageable);

@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.external.fcm;
 
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -25,8 +26,7 @@ public class FcmNotificationService {
         }
 
         Notification notification = Notification.builder()
-                .setTitle("TransferTracker")
-                .setBody("[" + teamName + "] 팀에 새로운 소식이 등록되었습니다!")
+                .setBody("[" + teamName + "] 팀에 새로운 소식이 등록됐습니다!")
                 .build();
 
         Message message = Message.builder()
@@ -43,5 +43,34 @@ public class FcmNotificationService {
         );
 
         return messageId;
+    }
+
+    public String sendTransferPostCreatedNotification(TransferPostSource journalist, String token) throws FirebaseMessagingException {
+        FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
+
+        if (firebaseMessaging == null) {
+            log.warn("FCM is disabled. Skipping push notification for Journalist={}", journalist);
+            return null;
+        }
+
+        Notification notification = Notification.builder()
+                .setBody("[" + journalist + "] 기자의 새로운 소식이 등록됐습니다!")
+                .build();
+
+        Message message = Message.builder()
+                .setToken(token)
+                .setNotification(notification)
+                .build();
+
+        String messageId = firebaseMessaging.send(message);
+
+        log.info(
+                "FCM 발송 요청 성공. journalist={}, messageId={}",
+                journalist,
+                messageId
+        );
+
+        return messageId;
+
     }
 }
