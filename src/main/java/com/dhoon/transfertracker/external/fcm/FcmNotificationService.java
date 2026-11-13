@@ -26,6 +26,7 @@ public class FcmNotificationService {
         }
 
         Notification notification = Notification.builder()
+                .setTitle("VEYRO")
                 .setBody("[" + teamName + "] 팀에 새로운 소식이 등록됐습니다!")
                 .build();
 
@@ -54,7 +55,8 @@ public class FcmNotificationService {
         }
 
         Notification notification = Notification.builder()
-                .setBody("[" + journalist + "] 기자의 새로운 소식이 등록됐습니다!")
+                .setTitle("VEYRO")
+                .setBody("[" + journalist.getDisplayerName() + "] 기자의 새로운 소식이 등록됐습니다!")
                 .build();
 
         Message message = Message.builder()
