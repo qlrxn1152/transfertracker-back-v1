@@ -23,6 +23,10 @@ public class TransferPostCommandOrchestrationService {
         return txService.publishNotificationTestPost(teamId);
     }
 
+    public Long publishJournalistNotificationTest(Long postId) {
+        return txService.publishJournalistNotificationTest(postId);
+    }
+
     public int removeNotificationTestPosts() {
         return txService.removeNotificationTestPosts();
     }

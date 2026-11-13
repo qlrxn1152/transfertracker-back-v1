@@ -8,6 +8,7 @@ import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
+import com.dhoon.transfertracker.internal.transferpost.sync.event.TransferPostCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -82,6 +83,20 @@ public class TransferPostCommandTxService {
         eventPublisher.publishEvent(new TransferPostTeamAssignedEvent(post.getId(), team.getId()));
 
         log.info("푸시 수신 확인용 테스트 게시물 생성 postId = {}, teamId = {}", post.getId(), team.getId());
+        return post.getId();
+    }
+
+    /**
+     * 운영 DB에 직접 적재된 기자 게시물은 스프링 이벤트를 거치지 않습니다.
+     * 이 메서드는 이미 저장된 게시물의 기자 팔로워 알림만 명시적으로 재발행합니다.
+     */
+    public Long publishJournalistNotificationTest(Long postId) {
+        TransferPost post = transferPostRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 기자 게시물입니다."));
+
+        eventPublisher.publishEvent(new TransferPostCreatedEvent(post.getId(), post.getSourcer()));
+        log.info("기자 팔로워 푸시 수신 점검 이벤트 발행 postId = {}, journalist = {}",
+                post.getId(), post.getSourcer());
         return post.getId();
     }
 
