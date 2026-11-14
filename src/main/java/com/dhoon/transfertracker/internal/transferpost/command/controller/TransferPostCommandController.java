@@ -22,23 +22,6 @@ public class TransferPostCommandController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/external/api/posts/notification-test/{teamId}")
-    public ResponseEntity<Long> publishNotificationTestPost(@PathVariable Long teamId) {
-        Long postId = transferPostCommandOrchestrationService.publishNotificationTestPost(teamId);
-        return ResponseEntity.ok(postId);
-    }
-
-    /** X API를 호출하지 않고, DB에 이미 저장된 기자 게시물로 팔로워 푸시 흐름만 점검합니다. */
-    @PostMapping("/external/api/posts/notification-test/journalist/{postId}")
-    public ResponseEntity<Long> publishJournalistNotificationTest(@PathVariable Long postId) {
-        Long notifiedPostId = transferPostCommandOrchestrationService.publishJournalistNotificationTest(postId);
-        return ResponseEntity.ok(notifiedPostId);
-    }
-
-    @DeleteMapping("/external/api/posts/notification-test")
-    public ResponseEntity<Integer> removeNotificationTestPosts() {
-        return ResponseEntity.ok(transferPostCommandOrchestrationService.removeNotificationTestPosts());
-    }
 
 
 

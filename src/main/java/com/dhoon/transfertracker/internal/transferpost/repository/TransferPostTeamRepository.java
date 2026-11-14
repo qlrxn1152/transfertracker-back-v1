@@ -24,6 +24,8 @@ public interface TransferPostTeamRepository extends JpaRepository<TransferPostTe
 
     List<TransferPostTeam> findAllByPostId(Long postId);
 
+    Optional<TransferPostTeam> findByTeamIdAndPostId(Long teamId, Long postId);
+
 
 
 }

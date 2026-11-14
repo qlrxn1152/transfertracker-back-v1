@@ -1,4 +1,8 @@
 package com.dhoon.transfertracker.internal.transferpost.command.dto;
 
-public record TeamAssignPostsTarget() {
+import java.util.List;
+
+public record TeamAssignPostsTarget(
+        List<TeamAssignPostTarget> targets
+) {
 }

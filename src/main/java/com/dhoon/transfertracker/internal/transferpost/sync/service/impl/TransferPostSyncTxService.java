@@ -35,6 +35,7 @@ public class TransferPostSyncTxService {
         TransferPost transferPost = transferPostRepository.findByExternalPostId(postId)
                 .orElseGet(() -> {
                     TransferPost savedPost = transferPostRepository.save(TransferPost.of(source, content, postId, createdAt, transferRelated, photoUrl));
+
                     eventPublisher.publishEvent(new TransferPostCreatedEvent(
                             savedPost.getId(),
                             savedPost.getSourcer()

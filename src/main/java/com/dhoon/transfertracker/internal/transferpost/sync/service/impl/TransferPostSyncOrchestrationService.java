@@ -30,7 +30,6 @@ public class TransferPostSyncOrchestrationService {
 
         do {
             JsonNode response = xClient.callExternalApi(source, nextToken); // null -> 첫페이지.
-
             JsonNode userPosts = response.get("data");
 
             if (userPosts == null) {

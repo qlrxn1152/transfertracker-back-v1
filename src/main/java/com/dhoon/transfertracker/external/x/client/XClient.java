@@ -29,7 +29,7 @@ public class XClient {
 
     public JsonNode callExternalApi(TransferPostSource source, String paginationToken) {
         String userId = source.getXUserId();
-        return getUserPosts(userId, 50, paginationToken);
+        return getUserPosts(userId, 30, paginationToken);
     }
 
     public JsonNode getUserByUsername(String username) {
