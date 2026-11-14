@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         indexes =
-            @Index(name = "idx_player_player_name", columnList = "playerName")
+            @Index(name = "idx_player_player_name", columnList = "player_name")
 )
 public class Player {
 
@@ -46,7 +46,18 @@ public class Player {
      * @return 생성된 Player 엔티티
      */
     public static Player of(String playerName, Long apiFootballId) {
-        return new Player(playerName, apiFootballId);
+
+        if (playerName == null || playerName.isBlank()) {
+            throw new IllegalArgumentException("선수의 이름은 비어 있을 수 없습니다.");
+        }
+
+        if (apiFootballId == null || apiFootballId <= 0) {
+            throw new IllegalArgumentException("선수의 API ID 의 값은 자연수이어야합니다.");
+        }
+
+        String normalizedPlayerName = normalizePlayerName(playerName);
+
+        return new Player(normalizedPlayerName, apiFootballId);
     }
 
 
@@ -58,7 +69,15 @@ public class Player {
      * @param playerNameKo 선수의 한국어 이름
      */
     public void assignKoPlayerName(String playerNameKo) {
-        this.playerNameKo = playerNameKo;
+
+        if (playerNameKo == null || playerNameKo.isBlank()) {
+            throw new IllegalArgumentException("선수의 한국어 이름은 비어 있을 수 없습니다.");
+        }
+
+        String normalizedPlayerNameKo = normalizePlayerName(playerNameKo);
+
+
+        this.playerNameKo = normalizedPlayerNameKo;
     }
 
 
@@ -71,11 +90,14 @@ public class Player {
      * @return 화면에 표시할(사용자에게 보여질) 선수 이름
      */
     public String getDisplayName() {
-        if (playerNameKo == null || playerNameKo.isBlank()) {
-            return playerName;
-        }
 
-        return playerNameKo;
+        boolean hasKoreanName = (playerNameKo != null && !playerNameKo.isBlank());
+
+        return hasKoreanName ? playerNameKo : playerName;
+    }
+
+    private static String normalizePlayerName(String playerName) {
+        return playerName.strip();
     }
 
 }
