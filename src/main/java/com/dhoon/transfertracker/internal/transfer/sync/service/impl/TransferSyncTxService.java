@@ -128,7 +128,7 @@ public class TransferSyncTxService {
                 // API-Football occasionally changes a historical team's numeric ID
                 // while preserving its name. Reuse the existing team instead of
                 // failing on the unique team_name constraint.
-                .or(() -> teamRepository.findByTeamName(teamName))
+                .or(() -> teamRepository.findByAnyDisplayName(teamName))
                 .orElseGet(() -> teamRepository.save(
                         Team.of(
                                 teamName,
