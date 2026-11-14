@@ -84,7 +84,13 @@ public class PlayerTest {
         assertThatThrownBy(() -> Player.of(playerName, Long.valueOf(-4)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("선수의 API ID 의 값은 자연수이어야합니다.");
+
+        assertThatThrownBy(() -> Player.of(playerName, Long.valueOf(0)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("선수의 API ID 의 값은 자연수이어야합니다.");
     }
+
+
 
     @Test
     @DisplayName(value = "정상적인 한국어 이름으로 Player 에게 한국어 이름을 할당한다.")
@@ -197,6 +203,23 @@ public class PlayerTest {
         assertThat(playerDisplayName).isEqualTo("브루노 페르난데스");
     }
 
+    @Test
+    @DisplayName("잘못된 한국어 이름으로 변경을 시도하면 기존 이름을 유지한다")
+    void assignKoreanNameFailKeepsExistingName() {
+        // given
+        Player player = Player.of("Bruno Fernandes", 111L);
+        player.assignKoPlayerName("브루노 페르난데스");
+
+        // when
+        assertThatThrownBy(() -> player.assignKoPlayerName("   "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("선수의 한국어 이름은 비어 있을 수 없습니다.");
+
+
+        // then
+        assertThat(player.getPlayerNameKo())
+                .isEqualTo("브루노 페르난데스");
+    }
 
 
 
