@@ -46,12 +46,12 @@ public class TeamPlayerSyncTxService {
 
     private TeamPlayer getOrCreateTeamPlayer(Player player, Team team) {
         return teamPlayerRepository.findByPlayerIdAndTeamId(player.getId(), team.getId())
-                .orElseGet(() -> teamPlayerRepository.save(
-                        TeamPlayer.of(
-                                team,
-                                player
-                        )
-                ));
+                .or(() -> teamPlayerRepository.findByPlayerId(player.getId())
+                        .map(teamPlayer -> {
+                            teamPlayer.changeTeam(team);
+                            return teamPlayer;
+                        }))
+                .orElseGet(() -> teamPlayerRepository.save(TeamPlayer.of(team, player)));
     }
 
     private Player getOrCreatePlayer(JsonNode playerData) {

@@ -33,12 +33,26 @@ public class TeamPlayerSyncOrchestrationService {
         List<TeamPlayerSaveResponseDto> response = new ArrayList<>();
 
         playersData.forEach(player -> {
+            if (!hasValidPlayerId(player)) {
+                log.warn("선수 식별자가 없는 API-Football 선수단 항목을 건너뜁니다. teamApiId={}, player={}", teamApiId, player);
+                return;
+            }
+
             TeamPlayerSaveResponseDto saveTeamPlayerResponse = txService.getOrCreateTeamPlayerResponse(player, teamData);
 
             response.add(saveTeamPlayerResponse);
         });
 
         return TeamPlayersSaveResponseDto.of(response);
+    }
+
+    private boolean hasValidPlayerId(JsonNode player) {
+        JsonNode id = player == null ? null : player.get("id");
+
+        return id != null
+                && id.isIntegralNumber()
+                && id.canConvertToLong()
+                && id.asLong() > 0;
     }
 
 }

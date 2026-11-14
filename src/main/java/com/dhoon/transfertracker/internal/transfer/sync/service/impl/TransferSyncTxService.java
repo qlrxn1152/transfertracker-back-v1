@@ -58,6 +58,11 @@ public class TransferSyncTxService {
         List<PlayerTransferItemResponseDto> playerTransfers = new ArrayList<>();
 
         transferDatas.forEach(transferData -> {
+            if (!hasRequiredTransferFields(transferData)) {
+                log.warn("팀 식별자가 없는 API-Football 이적 항목을 건너뜁니다. playerApiId={}, transfer={}",
+                        player.getApiFootballId(), transferData);
+                return;
+            }
 
             JsonNode teamData = transferData.get("teams");
 
@@ -78,6 +83,31 @@ public class TransferSyncTxService {
         return playerTransfers;
     }
 
+    private boolean hasRequiredTransferFields(JsonNode transferData) {
+        if (transferData == null || !transferData.isObject()) {
+            return false;
+        }
+
+        JsonNode date = transferData.get("date");
+        JsonNode teams = transferData.get("teams");
+
+        return date != null
+                && date.isTextual()
+                && teams != null
+                && hasValidTeamId(teams.get("in"))
+                && hasValidTeamId(teams.get("out"))
+                && teams.get("in").get("id").asLong() != teams.get("out").get("id").asLong();
+    }
+
+    private boolean hasValidTeamId(JsonNode teamData) {
+        JsonNode id = teamData == null ? null : teamData.get("id");
+
+        return id != null
+                && id.isIntegralNumber()
+                && id.canConvertToLong()
+                && id.asLong() > 0;
+    }
+
     private Player getOrCreatePlayer(JsonNode playerData) {
         long playerApiId = playerData.get("id").asLong(); // 외부 API ID
 
@@ -92,12 +122,17 @@ public class TransferSyncTxService {
 
     private Team getOrCreateTeam(JsonNode teamData) {
         long teamApiId = teamData.get("id").asLong();
+        String teamName = teamData.get("name").asString();
 
         return teamRepository.findByApiFootballId(teamApiId)
+                // API-Football occasionally changes a historical team's numeric ID
+                // while preserving its name. Reuse the existing team instead of
+                // failing on the unique team_name constraint.
+                .or(() -> teamRepository.findByTeamName(teamName))
                 .orElseGet(() -> teamRepository.save(
                         Team.of(
-                                teamData.get("name").asString(),
-                                teamData.get("id").asLong()
+                                teamName,
+                                teamApiId
                         )
                 ));
     }

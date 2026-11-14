@@ -38,4 +38,11 @@ public class TeamPlayer {
     public static TeamPlayer of(Team team, Player player) {
         return new TeamPlayer(team, player);
     }
+
+    /**
+     * API-Football 선수단 동기화 결과에 따라 선수의 현재 소속팀을 갱신한다.
+     */
+    public void changeTeam(Team team) {
+        this.team = team;
+    }
 }
