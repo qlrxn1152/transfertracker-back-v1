@@ -14,7 +14,9 @@ public interface TransferPostTeamRepository extends JpaRepository<TransferPostTe
     @Query("""
             select tpt from TransferPostTeam tpt
             join fetch tpt.team
+            join fetch tpt.post
             WHERE tpt.team.id = :teamId
+            ORDER BY tpt.post.contentCreatedAt DESC, tpt.post.id DESC
             """)
     Page<TransferPostTeam> findAllByTeamId(Long teamId, Pageable pageable);
 

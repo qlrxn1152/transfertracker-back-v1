@@ -47,8 +47,8 @@ public class TeamQueryOrchestrationService {
                 page,
                 20,
                 Sort.by(
-                        Sort.Order.desc("createdAt"),
-                        Sort.Order.desc("id")
+                        Sort.Order.desc("post.contentCreatedAt"),
+                        Sort.Order.desc("post.id")
                 )
         );
 
