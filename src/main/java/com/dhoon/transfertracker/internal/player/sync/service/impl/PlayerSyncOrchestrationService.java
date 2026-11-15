@@ -28,15 +28,22 @@ public class PlayerSyncOrchestrationService {
      * @return 기존 또는 신규 등록된 선수 정보
      */
     public PlayerSaveResponseDto syncPlayer(Long playerApiId) {
+
+        validatePlayerApiId(playerApiId);
+
         JsonNode playerData = footballClient.callExternalPlayerApi(playerApiId);
 
-        if (playerData.get("id") == null || playerData.get("name") == null) {
-            throw new IllegalStateException("외부 API 선수 정보에 필수 필드가 없습니다.");
-        }
+        validateExternalResponseData(playerData);
+
+        JsonNode idNode = playerData.get("id");
+        JsonNode nameNode = playerData.get("name");
+
+        validateIdNode(idNode);
+        validateNameNode(nameNode);
 
         PlayerSyncData playerSyncData = new PlayerSyncData(
-                playerData.get("id").asLong(),
-                playerData.get("name").asString()
+                idNode.asLong(),
+                nameNode.asString()
         );
 
         return txService.getOrCreatePlayerResponse(playerSyncData);
@@ -44,6 +51,37 @@ public class PlayerSyncOrchestrationService {
 
 
 
+    private static void validateExternalResponseData(JsonNode playerData) {
+        if (playerData == null || !playerData.isObject()) {
+            throw new IllegalArgumentException("외부 API 응답에서 선수 데이터가 올바르지 않습니다.");
+        }
+    }
+
+    private void validatePlayerApiId(Long playerApiId) {
+        if (playerApiId == null || playerApiId <= 0) {
+            throw new IllegalArgumentException("선수의 API ID 값은 자연수이어야합니다.");
+        }
+    }
+
+
+    private void validateNameNode(JsonNode nameNode) {
+
+        if (nameNode == null || !nameNode.isString()) {
+            throw new IllegalArgumentException("외부 API 응답에서, [Name] 의 값이 잘못된 값입니다.");
+        }
+
+        String strippedPlayerName = nameNode.asString().strip();
+        if (strippedPlayerName.isBlank() || strippedPlayerName.equalsIgnoreCase("null")) {
+            throw new IllegalArgumentException("외부 API 응답에서, [Name] 의 값이 잘못된 값입니다.");
+        }
+
+    }
+
+    private void validateIdNode(JsonNode idNode) {
+        if (idNode == null || idNode.isNull() || !idNode.isIntegralNumber() || !idNode.canConvertToLong() || idNode.asLong() <= 0) {
+            throw new IllegalArgumentException("외부 API 응답에서, [Api ID] 의 값이 잘못된 값입니다.");
+        }
+    }
 
 
 }
