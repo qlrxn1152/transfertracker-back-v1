@@ -5,6 +5,8 @@ import com.dhoon.transfertracker.external.openai.dto.response.PlayerNameTranslat
 import com.dhoon.transfertracker.external.openai.dto.response.PlayerNameTranslationResult;
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
+import com.dhoon.transfertracker.internal.player.translation.exception.PlayerNameTranslationApiExternalResponseNullException;
+import com.dhoon.transfertracker.internal.player.translation.exception.PlayerNameTranslationInvalidArgumentException;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,9 +41,7 @@ public class PlayerNameTranslationTxService {
     }
 
 
-    // 다 성공 OR 실패 1명이라도있으면 -> 다 실패
     public void applyTranslations(PlayerNameTranslationBatchResult result) {
-
 
         Set<Long> playerIdsSet = result.getPlayers()
                 .stream()
@@ -60,7 +60,6 @@ public class PlayerNameTranslationTxService {
 
         List<Player> players = playerRepository.findAllById(playerIdsSet);
 
-
         // 특정 플레이어가 존재하지 않는경우
         if (players.size() != playerIdsSet.size()) {
             throw new IllegalStateException("한글 이름을 반영할 Player를 찾을 수 없습니다.");
@@ -69,7 +68,6 @@ public class PlayerNameTranslationTxService {
 
         players.forEach(player -> {
             String playerNameKo = translatedNames.get(player.getId());
-
 
             // 한국어 이름이 존재하지 않는 플레이어에게 한국어 이름 할당
             if (player.getPlayerNameKo() == null || player.getPlayerNameKo().isBlank()) {
