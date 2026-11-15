@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,11 +42,11 @@ public class PlayerNameTranslationTxService {
     // 다 성공 OR 실패 1명이라도있으면 -> 다 실패
     public void applyTranslations(PlayerNameTranslationBatchResult result) {
 
-        List<Long> playerIds = result.getPlayers()
-                        .stream()
-                        .map(PlayerNameTranslationResult::getPlayerId)
-                        .toList();
 
+        Set<Long> playerIdsSet = result.getPlayers()
+                .stream()
+                .map(PlayerNameTranslationResult::getPlayerId)
+                .collect(Collectors.toSet());
 
         // <플레이어Id, 번역된 한국어이름>
         Map<Long, String> translatedNames = result.getPlayers()
@@ -57,11 +58,11 @@ public class PlayerNameTranslationTxService {
                                 )
                         );
 
-        List<Player> players = playerRepository.findAllById(playerIds);
+        List<Player> players = playerRepository.findAllById(playerIdsSet);
 
 
         // 특정 플레이어가 존재하지 않는경우
-        if (players.size() != playerIds.size()) {
+        if (players.size() != playerIdsSet.size()) {
             throw new IllegalStateException("한글 이름을 반영할 Player를 찾을 수 없습니다.");
         }
 
