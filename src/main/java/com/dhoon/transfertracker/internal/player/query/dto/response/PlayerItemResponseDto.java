@@ -18,13 +18,13 @@ public class PlayerItemResponseDto {
     private String photoUrl;
     private String teamName;
 
-    public static PlayerItemResponseDto of(Player player, Team team) {
+    public static PlayerItemResponseDto of(Player player) {
         return new PlayerItemResponseDto(
                 player.getId(),
                 player.getDisplayName(),
                 "https://media.api-sports.io/football/players/" + player.getApiFootballId() + ".png",
-                team.getDisplayName()
-                );
+                null
+        );
     }
 
     public static PlayerItemResponseDto of(TeamPlayer teamPlayer) {
@@ -36,12 +36,14 @@ public class PlayerItemResponseDto {
         );
     }
 
-    public static PlayerItemResponseDto of(Player player) {
+
+
+    public static PlayerItemResponseDto of(Player player, Team team) {
         return new PlayerItemResponseDto(
                 player.getId(),
                 player.getDisplayName(),
                 "https://media.api-sports.io/football/players/" + player.getApiFootballId() + ".png",
-                null
-        );
+                team.getDisplayName()
+                );
     }
 }

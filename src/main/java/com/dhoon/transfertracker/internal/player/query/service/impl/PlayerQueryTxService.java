@@ -29,10 +29,14 @@ public class PlayerQueryTxService {
 
     @Transactional(readOnly = true)
     public PlayerItemResponseDto getPlayer(Long playerId) {
-        // 팀에속한선수 , 팀에 속하지 않은 선수. ( FA )
+        // 해당 선수가 존재하는지 확인
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(NotFoundPlayerException::new);
 
+        // 해당 선수가 팀에 속한 선수인지 확인
+
+        // 존재 -> PlayerItemResponseDto -> teamPlayer 객체대상
+        // 존재 x -> PlayerItemResponseDto -> player 객체대상
         return teamPlayerRepository.findByPlayerId(playerId)
                 .map(PlayerItemResponseDto::of) // teamPlayer
                 .orElseGet(() -> PlayerItemResponseDto.of(player));

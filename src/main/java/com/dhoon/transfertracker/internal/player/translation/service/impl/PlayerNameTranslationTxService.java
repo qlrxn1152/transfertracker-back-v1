@@ -23,44 +23,32 @@ import java.util.stream.Collectors;
 public class PlayerNameTranslationTxService {
 
     private final PlayerRepository playerRepository;
-    private final TeamPlayerRepository teamPlayerRepository;
-
 
     @Transactional(readOnly = true)
-    public List<PlayerNameTranslationTarget> findTargets(int limit) {
-
-        return teamPlayerRepository
-                .findPlayerNameTranslationTargets(
+    public List<PlayerNameTranslationTarget> findTranslationTargets(int limit) {
+        return playerRepository.findPlayerNameTranslationTargets(
                         PageRequest.of(
                                 0,
                                 limit
                         )
                 )
                 .stream()
-                .map(teamPlayer ->
-                        new PlayerNameTranslationTarget(
-                                teamPlayer.getPlayer().getId(),
-                                teamPlayer.getPlayer().getPlayerName(),
-                                teamPlayer.getTeam().getTeamName()
-                        )
-                )
+                .map(PlayerNameTranslationTarget::of)
                 .toList();
     }
 
 
+    // 다 성공 OR 실패 1명이라도있으면 -> 다 실패
     public void applyTranslations(PlayerNameTranslationBatchResult result) {
 
-        List<Long> playerIds =
-                result.getPlayers()
+        List<Long> playerIds = result.getPlayers()
                         .stream()
-                        .map(
-                                PlayerNameTranslationResult::getPlayerId
-                        )
+                        .map(PlayerNameTranslationResult::getPlayerId)
                         .toList();
 
 
-        Map<Long, String> translatedNames =
-                result.getPlayers()
+        // <플레이어Id, 번역된 한국어이름>
+        Map<Long, String> translatedNames = result.getPlayers()
                         .stream()
                         .collect(
                                 Collectors.toMap(
@@ -69,49 +57,24 @@ public class PlayerNameTranslationTxService {
                                 )
                         );
 
-
-        List<Player> players =
-                playerRepository
-                        .findAllById(
-                                playerIds
-                        );
+        List<Player> players = playerRepository.findAllById(playerIds);
 
 
-        /*
-         * 요청 이후 Player가 삭제되는 등의 비정상 상황.
-         *
-         * 일부 Player만 변경되는 것을 방지하기 위해
-         * 전체 ID가 존재하는지 먼저 확인한다.
-         */
+        // 특정 플레이어가 존재하지 않는경우
         if (players.size() != playerIds.size()) {
-
-            throw new IllegalStateException(
-                    "한글 이름을 반영할 Player를 찾을 수 없습니다."
-            );
+            throw new IllegalStateException("한글 이름을 반영할 Player를 찾을 수 없습니다.");
         }
 
 
         players.forEach(player -> {
-
-            String playerNameKo =
-                    translatedNames.get(
-                            player.getId()
-                    );
+            String playerNameKo = translatedNames.get(player.getId());
 
 
-            /*
-             * 번역 대상 조회 이후 사람이 직접 값을 수정한 경우에는
-             * AI 결과로 덮어쓰지 않는다.
-             */
-            if (
-                    player.getPlayerNameKo() == null
-                            || player.getPlayerNameKo().isBlank()
-            ) {
-
-                player.assignKoPlayerName(
-                        playerNameKo
-                );
+            // 한국어 이름이 존재하지 않는 플레이어에게 한국어 이름 할당
+            if (player.getPlayerNameKo() == null || player.getPlayerNameKo().isBlank()) {
+                player.assignKoPlayerName(playerNameKo);
             }
+
         });
     }
 }

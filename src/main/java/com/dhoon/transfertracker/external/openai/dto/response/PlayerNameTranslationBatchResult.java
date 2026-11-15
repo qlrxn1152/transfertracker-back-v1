@@ -15,13 +15,8 @@ public class PlayerNameTranslationBatchResult {
 
     private List<PlayerNameTranslationResult> players;
 
-    public static PlayerNameTranslationBatchResult of(
-            List<PlayerNameTranslationResult> players
-    ) {
-
-        return new PlayerNameTranslationBatchResult(
-                players
-        );
+    public static PlayerNameTranslationBatchResult of(List<PlayerNameTranslationResult> players) {
+        return new PlayerNameTranslationBatchResult(players);
     }
 
     public static PlayerNameTranslationBatchResult empty() {

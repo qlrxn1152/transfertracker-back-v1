@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.external.openai.dto.request;
 
+import com.dhoon.transfertracker.internal.player.domain.Player;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,5 +12,8 @@ public class PlayerNameTranslationTarget {
 
     private Long playerId;
     private String playerName;
-    private String teamName;
+
+    public static PlayerNameTranslationTarget of(Player player) {
+        return new PlayerNameTranslationTarget(player.getId(), player.getPlayerName());
+    }
 }

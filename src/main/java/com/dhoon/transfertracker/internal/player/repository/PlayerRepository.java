@@ -23,6 +23,13 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     boolean existsByApiFootballId(Long apiFootballId);
 
+    @Query("""
+            select p from Player p
+            where p.playerNameKo is null
+                or trim(p.playerNameKo) = ''
+            order by p.id asc
+            """)
+    List<Player> findPlayerNameTranslationTargets(Pageable pageable);
 
 
 
