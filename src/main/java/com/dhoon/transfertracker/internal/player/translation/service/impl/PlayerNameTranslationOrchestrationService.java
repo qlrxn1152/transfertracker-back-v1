@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,17 +58,13 @@ public class PlayerNameTranslationOrchestrationService {
                     );
 
 
-            PlayerNameTranslationBatchResult result = openAiClient.translatePlayerNames(batch); // 번역에 성공한 플레이어에 대한 Response.
-
-
-            validateResult(batch, result);
-
+            PlayerNameTranslationBatchResult result = openAiClient.translatePlayerNames(batch);
+            PlayerNameTranslationBatchResult batchResult = getValidatedResult(batch, result);
 
             // Translation 작업 시작 -> DB 반영.
-            txService.applyTranslations(result);
+            txService.applyTranslations(batchResult);
 
-
-            translatedCount += result.getPlayers().size(); // 번역된 플레이어의 숫자
+            translatedCount += batchResult.getPlayers().size(); // 번역된 플레이어의 숫자
 
             batchCount++; // 몇번실행 ? BATCH_SIZE = 50 , FETCH_SIZE = 300 /// 정상적으로 모두 번역 -> BatchCount = 6.
         }
@@ -89,28 +86,58 @@ public class PlayerNameTranslationOrchestrationService {
 
 
 
-    private void validateResult(List<PlayerNameTranslationTarget> targets, PlayerNameTranslationBatchResult result) {
+    private PlayerNameTranslationBatchResult getValidatedResult(List<PlayerNameTranslationTarget> targets, PlayerNameTranslationBatchResult result) {
 
         // 번역 대상이 있어서 가지고왔는데 ( targets 검증을 통과했으므로 ) 번역 결과가 존재하지않으므로, 예외상황.
         if (result == null || result.getPlayers() == null) {
             throw new IllegalStateException("선수 이름 번역 결과가 존재하지 않습니다.");
         }
 
-
         // 중복된 플레이어 없이, 번역대상의 플레이어 IDs
         Set<Long> requestedIds = targets.stream()
-                        .map(PlayerNameTranslationTarget::getPlayerId)
-                        .collect(Collectors.toSet()); // set -> 중복제거
+                .map(PlayerNameTranslationTarget::getPlayerId)
+                .collect(Collectors.toSet()); // set -> 중복제거
+
+        List<PlayerNameTranslationResult> filteredPlayers = new ArrayList<>();
+
+        result.getPlayers().forEach(player -> {
+
+            if (player == null) {
+                throw new IllegalArgumentException("번역 결과의 Player 가 null 값입니다.");
+            }
+
+            Long playerId = player.getPlayerId();
+            String translatedPlayerName = player.getPlayerNameKo();
+
+            if (playerId == null || playerId <= 0) {
+                log.warn("Open API 가 넘겨준, 번역결과에 대해서 [ ID ] 값이 올바르지 않습니다");
+                return;
+            }
+
+            if (translatedPlayerName == null || translatedPlayerName.isBlank() || translatedPlayerName.strip().equalsIgnoreCase("null")) {
+                log.warn("Open API 가 넘겨준, 번역결과에 대해서 [ TranslatedPlayerName ] 값이 올바르지 않습니다 [ PlayerId = {} ]", playerId);
+                return;
+            }
+
+            if (!requestedIds.contains(playerId)) {
+                log.warn("선수 이름 번역 결과 제외, playerId = {}", playerId);
+                return;
+            }
+
+            // 그래서, 누가 문제인건데 ?
+
+            filteredPlayers.add(player); // 문제없는 player.
+        });
+
+
 
         // 번역된 플레이어들의 IDs
-        List<Long> responseIds = result.getPlayers().stream()
+        List<Long> responseIds = filteredPlayers.stream()
                         .map(PlayerNameTranslationResult::getPlayerId)
                         .toList();
 
-
         // 번역된 플레이어들의 IDs 중복제거
         Set<Long> responseIdSet = new HashSet<>(responseIds);
-
 
         // 번역 결과 과정에서, 중복된 아이디가 존재하는지 -> 즉, 중복된 플레이어가 존재하는지
         if (responseIds.size() != responseIdSet.size()) {
@@ -122,19 +149,8 @@ public class PlayerNameTranslationOrchestrationService {
             throw new IllegalStateException("선수 이름 번역 요청과 응답의 playerId가 일치하지 않습니다.");
         }
 
-
-        // 번역된 플레이어의 한국어 이름이 잘 할당이됐는지 ( null 이 아니면서, 비어져있으면 안됨 )
-        boolean hasInvalidName = result.getPlayers()
-                        .stream()
-                        .anyMatch(player ->
-                                (player.getPlayerNameKo() == null
-                                                || player.getPlayerNameKo().isBlank())
-                        );
-
-
-        if (hasInvalidName) {
-            throw new IllegalStateException("선수 이름 번역 결과에 비어있는 playerNameKo가 존재합니다.");
-        }
-
+        return PlayerNameTranslationBatchResult.of(filteredPlayers);
     }
+
+
 }

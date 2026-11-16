@@ -41,15 +41,15 @@ public class PlayerNameTranslationTxService {
     }
 
 
-    public void applyTranslations(PlayerNameTranslationBatchResult result) {
+    public void applyTranslations(PlayerNameTranslationBatchResult validatedResult) {
 
-        Set<Long> playerIdsSet = result.getPlayers()
+        Set<Long> playerIdsSet = validatedResult.getPlayers()
                 .stream()
                 .map(PlayerNameTranslationResult::getPlayerId)
                 .collect(Collectors.toSet());
 
         // <플레이어Id, 번역된 한국어이름>
-        Map<Long, String> translatedNames = result.getPlayers()
+        Map<Long, String> translatedNames = validatedResult.getPlayers()
                         .stream()
                         .collect(
                                 Collectors.toMap(
