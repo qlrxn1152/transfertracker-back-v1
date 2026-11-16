@@ -43,7 +43,8 @@ public class SecurityConfig {
                         // 회원가입 / 로그인
                         .requestMatchers(
                                 "/api/members/signup",
-                                "/api/members/login"
+                                "/api/members/login",
+                                "/api/auth/kakao/**"
                         )
                         .permitAll()
 

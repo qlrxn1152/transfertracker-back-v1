@@ -20,7 +20,10 @@ public class Member {
     @Column(name = "login_id", unique = true, nullable = false)
     private String loginId;
 
-    @Column(nullable = false)
+    @Column(name = "kakao_id", unique = true)
+    private String kakaoId;
+
+    @Column
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -35,6 +38,18 @@ public class Member {
 
     public static Member signUp(String loginId, String password) {
         return new Member(loginId, password);
+    }
+
+    public static Member signUpWithKakao(String kakaoId) {
+        Member member = new Member();
+        member.loginId = "kakao_" + kakaoId;
+        member.kakaoId = kakaoId;
+        member.memberGrade = MemberGrade.USER;
+        return member;
+    }
+
+    public boolean isKakaoMember() {
+        return kakaoId != null;
     }
 
 }

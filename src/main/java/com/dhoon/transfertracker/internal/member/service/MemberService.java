@@ -13,4 +13,6 @@ public interface MemberService {
 
     MemberLoginResponseDto login(MemberLoginRequestDto request);
 
+    MemberLoginResponseDto loginWithKakao(String kakaoId);
+
 }

@@ -18,7 +18,8 @@ public class MemberLoginResponseDto {
     private String accessToken;
 
     public static MemberLoginResponseDto of(Member member, String accessToken) {
-        return new MemberLoginResponseDto(member.getId(), member.getLoginId(), member.getMemberGrade(), accessToken);
+        String displayLoginId = member.isKakaoMember() ? "카카오 사용자" : member.getLoginId();
+        return new MemberLoginResponseDto(member.getId(), displayLoginId, member.getMemberGrade(), accessToken);
     }
 
 }

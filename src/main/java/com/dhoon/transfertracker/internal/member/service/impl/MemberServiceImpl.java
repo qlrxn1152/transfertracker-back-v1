@@ -68,9 +68,19 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepository.findByLoginId(request.getLoginId())
                 .orElseThrow(LoginFailException::new);
 
-        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+        if (member.getPassword() == null || !passwordEncoder.matches(request.getPassword(), member.getPassword())) {
             throw new LoginFailException();
         }
+
+        String accessToken = accessTokenProvider.createAccessToken(member.getId());
+
+        return MemberLoginResponseDto.of(member, accessToken);
+    }
+
+    @Override
+    public MemberLoginResponseDto loginWithKakao(String kakaoId) {
+        Member member = memberRepository.findByKakaoId(kakaoId)
+                .orElseGet(() -> memberRepository.save(Member.signUpWithKakao(kakaoId)));
 
         String accessToken = accessTokenProvider.createAccessToken(member.getId());
 
