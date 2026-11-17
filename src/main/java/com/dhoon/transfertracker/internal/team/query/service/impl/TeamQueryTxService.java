@@ -27,7 +27,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
+@Transactional(readOnly = true)
 @Service
 public class TeamQueryTxService {
 
@@ -36,7 +36,6 @@ public class TeamQueryTxService {
     private final TransferPostRepository transferPostRepository;
     private final TransferPostTeamRepository transferPostTeamRepository;
 
-    @Transactional(readOnly = true)
     public TeamItemResponseDto getTeam(Long teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
@@ -44,7 +43,6 @@ public class TeamQueryTxService {
         return TeamItemResponseDto.of(team);
     }
 
-    @Transactional(readOnly = true)
     public TeamsResponseDto getTeams() {
         List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCodeIsNotNull()
                 .stream()
@@ -54,7 +52,6 @@ public class TeamQueryTxService {
         return TeamsResponseDto.of(teams);
     }
 
-    @Transactional(readOnly = true)
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
         List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCode(leagueCode)
                 .stream()
@@ -64,7 +61,6 @@ public class TeamQueryTxService {
         return TeamsResponseDto.of(teams);
     }
 
-    @Transactional(readOnly = true)
     public TeamPageInfosResponseDto getTeamInfo(Long teamId, Pageable pageable) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);

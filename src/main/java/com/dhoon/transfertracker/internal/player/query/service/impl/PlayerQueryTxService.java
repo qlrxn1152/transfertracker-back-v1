@@ -21,13 +21,12 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class PlayerQueryTxService {
 
     private final PlayerRepository playerRepository;
     private final TeamPlayerRepository teamPlayerRepository;
 
-    @Transactional(readOnly = true)
     public PlayerItemResponseDto getPlayer(Long playerId) {
         // 해당 선수가 존재하는지 확인
         Player player = playerRepository.findById(playerId)
@@ -42,8 +41,6 @@ public class PlayerQueryTxService {
                 .orElseGet(() -> PlayerItemResponseDto.of(player));
     }
 
-
-    @Transactional(readOnly = true)
     public PlayersResponseDto getPlayers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
 
         Slice<TeamPlayer> playerSlice = teamPlayerRepository.findTeamPlayers(keyWord, pageable, leagueCode, teamId);
