@@ -95,5 +95,13 @@ public class TransferPost {
         this.translateStatus = TranslateStatus.FAILED;
     }
 
+    public void updatePhotoUrlIfAbsent(String photoUrl) {
+        if ((this.photoUrl == null || this.photoUrl.isBlank())
+                && photoUrl != null
+                && !photoUrl.isBlank()) {
+            this.photoUrl = photoUrl;
+        }
+    }
+
 
 }

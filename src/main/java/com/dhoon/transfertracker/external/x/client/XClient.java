@@ -48,8 +48,8 @@ public class XClient {
                     uriBuilder
                             .path("/2/users/{id}/tweets")
                             .queryParam("max_results", size)
-                            .queryParam("tweet.fields", "created_at,attachments")
-                            .queryParam("expansions", "attachments.media_keys")
+                            .queryParam("tweet.fields", "created_at,attachments,referenced_tweets")
+                            .queryParam("expansions", "attachments.media_keys,referenced_tweets.id,referenced_tweets.id.attachments.media_keys")
                             .queryParam("media.fields",
                                     "media_key,type,url,preview_image_url,width,height");
 

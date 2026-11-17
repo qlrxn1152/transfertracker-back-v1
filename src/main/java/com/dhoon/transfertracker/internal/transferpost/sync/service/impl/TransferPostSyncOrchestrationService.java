@@ -37,9 +37,15 @@ public class TransferPostSyncOrchestrationService {
             }
 
             Map<String, String> mediaUrlByKey = mapMediaUrlByKey(response);
+            Map<String, JsonNode> referencedPostById = mapReferencedPostById(response);
 
             userPosts.forEach(post -> {
-                TransferPostItemResponseDto saveTransferPost = txService.saveTransferPost(source, post, mediaUrlByKey);
+                TransferPostItemResponseDto saveTransferPost = txService.saveTransferPost(
+                        source,
+                        post,
+                        mediaUrlByKey,
+                        referencedPostById
+                );
                 posts.add(saveTransferPost);
             });
 
@@ -97,6 +103,24 @@ public class TransferPostSyncOrchestrationService {
         }
 
         return value.asString();
+    }
+
+    private Map<String, JsonNode> mapReferencedPostById(JsonNode response) {
+        Map<String, JsonNode> referencedPostById = new HashMap<>();
+        JsonNode tweets = response.path("includes").get("tweets");
+
+        if (tweets == null || !tweets.isArray()) {
+            return referencedPostById;
+        }
+
+        tweets.forEach(tweet -> {
+            String id = getString(tweet, "id");
+            if (id != null && !id.isBlank()) {
+                referencedPostById.put(id, tweet);
+            }
+        });
+
+        return referencedPostById;
     }
 
     private String extractNextToken(JsonNode response) {

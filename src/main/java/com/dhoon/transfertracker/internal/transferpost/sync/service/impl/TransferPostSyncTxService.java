@@ -13,8 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -25,14 +27,23 @@ public class TransferPostSyncTxService {
     private final TransferPostRepository transferPostRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public TransferPostItemResponseDto saveTransferPost(TransferPostSource source, JsonNode post, Map<String, String> mediaUrlByKey) {
+    public TransferPostItemResponseDto saveTransferPost(
+            TransferPostSource source,
+            JsonNode post,
+            Map<String, String> mediaUrlByKey,
+            Map<String, JsonNode> referencedPostById
+    ) {
         String content = post.get("text").asString();
         boolean transferRelated = isTransferRelated(content);
         String postId = post.get("id").asString();
         Instant createdAt = Instant.parse(post.get("created_at").asString());
-        String photoUrl = findPhotoUrl(post, mediaUrlByKey);
+        String photoUrl = findPhotoUrl(post, mediaUrlByKey, referencedPostById, new HashSet<>());
 
         TransferPost transferPost = transferPostRepository.findByExternalPostId(postId)
+                .map(existingPost -> {
+                    existingPost.updatePhotoUrlIfAbsent(photoUrl);
+                    return existingPost;
+                })
                 .orElseGet(() -> {
                     TransferPost savedPost = transferPostRepository.save(TransferPost.of(source, content, postId, createdAt, transferRelated, photoUrl));
 
@@ -81,27 +92,58 @@ public class TransferPostSyncTxService {
                 .anyMatch(targetContent::contains);
     }
 
-    private String findPhotoUrl(JsonNode post, Map<String, String> mediaUrlByKey) {
+    private String findPhotoUrl(
+            JsonNode post,
+            Map<String, String> mediaUrlByKey,
+            Map<String, JsonNode> referencedPostById,
+            Set<String> visitedPostIds
+    ) {
+        String postId = getString(post, "id");
+        if (postId != null && !visitedPostIds.add(postId)) {
+            return null;
+        }
+
         JsonNode attachments = post.get("attachments");
 
-        if (attachments == null) {
-            return null;
+        if (attachments != null) {
+            JsonNode mediaKeys = attachments.get("media_keys");
+
+            if (mediaKeys != null) {
+                for (JsonNode mediaKeyNode : mediaKeys) {
+                    String mediaUrl = mediaUrlByKey.get(mediaKeyNode.asString());
+
+                    if (mediaUrl != null && !mediaUrl.isBlank()) {
+                        return mediaUrl;
+                    }
+                }
+            }
         }
 
-        JsonNode mediaKeys = attachments.get("media_keys");
+        JsonNode referencedTweets = post.get("referenced_tweets");
+        if (referencedTweets != null && referencedTweets.isArray()) {
+            for (JsonNode reference : referencedTweets) {
+                JsonNode referencedPost = referencedPostById.get(getString(reference, "id"));
+                if (referencedPost == null) {
+                    continue;
+                }
 
-        if (mediaKeys == null) {
-            return null;
-        }
-
-        for (JsonNode mediaKeyNode : mediaKeys) {
-            String mediaUrl = mediaUrlByKey.get(mediaKeyNode.asString());
-
-            if (mediaUrl != null && !mediaUrl.isBlank()) {
-                return mediaUrl;
+                String referencedPhotoUrl = findPhotoUrl(
+                        referencedPost,
+                        mediaUrlByKey,
+                        referencedPostById,
+                        visitedPostIds
+                );
+                if (referencedPhotoUrl != null && !referencedPhotoUrl.isBlank()) {
+                    return referencedPhotoUrl;
+                }
             }
         }
 
         return null;
+    }
+
+    private String getString(JsonNode node, String fieldName) {
+        JsonNode value = node.get(fieldName);
+        return value == null || value.isNull() ? null : value.asString();
     }
 }
