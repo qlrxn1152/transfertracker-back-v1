@@ -35,6 +35,8 @@ public class TeamQueryOrchestrationService {
         return txService.getLeagueTeams(leagueCode);
     }
 
+
+
     public TeamPageInfosResponseDto getTeamInfo(Long teamId, int page) {
         validateTeamId(teamId);
 
@@ -57,7 +59,7 @@ public class TeamQueryOrchestrationService {
 
 
     private void validateTeamId(Long teamId) {
-        if (teamId == null) {
+        if (teamId == null || teamId <= 0) {
             throw new InvalidTeamIdException();
         }
     }
