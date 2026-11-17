@@ -36,43 +36,50 @@ public class Team {
 
 
     public void assignTeamLeague(LeagueCode leagueCode) {
+
+        if (leagueCode == null) {
+            throw new IllegalArgumentException("팀 리그코드의 값은 null 일 수 없습니다.");
+        }
+
         this.leagueCode = leagueCode;
     }
 
-    private Team(String teamName, Long apiFootballId) {
-        this.teamName = teamName;
-        this.apiFootballId = apiFootballId;
-    }
+    public static Team of(String teamName, Long apiFootballId) {
 
-    private Team(String teamName, Long apiFootballId, LeagueCode leagueCode) {
-        this.teamName = teamName;
-        this.apiFootballId = apiFootballId;
-        this.leagueCode = leagueCode;
+        if (apiFootballId == null || apiFootballId <= 0) {
+            throw new IllegalArgumentException("Team Api Football ID 의 값이 올바르지 않습니다. ID = " + apiFootballId);
+        }
+
+        if (teamName == null || teamName.isBlank() || teamName.strip().equalsIgnoreCase("null")) {
+            throw new IllegalArgumentException("영문 TeamName 의 값이 올바르지 않습니다. teamName = " + teamName);
+        }
+
+        return new Team(teamName, apiFootballId);
     }
 
     public void assignKoTeamName(String teamNameKo) {
+
+        if (teamNameKo == null || teamNameKo.isBlank() || teamNameKo.strip().equalsIgnoreCase("null")) {
+            throw new IllegalArgumentException("한국어 TeamName 의 값이 올바르지 않습니다. teamNameKo = " +  teamNameKo);
+        }
+
         this.teamNameKo = teamNameKo;
     }
 
 
-    public static Team of(String teamName, Long apiFootballId) {
-        return new Team(teamName, apiFootballId);
-    }
-
-    public static Team of(String teamName, Long apiFootballId,  LeagueCode leagueCode) {
-        return new Team(teamName, apiFootballId, leagueCode);
-    }
-
     public String getDisplayName() {
+        boolean hasKoreanTeamName = teamNameKo != null && !teamNameKo.isBlank();
 
-        if ( teamNameKo == null || teamNameKo.isEmpty() ) {
-            return teamName;
-        }
-
-        return teamNameKo;
-
+        return hasKoreanTeamName ? teamNameKo : teamName;
     }
 
+
+
+    // ================================================ //
+    private Team(String teamName, Long apiFootballId) {
+        this.teamName = teamName;
+        this.apiFootballId = apiFootballId;
+    }
 
 
 
