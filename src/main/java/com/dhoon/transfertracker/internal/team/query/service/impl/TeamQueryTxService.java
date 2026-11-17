@@ -33,7 +33,6 @@ public class TeamQueryTxService {
 
     private final TeamRepository teamRepository;
     private final TeamPlayerRepository teamPlayerRepository;
-    private final TransferPostRepository transferPostRepository;
     private final TransferPostTeamRepository transferPostTeamRepository;
 
     public TeamItemResponseDto getTeam(Long teamId) {

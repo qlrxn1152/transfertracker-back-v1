@@ -14,16 +14,16 @@ import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerReposi
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
+import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
@@ -48,6 +48,9 @@ public class TeamQueryTxServiceTest {
     @Mock
     private TransferPostRepository transferPostRepository;
 
+    @Mock
+    private TransferPostTeamRepository transferPostTeamRepository;
+
     @InjectMocks
     private TeamQueryTxService teamQueryTxService;
 
@@ -71,7 +74,7 @@ public class TeamQueryTxServiceTest {
     }
 
     @Test
-    @DisplayName(value = "존재하지 않는 팀 ID로 조회하면 NotFoundTeamException이 발생한다.")
+    @DisplayName(value = "존재하지 않는 팀 ID로 조회하면 예외가 발생한다.")
     void getTeam_notFound() throws Exception {
         // given
         when(teamRepository.findById(999L))
@@ -80,8 +83,10 @@ public class TeamQueryTxServiceTest {
         // when && then
         assertThatThrownBy(() -> teamQueryTxService.getTeam(999L))
                 .isInstanceOf(NotFoundTeamException.class);
+
         verify(teamRepository, times(1)).findById(999L);
     }
+
 
     @Test
     @DisplayName(value = "리그에 속한 팀들을 조회할 수 있다.")
@@ -107,6 +112,7 @@ public class TeamQueryTxServiceTest {
         assertThat(response.getTeams()).hasSize(3);
         assertThat(response.getTeams()).extracting(TeamItemResponseDto::getTeamName)
                 .containsExactlyInAnyOrder("teamA", "teamB", "teamC");
+
         verify(teamRepository, times(1)).findAllByLeagueCodeIsNotNull();
     }
 
@@ -176,25 +182,28 @@ public class TeamQueryTxServiceTest {
                 0,
                 20,
                 Sort.by(
-                        Sort.Order.desc("contentCreatedAt"),
-                        Sort.Order.desc("id")
+                        Sort.Order.desc("post.contentCreatedAt"),
+                        Sort.Order.desc("post.id")
                 )
         );
+
         Team team = Team.of("testTeam", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
-        TransferPost transferPost1 = TransferPost.of(
-                TransferPostSource.FABRIZIO_ROMANO,
-                "content-1",
-                "external-post-id-1",
-                Instant.parse("2026-01-01T12:00:00Z"),
-                false,
-                "photoUrl-1"
+        TransferPostTeam teamTransferPost = TransferPostTeam.postAssignTeam(
+                team,
+                TransferPost.of(
+                        TransferPostSource.FABRIZIO_ROMANO,
+                        "content-1",
+                        "external-post-id-1",
+                        Instant.parse("2026-01-01T12:00:00Z"),
+                        false,
+                        "photoUrl-1"
+                )
         );
 
-        Player player = Player.of("testPlayer", 999L);
-
-        TeamPlayer teamPlayer = TeamPlayer.of(team, player);
+        TeamPlayer teamPlayer = TeamPlayer.of(team, Player.of("testPlayer", 999L));
+        Page<TransferPostTeam> postPage = new PageImpl<>(List.of(teamTransferPost));
 
 
         given(teamRepository.findById(1L))
@@ -203,6 +212,8 @@ public class TeamQueryTxServiceTest {
                 .willReturn(1L);
         given(teamPlayerRepository.findAllByTeamIdWithLazyEntity(1L))
                 .willReturn(List.of(teamPlayer));
+        given(transferPostTeamRepository.findAllByTeamId(1L, pageable))
+                .willReturn(postPage);
 
         // when
         TeamPageInfosResponseDto response = teamQueryTxService.getTeamInfo(1L, pageable);
@@ -211,6 +222,7 @@ public class TeamQueryTxServiceTest {
         verify(teamRepository, times(1)).findById(1L);
         verify(teamPlayerRepository, times(1)).countByTeamId(1L);
         verify(teamPlayerRepository, times(1)).findAllByTeamIdWithLazyEntity(1L);
+        verify(transferPostTeamRepository, times(1)).findAllByTeamId(1L, pageable);
 
         assertThat(response.getTeams().getTeamId()).isEqualTo(1L);
         assertThat(response.getTeams().getTeamName()).isEqualTo("testTeam");
@@ -236,7 +248,7 @@ public class TeamQueryTxServiceTest {
 
         verify(teamRepository, times(1)).findById(1L);
         verifyNoInteractions(teamPlayerRepository);
-        verifyNoInteractions(transferPostRepository);
+        verifyNoInteractions(transferPostTeamRepository);
     }
 
 
