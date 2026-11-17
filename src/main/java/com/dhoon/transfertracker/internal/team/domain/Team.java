@@ -35,17 +35,7 @@ public class Team {
 
 
 
-    public void assignTeamLeague(LeagueCode leagueCode) {
-
-        if (leagueCode == null) {
-            throw new IllegalArgumentException("팀 리그코드의 값은 null 일 수 없습니다.");
-        }
-
-        this.leagueCode = leagueCode;
-    }
-
     public static Team of(String teamName, Long apiFootballId) {
-
         if (apiFootballId == null || apiFootballId <= 0) {
             throw new IllegalArgumentException("Team Api Football ID 의 값이 올바르지 않습니다. ID = " + apiFootballId);
         }
@@ -54,16 +44,26 @@ public class Team {
             throw new IllegalArgumentException("영문 TeamName 의 값이 올바르지 않습니다. teamName = " + teamName);
         }
 
-        return new Team(teamName, apiFootballId);
+        return new Team(
+                getStrippedTeamName(teamName),
+                apiFootballId
+        );
     }
 
     public void assignKoTeamName(String teamNameKo) {
-
         if (teamNameKo == null || teamNameKo.isBlank() || teamNameKo.strip().equalsIgnoreCase("null")) {
             throw new IllegalArgumentException("한국어 TeamName 의 값이 올바르지 않습니다. teamNameKo = " +  teamNameKo);
         }
 
-        this.teamNameKo = teamNameKo;
+        this.teamNameKo = getStrippedTeamName(teamNameKo);
+    }
+
+    public void assignTeamLeague(LeagueCode leagueCode) {
+        if (leagueCode == null) {
+            throw new IllegalArgumentException("팀 리그코드의 값은 null 일 수 없습니다.");
+        }
+
+        this.leagueCode = leagueCode;
     }
 
 
@@ -79,6 +79,10 @@ public class Team {
     private Team(String teamName, Long apiFootballId) {
         this.teamName = teamName;
         this.apiFootballId = apiFootballId;
+    }
+
+    private static String getStrippedTeamName(String teamName) {
+        return teamName.strip();
     }
 
 

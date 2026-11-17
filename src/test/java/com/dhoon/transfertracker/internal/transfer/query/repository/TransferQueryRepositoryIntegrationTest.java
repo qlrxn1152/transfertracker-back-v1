@@ -362,21 +362,26 @@ class TransferQueryRepositoryIntegrationTest {
 
         // EPL
         Team manCity = teamRepository.save(
-                Team.of("Manchester City", 33L, LeagueCode.EPL)
+                Team.of("Manchester City", 33L)
         );
 
+        manCity.assignTeamLeague(LeagueCode.EPL);
+
         Team arsenal = teamRepository.save(
-                Team.of("Arsenal", 44L, LeagueCode.EPL)
+                Team.of("Arsenal", 44L)
         );
+        arsenal.assignTeamLeague(LeagueCode.EPL);
 
         // LA_LIGA
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 55L, LeagueCode.LA_LIGA)
+                Team.of("Barcelona", 55L)
         );
+        barcelona.assignTeamLeague(LeagueCode.LA_LIGA);
 
         Team realMadrid = teamRepository.save(
-                Team.of("Real Madrid", 66L, LeagueCode.LA_LIGA)
+                Team.of("Real Madrid", 66L)
         );
+        realMadrid.assignTeamLeague(LeagueCode.LA_LIGA);
 
         // A: 입단팀이 EPL
         Transfer transferA = transferRepository.save(
