@@ -1,5 +1,7 @@
 package com.dhoon.transfertracker.internal.transferpost.command.service.impl;
 
+import com.dhoon.transfertracker.internal.player.domain.Player;
+import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPostResult;
@@ -8,8 +10,10 @@ import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPos
 import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPostsTarget;
 import com.dhoon.transfertracker.internal.transferpost.command.event.TransferPostTeamAssignedEvent;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostPlayer;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
 import com.dhoon.transfertracker.internal.transferpost.exception.NotFoundTransferPostException;
+import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostPlayerRepository;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +34,8 @@ public class TransferPostCommandTxService {
     private final TransferPostRepository transferPostRepository;
     private final TeamRepository teamRepository;
     private final TransferPostTeamRepository transferPostTeamRepository;
+    private final PlayerRepository playerRepository;
+    private final TransferPostPlayerRepository transferPostPlayerRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -44,7 +50,7 @@ public class TransferPostCommandTxService {
     }
 
 
-    public String postAssignTeam(TeamAssignPostsResult posts) {
+    public String postAssignTeamAndPlayer(TeamAssignPostsResult posts) {
 
         List<TeamAssignPostResult> results = posts.posts();
 
@@ -56,6 +62,7 @@ public class TransferPostCommandTxService {
                     .orElseThrow(NotFoundTransferPostException::new);
 
             List<String> assignedTeamNames = result.teamNames();
+            List<String> assignedPlayerNames = result.playerNames();
 
             assignedTeamNames.forEach(teamName -> {
 
@@ -72,7 +79,7 @@ public class TransferPostCommandTxService {
 
                 Team team = optTeam.get();
 
-                TransferPostTeam transferPostTeam = transferPostTeamRepository.findByTeamIdAndPostId(team.getId(), postId)
+                transferPostTeamRepository.findByTeamIdAndPostId(team.getId(), postId)
                         .orElseGet(() -> {
                             TransferPostTeam saved = transferPostTeamRepository.save(TransferPostTeam.postAssignTeam(team, post));
                             eventPublisher.publishEvent(
@@ -84,6 +91,24 @@ public class TransferPostCommandTxService {
 
                             return saved;
                         });
+            });
+
+            assignedPlayerNames.forEach(playerName -> {
+                Optional<Player> optPlayer = playerRepository.findByPlayerName(playerName);
+
+                if (optPlayer.isEmpty()) {
+                    log.warn(
+                            "해당 이름을 가진 플레이어가 존재하지 않습니다. postId={}, playerName={}",
+                            postId,
+                            playerName
+                    );
+                    return;
+                }
+
+                Player player = optPlayer.get();
+
+                transferPostPlayerRepository.findByPlayerIdAndTransferPostId(player.getId(), postId)
+                        .orElseGet(() -> transferPostPlayerRepository.save(TransferPostPlayer.postAssignPlayer(player, post)));
             });
 
         }

@@ -31,6 +31,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
             """)
     List<Player> findPlayerNameTranslationTargets(Pageable pageable);
 
+    Optional<Player> findByPlayerName(String playerName);
+
 
 
 

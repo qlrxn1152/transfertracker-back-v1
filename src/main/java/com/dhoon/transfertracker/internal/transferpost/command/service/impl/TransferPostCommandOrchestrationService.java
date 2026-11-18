@@ -18,9 +18,9 @@ public class TransferPostCommandOrchestrationService {
     public String postAssignTeam() {
         TeamAssignPostsTarget targetPosts = txService.findTargetTeams();
 
-        TeamAssignPostsResult result = openAiClient.classifyTeams(targetPosts);
+        TeamAssignPostsResult result = openAiClient.classifyTeamsAndPlayers(targetPosts);
 
-        return txService.postAssignTeam(result);
+        return txService.postAssignTeamAndPlayer(result);
     }
 
 

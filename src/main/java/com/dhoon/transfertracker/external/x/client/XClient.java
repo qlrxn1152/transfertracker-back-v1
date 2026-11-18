@@ -63,6 +63,29 @@ public class XClient {
                 .body(JsonNode.class);
     }
 
+    // ====================================
+
+    public JsonNode callExternalApiRefa(TransferPostSource source) {
+        String userId = source.getXUserId();
+        return getUserPostsRefa(userId, 100);
+    }
+
+    private JsonNode getUserPostsRefa(String userId, int size) {
+        return xRestClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder
+                            .path("/2/users/{id}/tweets")
+                            .queryParam("max_results", size)
+                            .queryParam("tweet.fields", "created_at,attachments,referenced_tweets")
+                            .queryParam("expansions", "attachments.media_keys,referenced_tweets.id,referenced_tweets.id.attachments.media_keys")
+                            .queryParam("media.fields",
+                                    "media_key,type,url,preview_image_url,width,height");
+                    return uriBuilder.build(userId);
+                })
+                .retrieve()
+                .body(JsonNode.class);
+    }
+
 
 
 
