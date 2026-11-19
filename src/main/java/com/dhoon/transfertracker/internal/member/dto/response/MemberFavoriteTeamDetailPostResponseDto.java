@@ -47,8 +47,8 @@ public class MemberFavoriteTeamDetailPostResponseDto {
                 postTeam.getTeam().getDisplayName(),
                 "https://media.api-sports.io/football/teams/" + postTeam.getTeam().getApiFootballId() + ".png",
                 postTeam.getPost().getId(),
-                postTeam.getPost().getDisplayContent(),
-                postTeam.getPost().getPhotoUrl(),
+                postTeam.getPost().getContent(),
+                null,
                 postTeam.getPost().getContentCreatedAt(),
                 TransferPostSource.valueOf(postTeam.getPost().getJournalist().name())
         );

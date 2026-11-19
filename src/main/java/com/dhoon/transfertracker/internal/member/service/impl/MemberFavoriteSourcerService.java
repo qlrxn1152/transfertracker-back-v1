@@ -89,7 +89,7 @@ public class MemberFavoriteSourcerService {
         PageRequest pageable = PageRequest.of(
                 page,
                 20,
-                Sort.by(Sort.Order.desc("translatedContent"), Sort.Order.desc("id"))
+                Sort.by(Sort.Order.desc("contentCreatedAt"), Sort.Order.desc("id"))
         );
 
 
@@ -117,7 +117,7 @@ public class MemberFavoriteSourcerService {
         PageRequest pageable = PageRequest.of(
                 page,
                 20,
-                Sort.by(Sort.Order.desc("translatedContent"), Sort.Order.desc("id"))
+                Sort.by(Sort.Order.desc("contentCreatedAt"), Sort.Order.desc("id"))
         );
 
         List<PostsResponseDto> allJournalistsPosts = new ArrayList<>();

@@ -21,8 +21,6 @@ public class PostItemResponseDto {
     private PostJournalist source;
     private Instant postCreatedAt;
     private boolean isRelateTransfer;
-    private String translatedContent;
-    private String photoUrl;
     private Long teamId;
     private String teamName;
 
@@ -34,8 +32,6 @@ public class PostItemResponseDto {
                 post.getJournalist(),
                 post.getContentCreatedAt(),
                 post.isTransferRelated(),
-                post.getTranslatedContent(),
-                post.getPhotoUrl(),
                 null,
                 null
         );
@@ -50,8 +46,6 @@ public class PostItemResponseDto {
                 post.getJournalist(),
                 post.getContentCreatedAt(),
                 post.isTransferRelated(),
-                post.getTranslatedContent(),
-                post.getPhotoUrl(),
                 postTeam.getTeam().getId(),
                 postTeam.getTeam().getDisplayName()
         );

@@ -224,9 +224,9 @@ public class MemberFavoriteTeamServiceTest {
 
 
         // 게시물 설정
-        Post postMock1 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-1", "post-1", java.time.Instant.now(), true, null);
-        Post postMock2 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-2", "post-2", java.time.Instant.now(), true, null);
-        Post postMock3 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-3", "post-3", java.time.Instant.now(), true, null);
+        Post postMock1 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-1", "post-1", java.time.Instant.now(), true);
+        Post postMock2 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-2", "post-2", java.time.Instant.now(), true);
+        Post postMock3 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-3", "post-3", java.time.Instant.now(), true);
 
         PostTeam tpt1 = PostTeam.postAssignTeam(t1, postMock1);
         PostTeam tpt2 = PostTeam.postAssignTeam(t1, postMock2);

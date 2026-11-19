@@ -33,9 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -61,13 +59,10 @@ public class PostSaveService {
         if (userPosts == null || !userPosts.isArray()) {
             throw new IllegalStateException("기자 게시물 응답에 data가 없습니다.");
         }
-        Map<String, String> mediaUrlByKey = mapMediaUrlByKey(response);
-        Map<String, JsonNode> referencedPostById = mapReferencedPostById(response);
-
         List<PostGenerationTarget> generationTargets = new ArrayList<>();
         List<TeamAssignPostTarget> assignPostTargets = new ArrayList<>();
         List<TranslationTarget> translationTargets = new ArrayList<>();
-        Map<String, JsonNode> rawPostByExternalId = new HashMap<>();
+        java.util.Map<String, JsonNode> rawPostByExternalId = new java.util.HashMap<>();
 
         userPosts.forEach(post -> {
             String externalPostId = post.get("id").asString();
@@ -96,12 +91,6 @@ public class PostSaveService {
                 return;
             }
             String createdAt = rawPost.get("created_at").asString();
-            String photoUrl = findPhotoUrl(rawPost, mediaUrlByKey, referencedPostById);
-
-
-
-
-
             Boolean transferRelated = generatedPost.transferRelated();
 
             Post savedPost = postRepository.findByExternalPostId(externalPostId)
@@ -111,8 +100,7 @@ public class PostSaveService {
                                 generationContent,
                                 externalPostId,
                                 java.time.Instant.parse(createdAt),
-                                Boolean.TRUE.equals(transferRelated),
-                                photoUrl
+                                Boolean.TRUE.equals(transferRelated)
                         ));
                         eventPublisher.publishEvent(new PostCreatedEvent(createdPost.getId(), journalist));
                         return createdPost;
@@ -173,76 +161,5 @@ public class PostSaveService {
     }
 
     // ========================================================== //
-
-    private Map<String, String> mapMediaUrlByKey(JsonNode response) {
-        Map<String, String> mediaUrlByKey = new HashMap<>();
-        JsonNode includes = response.get("includes");
-        if (includes == null || includes.get("media") == null) {
-            return mediaUrlByKey;
-        }
-
-        includes.get("media").forEach(media -> {
-            String mediaKey = getString(media, "media_key");
-            String type = getString(media, "type");
-            String mediaUrl = "photo".equals(type)
-                    ? getString(media, "url")
-                    : getString(media, "preview_image_url");
-            if (mediaKey != null && mediaUrl != null && !mediaUrl.isBlank()) {
-                mediaUrlByKey.put(mediaKey, mediaUrl);
-            }
-        });
-        return mediaUrlByKey;
-    }
-
-    private Map<String, JsonNode> mapReferencedPostById(JsonNode response) {
-        Map<String, JsonNode> posts = new HashMap<>();
-        JsonNode includes = response.get("includes");
-        if (includes == null || includes.get("tweets") == null) {
-            return posts;
-        }
-
-        includes.get("tweets").forEach(post -> {
-            String id = getString(post, "id");
-            if (id != null) {
-                posts.put(id, post);
-            }
-        });
-        return posts;
-    }
-
-    private String findPhotoUrl(
-            JsonNode post,
-            Map<String, String> mediaUrlByKey,
-            Map<String, JsonNode> referencedPostById
-    ) {
-        JsonNode attachments = post.get("attachments");
-        if (attachments != null && attachments.get("media_keys") != null) {
-            for (JsonNode mediaKey : attachments.get("media_keys")) {
-                String mediaUrl = mediaUrlByKey.get(mediaKey.asString());
-                if (mediaUrl != null && !mediaUrl.isBlank()) {
-                    return mediaUrl;
-                }
-            }
-        }
-
-        JsonNode references = post.get("referenced_tweets");
-        if (references != null) {
-            for (JsonNode reference : references) {
-                JsonNode referencedPost = referencedPostById.get(getString(reference, "id"));
-                if (referencedPost != null) {
-                    String mediaUrl = findPhotoUrl(referencedPost, mediaUrlByKey, Map.of());
-                    if (mediaUrl != null) {
-                        return mediaUrl;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    private String getString(JsonNode node, String fieldName) {
-        JsonNode value = node.get(fieldName);
-        return value == null || value.isNull() ? null : value.asString();
-    }
 
 }

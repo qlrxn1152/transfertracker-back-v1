@@ -41,38 +41,18 @@ public class Post {
     @Column(name = "is_transfer_related", nullable = false)
     private boolean transferRelated;
 
-    @Column(name = "photo_url", length = 1000)
-    private String photoUrl;
-
-    @Column(name = "translated_content", columnDefinition = "TEXT")
-    private String translatedContent;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "translate_status", nullable = false)
-    private PostTranslateStatus translateStatus;
-
-    @Column(name = "translated_at")
-    private Instant translatedAt;
-
     public static Post createPost(
             PostJournalist journalist,
             String content,
             String externalPostId,
             Instant contentCreatedAt,
-            boolean transferRelated,
-            String photoUrl
+            boolean transferRelated
     ) {
-        return new Post(journalist, content, externalPostId, contentCreatedAt, transferRelated, photoUrl);
+        return new Post(journalist, content, externalPostId, contentCreatedAt, transferRelated);
     }
 
-    public void translate(String translatedContent) {
-        this.translatedContent = translatedContent;
-        this.translateStatus = PostTranslateStatus.COMPLETED;
-        this.translatedAt = Instant.now();
-    }
-
-    public String getDisplayContent() {
-        return translatedContent == null || translatedContent.isBlank() ? content : translatedContent;
+    public void translate(String content) {
+        this.content = content;
     }
 
 
@@ -84,15 +64,12 @@ public class Post {
             String content,
             String externalPostId,
             Instant contentCreatedAt,
-            boolean transferRelated,
-            String photoUrl
+            boolean transferRelated
     ) {
         this.journalist = journalist;
         this.content = content;
         this.externalPostId = externalPostId;
         this.contentCreatedAt = contentCreatedAt;
         this.transferRelated = transferRelated;
-        this.photoUrl = photoUrl;
-        this.translateStatus = PostTranslateStatus.PENDING;
     }
 }

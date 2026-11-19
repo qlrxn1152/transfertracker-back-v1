@@ -2,7 +2,6 @@ package com.dhoon.transfertracker.internal.post.repository;
 
 import com.dhoon.transfertracker.internal.post.domain.Post;
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
-import com.dhoon.transfertracker.internal.post.domain.PostTranslateStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +16,4 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findAllByJournalist(PostJournalist journalist, Pageable pageable);
 
     List<Post> findAllByExternalPostIdStartingWith(String externalPostIdPrefix);
-
-    List<Post> findTop20ByTranslateStatusOrderByContentCreatedAtDescIdDesc(PostTranslateStatus translateStatus);
 }

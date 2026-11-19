@@ -244,8 +244,7 @@ public class TeamQueryOrchestrationServiceTest {
                         "Romano transfer news 1",
                         "post-100",
                         now.minusSeconds(3600),
-                        true,
-                        null
+                        true
                 ));
 
         PostTeam tpt2 = PostTeam.postAssignTeam(
@@ -255,8 +254,7 @@ public class TeamQueryOrchestrationServiceTest {
                         "Romano transfer news 2",
                         "post-101",
                         now,
-                        false,
-                        null
+                        false
                 ));
 
         TeamPageInfosResponseDto expect = TeamPageInfosResponseDto.of(
