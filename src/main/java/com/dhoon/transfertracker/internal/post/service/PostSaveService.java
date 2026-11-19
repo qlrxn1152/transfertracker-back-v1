@@ -151,10 +151,10 @@ public class PostSaveService {
         // 포스트 영문내용 한국어로 번역
         for (TranslationResult translationResult : translatedResults.getPosts()) {
             Long postId = translationResult.getPostId();
-            String translatedContent = translationResult.getTranslatedContent();
+            String translatedText = translationResult.getTranslatedContent();
 
             postRepository.findById(postId)
-                    .ifPresent(post -> post.translate(translatedContent));
+                    .ifPresent(post -> post.translate(translatedText));
         }
 
         return "성공";
