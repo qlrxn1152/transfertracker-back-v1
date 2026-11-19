@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.transferpost.command.dto;
+package com.dhoon.transfertracker.internal.post.record;
 
 public record TeamAssignPostTarget (
         Long postId,

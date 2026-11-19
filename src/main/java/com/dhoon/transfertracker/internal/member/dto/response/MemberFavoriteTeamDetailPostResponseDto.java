@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,7 +22,7 @@ public class MemberFavoriteTeamDetailPostResponseDto {
     private Long postId;
     private String postContent;
     private String postPhotoUrl;
-    private Instant postCreatedAt;
+    private LocalDateTime contentCreatedAt;
 
     private TransferPostSource sourcer;
 

@@ -10,8 +10,6 @@ import com.dhoon.transfertracker.internal.post.domain.Post;
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.domain.PostPlayer;
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
-import com.dhoon.transfertracker.internal.post.event.PostCreatedEvent;
-import com.dhoon.transfertracker.internal.post.event.PostTeamAssignedEvent;
 import com.dhoon.transfertracker.internal.post.exception.NotFoundPostException;
 import com.dhoon.transfertracker.internal.post.record.PostGenerationBatchResult;
 import com.dhoon.transfertracker.internal.post.record.PostGenerationBatchTarget;
@@ -21,13 +19,12 @@ import com.dhoon.transfertracker.internal.post.repository.PostPlayerRepository;
 import com.dhoon.transfertracker.internal.post.repository.PostRepository;
 import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPostResult;
-import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPostTarget;
-import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPostsResult;
-import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPostsTarget;
+import com.dhoon.transfertracker.internal.post.record.TeamAssignPostResult;
+import com.dhoon.transfertracker.internal.post.record.TeamAssignPostTarget;
+import com.dhoon.transfertracker.internal.post.record.TeamAssignPostsResult;
+import com.dhoon.transfertracker.internal.post.record.TeamAssignPostsTarget;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
@@ -50,30 +47,24 @@ public class PostSaveService {
     private final PostRepository postRepository;
     private final PostTeamRepository postTeamRepository;
     private final PostPlayerRepository postPlayerRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
-    public String syncPosts(PostJournalist journalist) {
+    public String syncPosts(PostJournalist journalist, Long memberId) {
 
         JsonNode response = xClient.callExternalApiRefa2(journalist);
         JsonNode userPosts = response.get("data");
-        if (userPosts == null || !userPosts.isArray()) {
-            throw new IllegalStateException("기자 게시물 응답에 data가 없습니다.");
-        }
+
         List<PostGenerationTarget> generationTargets = new ArrayList<>();
         List<TeamAssignPostTarget> assignPostTargets = new ArrayList<>();
         List<TranslationTarget> translationTargets = new ArrayList<>();
-        java.util.Map<String, JsonNode> rawPostByExternalId = new java.util.HashMap<>();
 
         userPosts.forEach(post -> {
             String externalPostId = post.get("id").asString();
             String content = post.get("text").asString();
-            rawPostByExternalId.put(externalPostId, post);
 
             PostGenerationTarget target = new PostGenerationTarget(externalPostId, journalist.getDisplayerName(), content);
 
             generationTargets.add(target);
         });
-
 
         PostGenerationBatchTarget generationBatchTarget = new PostGenerationBatchTarget(generationTargets);
         PostGenerationBatchResult postGenerationBatchResult = openAiClient.generatePosts(generationBatchTarget);
@@ -81,30 +72,19 @@ public class PostSaveService {
         List<PostGenerationResult> generatedPosts = postGenerationBatchResult.posts();
 
         generatedPosts.forEach(generatedPost -> {
-            log.info("Post generation result: {}", generatedPost);
 
             String externalPostId = generatedPost.externalPostId();
             String generationContent = generatedPost.generationContent();
-            JsonNode rawPost = rawPostByExternalId.get(externalPostId);
-            if (rawPost == null) {
-                log.warn("원본 게시물을 찾을 수 없어 저장을 건너뜁니다. externalPostId={}", externalPostId);
-                return;
-            }
-            String createdAt = rawPost.get("created_at").asString();
             Boolean transferRelated = generatedPost.transferRelated();
 
             Post savedPost = postRepository.findByExternalPostId(externalPostId)
-                    .orElseGet(() -> {
-                        Post createdPost = postRepository.save(Post.createPost(
+                    .orElseGet(() -> postRepository.save(Post.createPost(
                                 journalist,
                                 generationContent,
                                 externalPostId,
-                                java.time.Instant.parse(createdAt),
-                                Boolean.TRUE.equals(transferRelated)
-                        ));
-                        eventPublisher.publishEvent(new PostCreatedEvent(createdPost.getId(), journalist));
-                        return createdPost;
-                    });
+                                transferRelated
+                        ))
+                    );
 
             TeamAssignPostTarget assignPostTarget = new TeamAssignPostTarget(savedPost.getId(), savedPost.getContent()); // id -> PK값.
             assignPostTargets.add(assignPostTarget);
@@ -127,11 +107,7 @@ public class PostSaveService {
                             teamRepository.findByTeamName(teamName)
                                     .ifPresent(
                                             team -> postTeamRepository.findByTeamIdAndPostId(team.getId(), post.getId())
-                                                    .orElseGet(() -> {
-                                                        PostTeam postTeam = postTeamRepository.save(PostTeam.postAssignTeam(team, post));
-                                                        eventPublisher.publishEvent(new PostTeamAssignedEvent(post.getId(), team.getId()));
-                                                        return postTeam;
-                                                    }))
+                                                    .orElseGet(() -> postTeamRepository.save(PostTeam.postAssignTeam(team, post))))
                     );
 
             assignResult.playerNames()

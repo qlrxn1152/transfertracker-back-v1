@@ -243,7 +243,6 @@ public class TeamQueryOrchestrationServiceTest {
                         PostJournalist.FABRIZIO_ROMANO,
                         "Romano transfer news 1",
                         "post-100",
-                        now.minusSeconds(3600),
                         true
                 ));
 
@@ -253,7 +252,6 @@ public class TeamQueryOrchestrationServiceTest {
                         PostJournalist.FABRIZIO_ROMANO,
                         "Romano transfer news 2",
                         "post-101",
-                        now,
                         false
                 ));
 

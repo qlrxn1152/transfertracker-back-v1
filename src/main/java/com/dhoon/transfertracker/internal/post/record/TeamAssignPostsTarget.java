@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.transferpost.command.dto;
+package com.dhoon.transfertracker.internal.post.record;
 
 import java.util.List;
 

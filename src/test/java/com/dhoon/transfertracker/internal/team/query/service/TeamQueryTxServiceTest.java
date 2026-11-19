@@ -192,7 +192,6 @@ public class TeamQueryTxServiceTest {
                         PostJournalist.FABRIZIO_ROMANO,
                         "content-1",
                         "external-post-id-1",
-                        Instant.parse("2026-01-01T12:00:00Z"),
                         false
                 )
         );

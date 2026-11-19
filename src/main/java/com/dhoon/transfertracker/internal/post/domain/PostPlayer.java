@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -35,7 +36,7 @@ public class PostPlayer {
     private Post post;
 
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
 
 
@@ -48,6 +49,6 @@ public class PostPlayer {
     private PostPlayer(Player player, Post post) {
         this.player = player;
         this.post = post;
-        this.createdAt = Instant.now();
+        this.createdAt = LocalDateTime.now();
     }
 }

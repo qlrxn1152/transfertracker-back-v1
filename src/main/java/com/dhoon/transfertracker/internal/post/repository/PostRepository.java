@@ -14,6 +14,4 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Optional<Post> findByExternalPostId(String externalPostId);
 
     Page<Post> findAllByJournalist(PostJournalist journalist, Pageable pageable);
-
-    List<Post> findAllByExternalPostIdStartingWith(String externalPostIdPrefix);
 }

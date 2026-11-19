@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -36,19 +37,13 @@ public class Post {
     private String externalPostId;
 
     @Column(name = "content_created_at", nullable = false)
-    private Instant contentCreatedAt;
+    private LocalDateTime contentCreatedAt;
 
     @Column(name = "is_transfer_related", nullable = false)
     private boolean transferRelated;
 
-    public static Post createPost(
-            PostJournalist journalist,
-            String content,
-            String externalPostId,
-            Instant contentCreatedAt,
-            boolean transferRelated
-    ) {
-        return new Post(journalist, content, externalPostId, contentCreatedAt, transferRelated);
+    public static Post createPost(PostJournalist journalist, String content, String externalPostId, boolean transferRelated) {
+        return new Post(journalist, content, externalPostId, transferRelated);
     }
 
     public void translate(String content) {
@@ -63,13 +58,13 @@ public class Post {
             PostJournalist journalist,
             String content,
             String externalPostId,
-            Instant contentCreatedAt,
             boolean transferRelated
     ) {
         this.journalist = journalist;
         this.content = content;
         this.externalPostId = externalPostId;
-        this.contentCreatedAt = contentCreatedAt;
         this.transferRelated = transferRelated;
+        this.contentCreatedAt = LocalDateTime.now();
     }
+
 }

@@ -6,8 +6,8 @@ import com.dhoon.transfertracker.external.openai.dto.response.PlayerNameTranslat
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
 import com.dhoon.transfertracker.internal.post.record.PostGenerationBatchResult;
 import com.dhoon.transfertracker.internal.post.record.PostGenerationBatchTarget;
-import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPostsResult;
-import com.dhoon.transfertracker.internal.transferpost.command.dto.TeamAssignPostsTarget;
+import com.dhoon.transfertracker.internal.post.record.TeamAssignPostsResult;
+import com.dhoon.transfertracker.internal.post.record.TeamAssignPostsTarget;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
