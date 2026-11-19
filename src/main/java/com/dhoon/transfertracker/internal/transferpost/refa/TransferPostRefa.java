@@ -54,12 +54,25 @@ public class TransferPostRefa {
         List<TeamAssignPostTarget> assignPostTargets = new ArrayList<>();
         List<TranslationTarget> translationTargets = new ArrayList<>();
 
-
         // 해당 게시물들 먼저 새로 저장.
         userPosts.forEach(post -> {
 
             String content = post.get("text").asString();
             String externalPostId = post.get("id").asString();
+
+            // content, externalPostId -> Open AI 에 전달. ==> content 를 프로젝트에 맞게 번역.
+
+            // 새롭게 만들어진 content, 기자이름, 날짜, 이적관련
+
+            // 내용 새롭게만듦 -> 팀 & 플레이어 할당 -> 내용번역
+
+            // 팀 & 플레이어 할당은, 새롭게 만들어진걸로 ? 아니면, 기존 원문 ?
+
+            // transferPost -> post 원문필요할까?
+
+
+
+
             Instant createdAt = Instant.parse(post.get("created_at").asString());
             boolean transferRelated = isTransferRelated(content);
             String photoUrl = findPhotoUrl(post, mediaUrlByKey, referencedPostById, new HashSet<>());
@@ -74,7 +87,7 @@ public class TransferPostRefa {
                             photoUrl
                     )));
 
-            TeamAssignPostTarget assignPostTarget = new TeamAssignPostTarget(savedTransferPost.getId(), content);
+            TeamAssignPostTarget assignPostTarget = new TeamAssignPostTarget(savedTransferPost.getId(), content); // id -> PK값.-
 
             assignPostTargets.add(assignPostTarget);
             translationTargets.add(new TranslationTarget(savedTransferPost.getId(), content));
@@ -121,6 +134,14 @@ public class TransferPostRefa {
 
         return "성공";
     }
+
+
+
+
+
+
+
+
 
 
     // ========================================================== //

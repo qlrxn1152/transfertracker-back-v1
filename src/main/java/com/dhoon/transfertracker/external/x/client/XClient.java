@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.external.x.client;
 
 
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
@@ -84,6 +85,11 @@ public class XClient {
                 })
                 .retrieve()
                 .body(JsonNode.class);
+    }
+
+    public JsonNode callExternalApiRefa2(PostJournalist journalist) {
+        String userId = journalist.getXUserId();
+        return getUserPostsRefa(userId, 100);
     }
 
 

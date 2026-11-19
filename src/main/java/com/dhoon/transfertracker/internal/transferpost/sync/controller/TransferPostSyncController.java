@@ -1,5 +1,7 @@
 package com.dhoon.transfertracker.internal.transferpost.sync.controller;
 
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.internal.post.service.PostSaveService;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
 import com.dhoon.transfertracker.internal.transferpost.refa.TransferPostRefa;
@@ -22,9 +24,11 @@ public class TransferPostSyncController {
 
     private final TransferPostRefa transferPostRefa;
 
-    @PostMapping("/external/api/posts/{source}")
-    public ResponseEntity<String> syncPosts(@PathVariable TransferPostSource source) {
-        String response = transferPostRefa.syncTransferPost(source);
+    private final PostSaveService postSaveService;
+
+    @PostMapping("/external/api/posts/{journalist}")
+    public ResponseEntity<String> syncPosts(@PathVariable PostJournalist journalist) {
+        String response = postSaveService.syncTransferPost(journalist);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
