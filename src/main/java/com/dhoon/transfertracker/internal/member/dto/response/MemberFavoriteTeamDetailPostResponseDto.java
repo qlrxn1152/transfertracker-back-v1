@@ -1,8 +1,7 @@
 package com.dhoon.transfertracker.internal.member.dto.response;
 
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
+import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,21 +24,6 @@ public class MemberFavoriteTeamDetailPostResponseDto {
     private Instant postCreatedAt;
 
     private TransferPostSource sourcer;
-
-    public static MemberFavoriteTeamDetailPostResponseDto of(TransferPostTeam transferPostTeam) {
-        return new MemberFavoriteTeamDetailPostResponseDto(
-                transferPostTeam.getTeam().getId(),
-                transferPostTeam.getTeam().getDisplayName(),
-                "https://media.api-sports.io/football/teams/" + transferPostTeam.getTeam().getApiFootballId() + ".png",
-
-                transferPostTeam.getPost().getId(),
-                transferPostTeam.getPost().getDisplayContent(),
-                transferPostTeam.getPost().getPhotoUrl(),
-                transferPostTeam.getPost().getContentCreatedAt(),
-
-                transferPostTeam.getPost().getSourcer()
-        );
-    }
 
     public static MemberFavoriteTeamDetailPostResponseDto of(PostTeam postTeam) {
         return new MemberFavoriteTeamDetailPostResponseDto(
