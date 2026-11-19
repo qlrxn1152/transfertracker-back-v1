@@ -6,7 +6,7 @@ import com.dhoon.transfertracker.internal.member.dto.response.MemberFollowJourna
 import com.dhoon.transfertracker.internal.member.dto.response.MemberFollowJournalistsResponseDto;
 import com.dhoon.transfertracker.internal.member.service.impl.MemberFavoriteSourcerService;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsPageResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,10 +51,10 @@ public class MemberFavoriteSourcerController {
     }
 
     @GetMapping("/api/journalists/{journalist}/posts")
-    public ResponseEntity<TransferPostsPageResponseDto> getJournalistPosts(@AuthenticationPrincipal Jwt jwt, @PathVariable TransferPostSource journalist, @RequestParam(defaultValue = "0") int page) {
+    public ResponseEntity<PostsResponseDto> getJournalistPosts(@AuthenticationPrincipal Jwt jwt, @PathVariable TransferPostSource journalist, @RequestParam(defaultValue = "0") int page) {
         Long memberId = Long.valueOf(jwt.getSubject());
 
-        TransferPostsPageResponseDto response = memberFavoriteSourcerService.getJournalistPosts(memberId, journalist, page);
+        PostsResponseDto response = memberFavoriteSourcerService.getJournalistPosts(memberId, journalist, page);
 
         return ResponseEntity.ok().body(response);
     }

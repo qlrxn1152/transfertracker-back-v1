@@ -1,12 +1,11 @@
 package com.dhoon.transfertracker.internal.post.domain;
 
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Getter
@@ -37,30 +36,63 @@ public class Post {
     private String externalPostId;
 
     @Column(name = "content_created_at", nullable = false)
-    private LocalDateTime contentCreatedAt;
+    private Instant contentCreatedAt;
 
     @Column(name = "is_transfer_related", nullable = false)
     private boolean transferRelated;
 
-    public static Post createPost(PostJournalist journalist, String content, String externalPostId, boolean transferRelated) {
-        return new Post(journalist, content, externalPostId, transferRelated);
+    @Column(name = "photo_url", length = 1000)
+    private String photoUrl;
+
+    @Column(name = "translated_content", columnDefinition = "TEXT")
+    private String translatedContent;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "translate_status", nullable = false)
+    private PostTranslateStatus translateStatus;
+
+    @Column(name = "translated_at")
+    private Instant translatedAt;
+
+    public static Post createPost(
+            PostJournalist journalist,
+            String content,
+            String externalPostId,
+            Instant contentCreatedAt,
+            boolean transferRelated,
+            String photoUrl
+    ) {
+        return new Post(journalist, content, externalPostId, contentCreatedAt, transferRelated, photoUrl);
     }
 
     public void translate(String translatedContent) {
-        this.content = translatedContent;
+        this.translatedContent = translatedContent;
+        this.translateStatus = PostTranslateStatus.COMPLETED;
+        this.translatedAt = Instant.now();
+    }
+
+    public String getDisplayContent() {
+        return translatedContent == null || translatedContent.isBlank() ? content : translatedContent;
     }
 
 
 
 
 
-
-    private Post(PostJournalist journalist, String content, String externalPostId, boolean transferRelated) {
+    private Post(
+            PostJournalist journalist,
+            String content,
+            String externalPostId,
+            Instant contentCreatedAt,
+            boolean transferRelated,
+            String photoUrl
+    ) {
         this.journalist = journalist;
         this.content = content;
         this.externalPostId = externalPostId;
+        this.contentCreatedAt = contentCreatedAt;
         this.transferRelated = transferRelated;
-
-        this.contentCreatedAt = LocalDateTime.now();
+        this.photoUrl = photoUrl;
+        this.translateStatus = PostTranslateStatus.PENDING;
     }
 }

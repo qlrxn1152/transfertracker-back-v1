@@ -11,11 +11,10 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
+import com.dhoon.transfertracker.internal.post.domain.PostTeam;
+import com.dhoon.transfertracker.internal.post.dto.response.PostItemResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
+import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,7 +32,7 @@ public class TeamQueryTxService {
 
     private final TeamRepository teamRepository;
     private final TeamPlayerRepository teamPlayerRepository;
-    private final TransferPostTeamRepository transferPostTeamRepository;
+    private final PostTeamRepository postTeamRepository;
 
     public TeamItemResponseDto getTeam(Long teamId) {
         Team team = teamRepository.findById(teamId)
@@ -71,23 +70,23 @@ public class TeamQueryTxService {
                 .map(TeamPlayerItemResponseDto::of)
                 .toList();
 
-        Page<TransferPostTeam> postPage = transferPostTeamRepository.findAllByTeamId(teamId, pageable);
+        Page<PostTeam> postPage = postTeamRepository.findAllByTeamId(teamId, pageable);
 
         long totalPostCount = postPage.getTotalElements();
         int totalPageCount = postPage.getTotalPages();
         boolean hasNext = postPage.hasNext();
         boolean hasPrevious = postPage.hasPrevious();
 
-        List<TransferPostItemResponseDto> postsData = postPage.getContent()
+        List<PostItemResponseDto> postsData = postPage.getContent()
                 .stream()
-                .map(TransferPostItemResponseDto::of)
+                .map(PostItemResponseDto::of)
                 .toList();
 
         TeamPageInfoForTeamResponseDto teams = TeamPageInfoForTeamResponseDto.of(team, teamPlayerCount);// 팀에 대한 정보 ... ( teamId, name, 속해있는 선수 숫자, 엠블렘 ... )
 
         TeamPlayersResponseDto players = TeamPlayersResponseDto.of(playersData);// 팀에 속한 선수들 정보 ( playerId, playerName, player 사진 )
 
-        TransferPostsResponseDto posts = TransferPostsResponseDto.of(postsData, totalPostCount, totalPageCount, hasNext, hasPrevious);// 팀 게시물에 대한 정보 ( postId, externalPostId, content, source, postCreatedAt, 이적과 관련된건지 )
+        PostsResponseDto posts = PostsResponseDto.of(postsData, totalPostCount, totalPageCount, hasNext, hasPrevious);// 팀 게시물에 대한 정보 ( postId, externalPostId, content, source, postCreatedAt, 이적과 관련된건지 )
 
         return TeamPageInfosResponseDto.of(teams, players, posts);
     }

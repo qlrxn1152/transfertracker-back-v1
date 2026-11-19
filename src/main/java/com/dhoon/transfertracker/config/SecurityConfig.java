@@ -74,6 +74,7 @@ public class SecurityConfig {
                                 "/api/players/**",
                                 "/api/team-players/**",
                                 "/api/transfers/**",
+                                "/api/posts/**",
                                 "/api/transfer-posts/**"
                         )
                         .permitAll()

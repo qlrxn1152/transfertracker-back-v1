@@ -28,7 +28,7 @@ public class TransferPostSyncController {
 
     @PostMapping("/external/api/posts/{journalist}")
     public ResponseEntity<String> syncPosts(@PathVariable PostJournalist journalist) {
-        String response = postSaveService.syncTransferPost(journalist);
+        String response = postSaveService.syncPosts(journalist);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

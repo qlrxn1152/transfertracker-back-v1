@@ -12,9 +12,10 @@ import com.dhoon.transfertracker.internal.member.repository.MemberRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
+import com.dhoon.transfertracker.internal.post.domain.Post;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.internal.post.domain.PostTeam;
+import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +42,7 @@ public class MemberFavoriteTeamServiceTest {
     private MemberFavoriteTeamRepository memberFavoriteTeamRepository;
 
     @Mock
-    private TransferPostTeamRepository transferPostTeamRepository;
+    private PostTeamRepository postTeamRepository;
 
     @Mock
     private TeamRepository teamRepository;
@@ -223,13 +224,13 @@ public class MemberFavoriteTeamServiceTest {
 
 
         // 게시물 설정
-        TransferPost postMock1 = mock(TransferPost.class);
-        TransferPost postMock2 = mock(TransferPost.class);
-        TransferPost postMock3 = mock(TransferPost.class);
+        Post postMock1 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-1", "post-1", java.time.Instant.now(), true, null);
+        Post postMock2 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-2", "post-2", java.time.Instant.now(), true, null);
+        Post postMock3 = Post.createPost(PostJournalist.FABRIZIO_ROMANO, "content-3", "post-3", java.time.Instant.now(), true, null);
 
-        TransferPostTeam tpt1 = TransferPostTeam.postAssignTeam(t1, postMock1);
-        TransferPostTeam tpt2 = TransferPostTeam.postAssignTeam(t1, postMock2);
-        TransferPostTeam tpt3 = TransferPostTeam.postAssignTeam(t1, postMock3);
+        PostTeam tpt1 = PostTeam.postAssignTeam(t1, postMock1);
+        PostTeam tpt2 = PostTeam.postAssignTeam(t1, postMock2);
+        PostTeam tpt3 = PostTeam.postAssignTeam(t1, postMock3);
 
         MemberFavoriteTeam memberFavoriteTeam = MemberFavoriteTeam.of(member, t1);
 
@@ -241,18 +242,18 @@ public class MemberFavoriteTeamServiceTest {
                 0,
                 20,
                 Sort.by(
-                        Sort.Order.desc("contentCreatedAt"),
+                        Sort.Order.desc("post.contentCreatedAt"),
                         Sort.Order.desc("id")
                 )
         );
 
-        Page<TransferPostTeam> pageReturn = new PageImpl<>(
+        Page<PostTeam> pageReturn = new PageImpl<>(
                 List.of(tpt1, tpt2, tpt3),
                 pageable,
                 3
         );
 
-        given(transferPostTeamRepository.findAllByTeamId(55L, pageable))
+        given(postTeamRepository.findAllByTeamId(55L, pageable))
                 .willReturn(pageReturn);
 
         // when
@@ -273,7 +274,7 @@ public class MemberFavoriteTeamServiceTest {
 
         verify(memberRepository, times(1)).findById(1L);
         verify(teamRepository, times(1)).findById(55L);
-        verify(transferPostTeamRepository, times(1)).findAllByTeamId(55L, pageable);
+        verify(postTeamRepository, times(1)).findAllByTeamId(55L, pageable);
     }
 
     @Test

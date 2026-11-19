@@ -12,11 +12,10 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
+import com.dhoon.transfertracker.internal.post.domain.Post;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.internal.post.domain.PostTeam;
+import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,10 +45,7 @@ public class TeamQueryTxServiceTest {
     private TeamPlayerRepository teamPlayerRepository;
 
     @Mock
-    private TransferPostRepository transferPostRepository;
-
-    @Mock
-    private TransferPostTeamRepository transferPostTeamRepository;
+    private PostTeamRepository postTeamRepository;
 
     @InjectMocks
     private TeamQueryTxService teamQueryTxService;
@@ -190,10 +186,10 @@ public class TeamQueryTxServiceTest {
         Team team = Team.of("testTeam", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
-        TransferPostTeam teamTransferPost = TransferPostTeam.postAssignTeam(
+        PostTeam teamTransferPost = PostTeam.postAssignTeam(
                 team,
-                TransferPost.of(
-                        TransferPostSource.FABRIZIO_ROMANO,
+                Post.createPost(
+                        PostJournalist.FABRIZIO_ROMANO,
                         "content-1",
                         "external-post-id-1",
                         Instant.parse("2026-01-01T12:00:00Z"),
@@ -203,7 +199,7 @@ public class TeamQueryTxServiceTest {
         );
 
         TeamPlayer teamPlayer = TeamPlayer.of(team, Player.of("testPlayer", 999L));
-        Page<TransferPostTeam> postPage = new PageImpl<>(List.of(teamTransferPost));
+        Page<PostTeam> postPage = new PageImpl<>(List.of(teamTransferPost));
 
 
         given(teamRepository.findById(1L))
@@ -212,7 +208,7 @@ public class TeamQueryTxServiceTest {
                 .willReturn(1L);
         given(teamPlayerRepository.findAllByTeamIdWithLazyEntity(1L))
                 .willReturn(List.of(teamPlayer));
-        given(transferPostTeamRepository.findAllByTeamId(1L, pageable))
+        given(postTeamRepository.findAllByTeamId(1L, pageable))
                 .willReturn(postPage);
 
         // when
@@ -222,7 +218,7 @@ public class TeamQueryTxServiceTest {
         verify(teamRepository, times(1)).findById(1L);
         verify(teamPlayerRepository, times(1)).countByTeamId(1L);
         verify(teamPlayerRepository, times(1)).findAllByTeamIdWithLazyEntity(1L);
-        verify(transferPostTeamRepository, times(1)).findAllByTeamId(1L, pageable);
+        verify(postTeamRepository, times(1)).findAllByTeamId(1L, pageable);
 
         assertThat(response.getTeams().getTeamId()).isEqualTo(1L);
         assertThat(response.getTeams().getTeamName()).isEqualTo("testTeam");
@@ -248,7 +244,7 @@ public class TeamQueryTxServiceTest {
 
         verify(teamRepository, times(1)).findById(1L);
         verifyNoInteractions(teamPlayerRepository);
-        verifyNoInteractions(transferPostTeamRepository);
+        verifyNoInteractions(postTeamRepository);
     }
 
 

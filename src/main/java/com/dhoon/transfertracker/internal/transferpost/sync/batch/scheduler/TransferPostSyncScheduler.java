@@ -1,11 +1,8 @@
 package com.dhoon.transfertracker.internal.transferpost.sync.batch.scheduler;
 
-import com.dhoon.transfertracker.internal.transferpost.sync.batch.config.TransferPostSyncBatchConfig;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.internal.post.service.PostSaveService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.batch.core.job.Job;
-import org.springframework.batch.core.job.parameters.JobParameters;
-import org.springframework.batch.core.job.parameters.JobParametersBuilder;
-import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -13,15 +10,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TransferPostSyncScheduler {
 
-    private final JobOperator jobOperator;
-    private final Job transferPostSyncJob;
+    private final PostSaveService postSaveService;
 
     @Scheduled(cron = "0 0 9,21 * * *", zone = "Asia/Seoul")
-    public void syncTransferPosts() throws Exception{
-        JobParameters parameters = new JobParametersBuilder()
-                .addLong("run.id", System.currentTimeMillis())
-                .toJobParameters();
-
-        jobOperator.start(transferPostSyncJob, parameters);
+    public void syncPosts() {
+        postSaveService.syncPosts(PostJournalist.FABRIZIO_ROMANO);
     }
 }

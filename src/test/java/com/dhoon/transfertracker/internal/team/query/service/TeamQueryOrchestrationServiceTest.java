@@ -14,11 +14,11 @@ import com.dhoon.transfertracker.internal.team.query.service.impl.TeamQueryTxSer
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.post.domain.Post;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.internal.post.domain.PostTeam;
+import com.dhoon.transfertracker.internal.post.dto.response.PostItemResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -237,24 +237,26 @@ public class TeamQueryOrchestrationServiceTest {
         TeamPlayer tp2 = TeamPlayer.of(team, Player.of("player-2", 34L));
 
 
-        TransferPostTeam tpt1 = TransferPostTeam.postAssignTeam(
+        PostTeam tpt1 = PostTeam.postAssignTeam(
                 team,
-                TransferPost.of(
-                        TransferPostSource.FABRIZIO_ROMANO,
+                Post.createPost(
+                        PostJournalist.FABRIZIO_ROMANO,
                         "Romano transfer news 1",
                         "post-100",
                         now.minusSeconds(3600),
-                        true
+                        true,
+                        null
                 ));
 
-        TransferPostTeam tpt2 = TransferPostTeam.postAssignTeam(
+        PostTeam tpt2 = PostTeam.postAssignTeam(
                 team,
-                TransferPost.of(
-                        TransferPostSource.FABRIZIO_ROMANO,
+                Post.createPost(
+                        PostJournalist.FABRIZIO_ROMANO,
                         "Romano transfer news 2",
                         "post-101",
                         now,
-                        false
+                        false,
+                        null
                 ));
 
         TeamPageInfosResponseDto expect = TeamPageInfosResponseDto.of(
@@ -263,10 +265,10 @@ public class TeamQueryOrchestrationServiceTest {
                         TeamPlayerItemResponseDto.of(tp1),
                         TeamPlayerItemResponseDto.of(tp2)
                 )),
-                TransferPostsResponseDto.of(
+                PostsResponseDto.of(
                         List.of(
-                                TransferPostItemResponseDto.of(tpt2),
-                        TransferPostItemResponseDto.of(tpt1)),
+                                PostItemResponseDto.of(tpt2),
+                        PostItemResponseDto.of(tpt1)),
                         2,
                         2,
                         false,
@@ -309,7 +311,7 @@ public class TeamQueryOrchestrationServiceTest {
         assertThat(response.getPosts().getTotalPostCount()).isEqualTo(2L);
         assertThat(response.getPosts().getTotalPageCount()).isEqualTo(2);
 
-        assertThat(response.getPosts().getPosts()).extracting(TransferPostItemResponseDto::getExternalPostId)
+        assertThat(response.getPosts().getPosts()).extracting(PostItemResponseDto::getExternalPostId)
                 .containsExactly("post-101", "post-100");
     }
 

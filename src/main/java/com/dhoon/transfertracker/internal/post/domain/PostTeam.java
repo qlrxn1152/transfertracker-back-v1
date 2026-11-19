@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -35,7 +35,7 @@ public class PostTeam {
     private Post post;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     public static PostTeam postAssignTeam(Team team, Post post) {
         return new PostTeam(team, post);
@@ -44,6 +44,6 @@ public class PostTeam {
     private PostTeam(Team team, Post post) {
         this.team = team;
         this.post = post;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 }

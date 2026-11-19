@@ -11,11 +11,12 @@ import com.dhoon.transfertracker.internal.member.exception.NotFoundMemberExcepti
 import com.dhoon.transfertracker.internal.member.exception.NotFoundMemberFavoriteSourcerException;
 import com.dhoon.transfertracker.internal.member.repository.MemberFavoriteSourcerRepository;
 import com.dhoon.transfertracker.internal.member.repository.MemberRepository;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
+import com.dhoon.transfertracker.internal.post.domain.Post;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.internal.post.dto.response.PostItemResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
+import com.dhoon.transfertracker.internal.post.repository.PostRepository;
 import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostItemResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsPageResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,7 +35,7 @@ import java.util.List;
 public class MemberFavoriteSourcerService {
 
     private final MemberFavoriteSourcerRepository memberFavoriteSourcerRepository;
-    private final TransferPostRepository transferPostRepository;
+    private final PostRepository postRepository;
 
     private final MemberRepository memberRepository;
 
@@ -78,7 +79,7 @@ public class MemberFavoriteSourcerService {
         return MemberFollowJournalistsResponseDto.of(memberFollowJournalists);
     }
 
-    public TransferPostsPageResponseDto getJournalistPosts(Long memberId, TransferPostSource journalist, int page) {
+    public PostsResponseDto getJournalistPosts(Long memberId, TransferPostSource journalist, int page) {
         memberRepository.findById(memberId)
                 .orElseThrow(NotFoundMemberException::new);
 
@@ -92,19 +93,19 @@ public class MemberFavoriteSourcerService {
         );
 
 
-        Page<TransferPost> journalistAllPosts = transferPostRepository.findAllBySourcer(journalist, pageable);
+        Page<Post> journalistAllPosts = postRepository.findAllByJournalist(PostJournalist.valueOf(journalist.name()), pageable);
 
         long totalPostCount = journalistAllPosts.getTotalElements();
         int totalPageCount = journalistAllPosts.getTotalPages();
         boolean hasNext = journalistAllPosts.hasNext();
         boolean hasPrevious = journalistAllPosts.hasPrevious();
 
-        List<TransferPostItemResponseDto> posts = journalistAllPosts.getContent()
+        List<PostItemResponseDto> posts = journalistAllPosts.getContent()
                 .stream()
-                .map(TransferPostItemResponseDto::of)
+                .map(PostItemResponseDto::of)
                 .toList();
 
-        return TransferPostsPageResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
+        return PostsResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
     }
 
     public MemberFavoriteSourcersAllPostsResponseDto getAllJournalistPosts(Long memberId, int page) {
@@ -119,25 +120,25 @@ public class MemberFavoriteSourcerService {
                 Sort.by(Sort.Order.desc("translatedContent"), Sort.Order.desc("id"))
         );
 
-        List<TransferPostsPageResponseDto> allJournalistsPosts = new ArrayList<>();
+        List<PostsResponseDto> allJournalistsPosts = new ArrayList<>();
 
 
         for (MemberFavoriteSourcer favoriteSourcer : memberFollowingJournalists) {
             TransferPostSource journalist = favoriteSourcer.getJournalist();
 
-            Page<TransferPost> journalistAllPosts = transferPostRepository.findAllBySourcer(journalist, pageable);
+            Page<Post> journalistAllPosts = postRepository.findAllByJournalist(PostJournalist.valueOf(journalist.name()), pageable);
 
             long totalPostCount = journalistAllPosts.getTotalElements();
             int totalPageCount = journalistAllPosts.getTotalPages();
             boolean hasNext = journalistAllPosts.hasNext();
             boolean hasPrevious = journalistAllPosts.hasPrevious();
 
-            List<TransferPostItemResponseDto> posts = journalistAllPosts.getContent()
+            List<PostItemResponseDto> posts = journalistAllPosts.getContent()
                     .stream()
-                    .map(TransferPostItemResponseDto::of)
+                    .map(PostItemResponseDto::of)
                     .toList();
 
-            allJournalistsPosts.add(TransferPostsPageResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious));
+            allJournalistsPosts.add(PostsResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious));
         }
 
         return MemberFavoriteSourcersAllPostsResponseDto.of(allJournalistsPosts);

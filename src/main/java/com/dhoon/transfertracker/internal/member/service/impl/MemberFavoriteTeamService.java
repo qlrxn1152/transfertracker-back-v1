@@ -11,9 +11,8 @@ import com.dhoon.transfertracker.internal.member.repository.MemberRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
+import com.dhoon.transfertracker.internal.post.domain.PostTeam;
+import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,7 +36,7 @@ public class MemberFavoriteTeamService {
 
     private final MemberFavoriteTeamRepository memberFavoriteTeamRepository;
 
-    private final TransferPostTeamRepository transferPostTeamRepository;
+    private final PostTeamRepository postTeamRepository;
     private final MemberRepository memberRepository;
     private final TeamRepository teamRepository;
 
@@ -94,7 +93,7 @@ public class MemberFavoriteTeamService {
             teamDetails.add(MemberFavoriteTeamDetailTeamResponseDto.of(team));
 
 
-            Page<TransferPostTeam> teamPostPage = transferPostTeamRepository.findAllByTeamId(teamId, pageable);
+            Page<PostTeam> teamPostPage = postTeamRepository.findAllByTeamId(teamId, pageable);
 
             teamPostPage.getContent()
                     .stream()

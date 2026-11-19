@@ -1,7 +1,7 @@
 package com.dhoon.transfertracker.internal.team.query.dto.response;
 
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
-import com.dhoon.transfertracker.internal.transferpost.dto.response.TransferPostsResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,9 +14,9 @@ public class TeamPageInfosResponseDto {
 
     private TeamPageInfoForTeamResponseDto teams;
     private TeamPlayersResponseDto players;
-    private TransferPostsResponseDto posts;
+    private PostsResponseDto posts;
 
-    public static TeamPageInfosResponseDto of(TeamPageInfoForTeamResponseDto teams, TeamPlayersResponseDto players, TransferPostsResponseDto posts) {
+    public static TeamPageInfosResponseDto of(TeamPageInfoForTeamResponseDto teams, TeamPlayersResponseDto players, PostsResponseDto posts) {
         return new TeamPageInfosResponseDto(teams, players, posts);
     }
 }
