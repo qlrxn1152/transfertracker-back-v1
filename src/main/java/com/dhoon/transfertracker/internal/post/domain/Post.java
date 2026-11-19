@@ -29,7 +29,7 @@ public class Post {
     @Column(name = "journalist_name", nullable = false)
     private PostJournalist journalist;
 
-    @Column(name = "content", nullable = false, length = 500)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "external_post_id", nullable = false, unique = true)
