@@ -8,8 +8,11 @@ import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.domain.PostPlayer;
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
 import com.dhoon.transfertracker.internal.post.dto.response.PostItemResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostDetailResponseDto;
 import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
 import com.dhoon.transfertracker.internal.post.exception.InvalidPageException;
+import com.dhoon.transfertracker.internal.post.exception.InvalidPostIdException;
+import com.dhoon.transfertracker.internal.post.exception.NotFoundPostException;
 import com.dhoon.transfertracker.internal.post.repository.PostPlayerRepository;
 import com.dhoon.transfertracker.internal.post.repository.PostRepository;
 import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
@@ -53,7 +56,7 @@ public class PostQueryService {
 
         List<PostItemResponseDto> posts = postPage.getContent()
                 .stream()
-                .map(PostItemResponseDto::of)
+                .map(this::toPostItem)
                 .toList();
 
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
@@ -71,10 +74,21 @@ public class PostQueryService {
 
         List<PostItemResponseDto> posts = postPage.getContent()
                 .stream()
-                .map(PostItemResponseDto::of)
+                .map(this::toPostItem)
                 .toList();
 
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
+    }
+
+    public PostDetailResponseDto getPost(Long postId) {
+        if (postId == null || postId <= 0) {
+            throw new InvalidPostIdException();
+        }
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(NotFoundPostException::new);
+
+        return PostDetailResponseDto.of(toPostItem(post));
     }
 
     public PostsResponseDto getTeamPosts(Long teamId, int page) {
@@ -138,6 +152,19 @@ public class PostQueryService {
                 30,
                 Sort.by(Sort.Order.desc("contentCreatedAt"), Sort.Order.desc("id"))
         );
+    }
+
+    private PostItemResponseDto toPostItem(Post post) {
+        PostTeam postTeam = postTeamRepository.findAllByPostId(post.getId())
+                .stream()
+                .findFirst()
+                .orElse(null);
+        PostPlayer postPlayer = postPlayerRepository.findAllByPostId(post.getId())
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        return PostItemResponseDto.of(post, postTeam, postPlayer);
     }
 
     private void validatePageNotNegative(int page) {

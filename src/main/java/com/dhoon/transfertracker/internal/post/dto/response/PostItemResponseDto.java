@@ -31,6 +31,10 @@ public class PostItemResponseDto {
     private String playerName;
 
     public static PostItemResponseDto of(Post post) {
+        return of(post, null, null);
+    }
+
+    public static PostItemResponseDto of(Post post, PostTeam postTeam, PostPlayer postPlayer) {
         return new PostItemResponseDto(
                 post.getId(),
                 post.getExternalPostId(),
@@ -38,10 +42,10 @@ public class PostItemResponseDto {
                 post.getJournalist(),
                 post.getContentCreatedAt(),
                 post.isTransferRelated(),
-                null,
-                null,
-                null,
-                null
+                postTeam == null ? null : postTeam.getTeam().getId(),
+                postTeam == null ? null : postTeam.getTeam().getDisplayName(),
+                postPlayer == null ? null : postPlayer.getPlayer().getId(),
+                postPlayer == null ? null : postPlayer.getPlayer().getDisplayName()
         );
     }
 

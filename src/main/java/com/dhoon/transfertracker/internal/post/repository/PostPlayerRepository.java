@@ -6,11 +6,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PostPlayerRepository extends JpaRepository<PostPlayer, Long> {
 
     Optional<PostPlayer> findByPlayerIdAndPostId(Long playerId, Long postId);
+
+    @Query("""
+            select pp from PostPlayer pp
+            join fetch pp.player
+            where pp.post.id = :postId
+            order by pp.id asc
+            """)
+    List<PostPlayer> findAllByPostId(Long postId);
 
     @Query("""
             select pp from PostPlayer pp

@@ -5,6 +5,7 @@ import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoritePlay
 import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoritePlayerDetailsResponse;
 import com.dhoon.transfertracker.internal.member.dto.response.MemberFavoritePlayersResponseDto;
 import com.dhoon.transfertracker.internal.member.service.impl.MemberFavoritePlayerService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,10 @@ public class MemberFavoritePlayerController {
     private final MemberFavoritePlayerService memberFavoritePlayerService;
 
     @PostMapping("/api/members/me/players/follow")
-    public ResponseEntity<MemberFavoritePlayerDetailResponseDto> followPlayer(@AuthenticationPrincipal Jwt jwt, MemberFavoritePlayerRegisterRequestDto requestDto) {
+    public ResponseEntity<MemberFavoritePlayerDetailResponseDto> followPlayer(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody MemberFavoritePlayerRegisterRequestDto requestDto
+    ) {
         Long memberId = Long.valueOf(jwt.getSubject());
 
         MemberFavoritePlayerDetailResponseDto response = memberFavoritePlayerService.followPlayer(memberId, requestDto);
@@ -30,7 +34,10 @@ public class MemberFavoritePlayerController {
     }
 
     @DeleteMapping("/api/members/me/players/unfollow")
-    public ResponseEntity<Void> unfollowPlayer(@AuthenticationPrincipal Jwt jwt, MemberFavoritePlayerRegisterRequestDto requestDto) {
+    public ResponseEntity<Void> unfollowPlayer(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody MemberFavoritePlayerRegisterRequestDto requestDto
+    ) {
         Long memberId = Long.valueOf(jwt.getSubject());
 
         memberFavoritePlayerService.unfollowPlayer(memberId, requestDto);

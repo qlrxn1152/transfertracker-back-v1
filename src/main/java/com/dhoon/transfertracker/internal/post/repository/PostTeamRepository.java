@@ -22,6 +22,12 @@ public interface PostTeamRepository extends JpaRepository<PostTeam, Long> {
 
     boolean existsByPostId(Long postId);
 
+    @Query("""
+            select pt from PostTeam pt
+            join fetch pt.team
+            where pt.post.id = :postId
+            order by pt.id asc
+            """)
     List<PostTeam> findAllByPostId(Long postId);
 
     Optional<PostTeam> findByTeamIdAndPostId(Long teamId, Long postId);
