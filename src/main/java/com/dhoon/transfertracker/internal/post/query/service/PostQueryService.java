@@ -119,9 +119,15 @@ public class PostQueryService {
         playerRepository.findById(playerId)
                 .orElseThrow(NotFoundPlayerException::new);
 
-        Pageable pageable = createPostPage(page);
+        Pageable pageable = PageRequest.of(
+                page,
+                10,
+                Sort.by(Sort.Order.desc("post.contentCreatedAt"), Sort.Order.desc("post.id"))
+        );
 
         Page<PostPlayer> postPage = postPlayerRepository.findAllByPlayerId(playerId, pageable);
+
+        log.info("content = {}", postPage.getContent());
 
         if (!teamPlayerRepository.existsByPlayerId(playerId)) {
             List<PostItemResponseDto> posts = postPage.getContent()

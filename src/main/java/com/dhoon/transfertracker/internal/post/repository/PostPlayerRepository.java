@@ -29,4 +29,6 @@ public interface PostPlayerRepository extends JpaRepository<PostPlayer, Long> {
             order by pp.post.contentCreatedAt desc, pp.post.id desc
             """)
     Page<PostPlayer> findAllByPlayerId(Long playerId, Pageable pageable);
+
+
 }
