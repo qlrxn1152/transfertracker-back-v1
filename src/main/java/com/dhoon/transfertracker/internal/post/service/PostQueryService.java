@@ -98,7 +98,7 @@ public class PostQueryService {
         teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
 
-        Pageable pageable = createPostPage(page);
+        Pageable pageable = createRelationPostPage(page);
 
         Page<PostTeam> postPage = postTeamRepository.findAllByTeamId(teamId, pageable);
 
@@ -120,9 +120,9 @@ public class PostQueryService {
         com.dhoon.transfertracker.internal.player.domain.Player player = playerRepository.findById(playerId)
                 .orElseThrow(NotFoundPlayerException::new);
 
-        Pageable pageable = createPostPage(page);
+        Pageable relationPageable = createRelationPostPage(page);
 
-        Page<PostPlayer> postPage = postPlayerRepository.findAllByPlayerId(playerId, pageable);
+        Page<PostPlayer> postPage = postPlayerRepository.findAllByPlayerId(playerId, relationPageable);
 
         if (postPage.hasContent()) {
             if (!teamPlayerRepository.existsByPlayerId(playerId)) {
@@ -148,7 +148,7 @@ public class PostQueryService {
         // Post 전환 이전에 연결 테이블이 비어 있던 게시물도 선수 상세에서 노출한다.
         // 기존 TransferPost를 다시 조회하지 않고, 현재 Post 본문을 기준으로만 보완한다.
         Page<Post> contentMatchedPostPage = postRepository.findAllByContentContainingIgnoreCase(
-                player.getDisplayName(), pageable
+                player.getDisplayName(), createPostPage(page)
         );
 
         List<PostItemResponseDto> posts = contentMatchedPostPage.getContent()
@@ -172,6 +172,14 @@ public class PostQueryService {
                 30,
                 Sort.by(Sort.Order.desc("contentCreatedAt"), Sort.Order.desc("id"))
         );
+    }
+
+    /**
+     * PostTeam/PostPlayer 조회는 repository JPQL에서 post.contentCreatedAt 기준 정렬을 이미 지정한다.
+     * Pageable에 Post 속성 정렬을 같이 전달하면 관계 엔티티에 해당 필드가 없어서 Hibernate가 실패한다.
+     */
+    private Pageable createRelationPostPage(int page) {
+        return PageRequest.of(page, 30);
     }
 
     private PostItemResponseDto toPostItem(Post post) {
