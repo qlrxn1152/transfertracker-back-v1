@@ -4,6 +4,7 @@ import com.dhoon.transfertracker.internal.post.domain.Post;
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.domain.PostPlayer;
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
+import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,7 +32,7 @@ public class PostItemResponseDto {
     private String playerName;
 
     public static PostItemResponseDto of(Post post) {
-        return of(post, null, null);
+        return of(post, null, (PostPlayer) null);
     }
 
     public static PostItemResponseDto of(Post post, PostTeam postTeam, PostPlayer postPlayer) {
@@ -46,6 +47,21 @@ public class PostItemResponseDto {
                 postTeam == null ? null : postTeam.getTeam().getDisplayName(),
                 postPlayer == null ? null : postPlayer.getPlayer().getId(),
                 postPlayer == null ? null : postPlayer.getPlayer().getDisplayName()
+        );
+    }
+
+    public static PostItemResponseDto of(Post post, PostTeam postTeam, Player player) {
+        return new PostItemResponseDto(
+                post.getId(),
+                post.getExternalPostId(),
+                post.getContent(),
+                post.getJournalist(),
+                post.getContentCreatedAt(),
+                post.isTransferRelated(),
+                postTeam == null ? null : postTeam.getTeam().getId(),
+                postTeam == null ? null : postTeam.getTeam().getDisplayName(),
+                player.getId(),
+                player.getDisplayName()
         );
     }
 
