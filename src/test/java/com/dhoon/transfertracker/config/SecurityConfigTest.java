@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.web.context.WebApplicationContext;
@@ -69,6 +70,11 @@ public class SecurityConfigTest {
             return "OK";
         }
 
+        @GetMapping("/api/posts/players/{playerId}")
+        public String playerPosts() {
+            return "OK";
+        }
+
 
     }
 
@@ -95,6 +101,13 @@ public class SecurityConfigTest {
     void external_adminSuccess() throws Exception {
         // when && then
         mockMvc.perform(post("/external/test"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("로그인하지 않아도 선수별 게시물을 조회할 수 있다.")
+    void playerPosts_arePublic() throws Exception {
+        mockMvc.perform(get("/api/posts/players/3113"))
                 .andExpect(status().isOk());
     }
 
