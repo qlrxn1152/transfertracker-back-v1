@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -17,7 +19,7 @@ public class FcmNotificationService {
 
     private final ObjectProvider<FirebaseMessaging> firebaseMessagingProvider;
 
-
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public String sendTeamPostNotification(String token, String teamName, Long postId) throws FirebaseMessagingException {
         FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
         if (firebaseMessaging == null) {
@@ -48,6 +50,7 @@ public class FcmNotificationService {
         return messageId;
     }
 
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public String sendJournalistPostCreatedNotification(PostJournalist journalist, String token, Long postId) throws FirebaseMessagingException {
         FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
 
