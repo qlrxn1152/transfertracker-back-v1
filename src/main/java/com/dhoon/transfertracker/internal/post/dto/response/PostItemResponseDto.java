@@ -4,14 +4,12 @@ import com.dhoon.transfertracker.internal.post.domain.Post;
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.domain.PostPlayer;
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
-import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -22,7 +20,7 @@ public class PostItemResponseDto {
     private Long postId;
     private String externalPostId;
     private String content;
-    private PostJournalist source;
+    private PostJournalist journalist;
     private LocalDateTime contentCreatedAt;
     private boolean isRelateTransfer;
 
