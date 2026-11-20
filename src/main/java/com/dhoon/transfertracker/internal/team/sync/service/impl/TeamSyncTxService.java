@@ -53,4 +53,5 @@ public class TeamSyncTxService {
 
         return TeamItemResponseDto.of(team);
     }
+
 }

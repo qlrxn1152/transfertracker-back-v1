@@ -10,6 +10,7 @@ import com.dhoon.transfertracker.internal.post.domain.PostTeam;
 import com.dhoon.transfertracker.internal.post.dto.response.PostItemResponseDto;
 import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
 import com.dhoon.transfertracker.internal.post.exception.InvalidPageException;
+import com.dhoon.transfertracker.internal.post.query.service.PostQueryService;
 import com.dhoon.transfertracker.internal.post.repository.PostPlayerRepository;
 import com.dhoon.transfertracker.internal.post.repository.PostRepository;
 import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;

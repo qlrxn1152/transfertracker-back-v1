@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.internal.post.service;
+package com.dhoon.transfertracker.internal.post.sync.service;
 
 import com.dhoon.transfertracker.external.openai.client.OpenAiClient;
 import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;

@@ -1,35 +1,27 @@
-package com.dhoon.transfertracker.internal.post.controller;
+package com.dhoon.transfertracker.internal.post.query.controller;
 
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
-import com.dhoon.transfertracker.internal.post.dto.response.*;
-import com.dhoon.transfertracker.internal.post.service.PostQueryService;
-import com.dhoon.transfertracker.internal.post.service.PostSaveService;
+import com.dhoon.transfertracker.internal.post.dto.response.PostItemResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostSourceItemResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostSourcesResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
+import com.dhoon.transfertracker.internal.post.query.service.PostQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-public class PostSaveController {
+public class PostQueryController {
 
-    private final PostSaveService postSaveService;
     private final PostQueryService postQueryService;
-
-    @PostMapping("/external/api/posts/{journalist}")
-    public ResponseEntity<String> savePosts(@PathVariable PostJournalist journalist, @AuthenticationPrincipal Jwt jwt) {
-        Long memberId = Long.valueOf(jwt.getSubject());
-        String response = postSaveService.syncPosts(journalist, memberId);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
 
     @GetMapping("/api/posts")
     public ResponseEntity<PostsResponseDto> getPosts(@RequestParam(defaultValue = "0") int page) {

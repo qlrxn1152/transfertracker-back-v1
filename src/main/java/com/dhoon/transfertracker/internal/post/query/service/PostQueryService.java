@@ -1,6 +1,5 @@
-package com.dhoon.transfertracker.internal.post.service;
+package com.dhoon.transfertracker.internal.post.query.service;
 
-import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
 import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
@@ -9,7 +8,6 @@ import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.domain.PostPlayer;
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
 import com.dhoon.transfertracker.internal.post.dto.response.PostItemResponseDto;
-import com.dhoon.transfertracker.internal.post.dto.response.PostDetailResponseDto;
 import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
 import com.dhoon.transfertracker.internal.post.exception.InvalidPageException;
 import com.dhoon.transfertracker.internal.post.exception.InvalidPostIdException;
@@ -60,7 +58,6 @@ public class PostQueryService {
 
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
     }
-
 
     public PostsResponseDto getJournalistPosts(PostJournalist journalist, int page) {
         if (journalist == null) {

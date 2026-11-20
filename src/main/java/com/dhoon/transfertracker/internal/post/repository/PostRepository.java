@@ -13,6 +13,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Optional<Post> findByExternalPostId(String externalPostId);
 
+    boolean existsByExternalPostId(String externalPostId);
+
     Page<Post> findAllByJournalist(PostJournalist journalist, Pageable pageable);
 
     Page<Post> findAllByContentContainingIgnoreCase(String keyword, Pageable pageable);
