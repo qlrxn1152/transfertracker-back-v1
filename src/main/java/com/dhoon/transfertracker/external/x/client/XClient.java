@@ -51,7 +51,7 @@ public class XClient {
     }
 
     public JsonNode getJournalistPosts(PostJournalist journalist) {
-        return getUserPosts(journalist.getXUserId(), 100, null);
+        return getUserPosts(journalist.getXUserId(), 10, null);
     }
 
 
