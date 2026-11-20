@@ -1,6 +1,6 @@
 package com.dhoon.transfertracker.external.fcm;
 
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -46,7 +46,7 @@ public class FcmNotificationService {
         return messageId;
     }
 
-    public String sendTransferPostCreatedNotification(TransferPostSource journalist, String token) throws FirebaseMessagingException {
+    public String sendJournalistPostCreatedNotification(PostJournalist journalist, String token) throws FirebaseMessagingException {
         FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
 
         if (firebaseMessaging == null) {

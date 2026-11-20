@@ -11,7 +11,7 @@ import com.dhoon.transfertracker.internal.notification.repository.MemberFcmToken
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,18 +58,18 @@ public class MemberNotificationService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
-    public void sendTransferPostCreatedNotification(Long postId, TransferPostSource journalist) {
+    public void sendJournalistPostCreatedNotification(Long postId, PostJournalist journalist) {
         List<MemberFavoriteSourcer> journalistFollowMembers = memberFavoriteSourcerRepository.findAllByJournalist(journalist);
 
         journalistFollowMembers.forEach(journalistFollowMember -> {
             Member member = journalistFollowMember.getMember();
-            TransferPostSource followJournalist = journalistFollowMember.getJournalist();
+            PostJournalist followJournalist = journalistFollowMember.getJournalist();
 
             List<MemberFcmToken> memberTokens = memberFcmTokenRepository.findAllByMemberId(member.getId());
 
             memberTokens.forEach(memberToken -> {
                 try {
-                    fcmNotificationService.sendTransferPostCreatedNotification(followJournalist, memberToken.getToken());
+                    fcmNotificationService.sendJournalistPostCreatedNotification(followJournalist, memberToken.getToken());
                 } catch (FirebaseMessagingException e) {
                     throw new RuntimeException(e);
                 }

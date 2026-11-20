@@ -50,7 +50,7 @@ public class PostSaveService {
 
     public String syncPosts(PostJournalist journalist, Long memberId) {
 
-        JsonNode response = xClient.callExternalApiRefa2(journalist);
+        JsonNode response = xClient.getJournalistPosts(journalist);
         JsonNode userPosts = response.get("data");
 
         List<PostGenerationTarget> generationTargets = new ArrayList<>();

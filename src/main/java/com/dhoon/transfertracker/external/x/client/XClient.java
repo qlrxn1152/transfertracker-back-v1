@@ -2,35 +2,21 @@ package com.dhoon.transfertracker.external.x.client;
 
 
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
 public class XClient {
 
     private final RestClient xRestClient;
-    private final TransferPostRepository transferPostRepository;
 
-    public XClient(@Qualifier("xRestClient") RestClient xRestClient, TransferPostRepository transferPostRepository) {
+    public XClient(@Qualifier("xRestClient") RestClient xRestClient) {
         this.xRestClient = xRestClient;
-        this.transferPostRepository = transferPostRepository;
-    }
-
-    public JsonNode callExternalApi(TransferPostSource source, String paginationToken) {
-        String userId = source.getXUserId();
-        return getUserPosts(userId, 30, paginationToken);
     }
 
     public JsonNode getUserByUsername(String username) {
@@ -64,32 +50,8 @@ public class XClient {
                 .body(JsonNode.class);
     }
 
-    // ====================================
-
-    public JsonNode callExternalApiRefa(TransferPostSource source) {
-        String userId = source.getXUserId();
-        return getUserPostsRefa(userId, 100);
-    }
-
-    private JsonNode getUserPostsRefa(String userId, int size) {
-        return xRestClient.get()
-                .uri(uriBuilder -> {
-                    uriBuilder
-                            .path("/2/users/{id}/tweets")
-                            .queryParam("max_results", size)
-                            .queryParam("tweet.fields", "created_at,attachments,referenced_tweets")
-                            .queryParam("expansions", "attachments.media_keys,referenced_tweets.id,referenced_tweets.id.attachments.media_keys")
-                            .queryParam("media.fields",
-                                    "media_key,type,url,preview_image_url,width,height");
-                    return uriBuilder.build(userId);
-                })
-                .retrieve()
-                .body(JsonNode.class);
-    }
-
-    public JsonNode callExternalApiRefa2(PostJournalist journalist) {
-        String userId = journalist.getXUserId();
-        return getUserPostsRefa(userId, 100);
+    public JsonNode getJournalistPosts(PostJournalist journalist) {
+        return getUserPosts(journalist.getXUserId(), 100, null);
     }
 
 

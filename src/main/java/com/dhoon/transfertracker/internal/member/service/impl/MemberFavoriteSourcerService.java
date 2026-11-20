@@ -16,7 +16,6 @@ import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.dto.response.PostItemResponseDto;
 import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
 import com.dhoon.transfertracker.internal.post.repository.PostRepository;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,7 +41,7 @@ public class MemberFavoriteSourcerService {
     public MemberFollowJournalistDetailResponseDto followJournalist(Long memberId, MemberFavoriteSourcerRegisterRequestDto requestDto) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(NotFoundMemberException::new);
-        TransferPostSource journalist = requestDto.getJournalist();
+        PostJournalist journalist = requestDto.getJournalist();
 
         memberFavoriteSourcerRepository.findByMemberIdAndJournalist(memberId, journalist)
                 .ifPresentOrElse(
@@ -58,7 +57,7 @@ public class MemberFavoriteSourcerService {
     public void unFollowJournalist(Long memberId, MemberFavoriteSourcerRegisterRequestDto requestDto) {
         memberRepository.findById(memberId)
                 .orElseThrow(NotFoundMemberException::new);
-        TransferPostSource journalist = requestDto.getJournalist();
+        PostJournalist journalist = requestDto.getJournalist();
 
         memberFavoriteSourcerRepository.findByMemberIdAndJournalist(memberId, journalist)
                 .ifPresentOrElse(
@@ -79,7 +78,7 @@ public class MemberFavoriteSourcerService {
         return MemberFollowJournalistsResponseDto.of(memberFollowJournalists);
     }
 
-    public PostsResponseDto getJournalistPosts(Long memberId, TransferPostSource journalist, int page) {
+    public PostsResponseDto getJournalistPosts(Long memberId, PostJournalist journalist, int page) {
         memberRepository.findById(memberId)
                 .orElseThrow(NotFoundMemberException::new);
 
@@ -93,7 +92,7 @@ public class MemberFavoriteSourcerService {
         );
 
 
-        Page<Post> journalistAllPosts = postRepository.findAllByJournalist(PostJournalist.valueOf(journalist.name()), pageable);
+        Page<Post> journalistAllPosts = postRepository.findAllByJournalist(journalist, pageable);
 
         long totalPostCount = journalistAllPosts.getTotalElements();
         int totalPageCount = journalistAllPosts.getTotalPages();
@@ -124,9 +123,9 @@ public class MemberFavoriteSourcerService {
 
 
         for (MemberFavoriteSourcer favoriteSourcer : memberFollowingJournalists) {
-            TransferPostSource journalist = favoriteSourcer.getJournalist();
+            PostJournalist journalist = favoriteSourcer.getJournalist();
 
-            Page<Post> journalistAllPosts = postRepository.findAllByJournalist(PostJournalist.valueOf(journalist.name()), pageable);
+            Page<Post> journalistAllPosts = postRepository.findAllByJournalist(journalist, pageable);
 
             long totalPostCount = journalistAllPosts.getTotalElements();
             int totalPageCount = journalistAllPosts.getTotalPages();

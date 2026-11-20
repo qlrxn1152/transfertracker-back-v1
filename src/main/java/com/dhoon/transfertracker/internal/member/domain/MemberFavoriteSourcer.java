@@ -1,6 +1,6 @@
 package com.dhoon.transfertracker.internal.member.domain;
 
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -27,13 +27,13 @@ public class MemberFavoriteSourcer {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "journalist", nullable = false)
-    private TransferPostSource journalist;
+    private PostJournalist journalist;
 
-    public static MemberFavoriteSourcer of(Member member, TransferPostSource journalist) {
+    public static MemberFavoriteSourcer of(Member member, PostJournalist journalist) {
         return new MemberFavoriteSourcer(member, journalist);
     }
 
-    private MemberFavoriteSourcer(Member member, TransferPostSource journalist) {
+    private MemberFavoriteSourcer(Member member, PostJournalist journalist) {
         this.member = member;
         this.journalist = journalist;
     }

@@ -1,6 +1,6 @@
 package com.dhoon.transfertracker.internal.member.dto.request;
 
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class MemberFavoriteSourcerRegisterRequestDto {
 
-    private TransferPostSource journalist;
+    private PostJournalist journalist;
 
 }

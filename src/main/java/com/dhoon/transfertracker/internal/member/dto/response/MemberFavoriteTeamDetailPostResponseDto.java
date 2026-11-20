@@ -1,7 +1,7 @@
 package com.dhoon.transfertracker.internal.member.dto.response;
 
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,7 +24,7 @@ public class MemberFavoriteTeamDetailPostResponseDto {
     private String postPhotoUrl;
     private LocalDateTime contentCreatedAt;
 
-    private TransferPostSource sourcer;
+    private PostJournalist sourcer;
 
     public static MemberFavoriteTeamDetailPostResponseDto of(PostTeam postTeam) {
         return new MemberFavoriteTeamDetailPostResponseDto(
@@ -35,7 +35,7 @@ public class MemberFavoriteTeamDetailPostResponseDto {
                 postTeam.getPost().getContent(),
                 null,
                 postTeam.getPost().getContentCreatedAt(),
-                TransferPostSource.valueOf(postTeam.getPost().getJournalist().name())
+                postTeam.getPost().getJournalist()
         );
     }
 

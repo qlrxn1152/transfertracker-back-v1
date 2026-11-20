@@ -1,7 +1,7 @@
 package com.dhoon.transfertracker.internal.member.dto.response;
 
 import com.dhoon.transfertracker.internal.member.domain.MemberFavoriteSourcer;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class MemberFollowJournalistDetailResponseDto {
 
     private Long memberId;
-    private TransferPostSource journalist;
+    private PostJournalist journalist;
     private String displayName;
 
     public static MemberFollowJournalistDetailResponseDto of(MemberFavoriteSourcer memberFavoriteSourcer) {
