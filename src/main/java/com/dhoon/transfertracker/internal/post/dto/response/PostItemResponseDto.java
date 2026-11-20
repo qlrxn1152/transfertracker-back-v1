@@ -4,7 +4,6 @@ import com.dhoon.transfertracker.internal.post.domain.Post;
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.domain.PostPlayer;
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
-import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,11 +30,7 @@ public class PostItemResponseDto {
     private Long playerId;
     private String playerName;
 
-    public static PostItemResponseDto of(Post post) {
-        return of(post, null, (PostPlayer) null);
-    }
-
-    public static PostItemResponseDto of(Post post, PostTeam postTeam, PostPlayer postPlayer) {
+    public static PostItemResponseDto createPost(Post post) {
         return new PostItemResponseDto(
                 post.getId(),
                 post.getExternalPostId(),
@@ -43,29 +38,14 @@ public class PostItemResponseDto {
                 post.getJournalist(),
                 post.getContentCreatedAt(),
                 post.isTransferRelated(),
-                postTeam == null ? null : postTeam.getTeam().getId(),
-                postTeam == null ? null : postTeam.getTeam().getDisplayName(),
-                postPlayer == null ? null : postPlayer.getPlayer().getId(),
-                postPlayer == null ? null : postPlayer.getPlayer().getDisplayName()
+                null,
+                null,
+                null,
+                null
         );
     }
 
-    public static PostItemResponseDto of(Post post, PostTeam postTeam, Player player) {
-        return new PostItemResponseDto(
-                post.getId(),
-                post.getExternalPostId(),
-                post.getContent(),
-                post.getJournalist(),
-                post.getContentCreatedAt(),
-                post.isTransferRelated(),
-                postTeam == null ? null : postTeam.getTeam().getId(),
-                postTeam == null ? null : postTeam.getTeam().getDisplayName(),
-                player.getId(),
-                player.getDisplayName()
-        );
-    }
-
-    public static PostItemResponseDto of(PostTeam postTeam) {
+    public static PostItemResponseDto createTeamPost(PostTeam postTeam) {
         Post post = postTeam.getPost();
         return new PostItemResponseDto(
                 post.getId(),
@@ -112,8 +92,6 @@ public class PostItemResponseDto {
 
                 teamPlayer.getTeam().getId(),
                 teamPlayer.getTeam().getDisplayName(),
-
-
 
                 postPlayer.getPlayer().getId(),
                 postPlayer.getPlayer().getDisplayName()

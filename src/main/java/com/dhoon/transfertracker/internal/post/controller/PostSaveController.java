@@ -1,10 +1,7 @@
 package com.dhoon.transfertracker.internal.post.controller;
 
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
-import com.dhoon.transfertracker.internal.post.dto.response.PostDetailResponseDto;
-import com.dhoon.transfertracker.internal.post.dto.response.PostSourceItemResponseDto;
-import com.dhoon.transfertracker.internal.post.dto.response.PostSourcesResponseDto;
-import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
+import com.dhoon.transfertracker.internal.post.dto.response.*;
 import com.dhoon.transfertracker.internal.post.service.PostQueryService;
 import com.dhoon.transfertracker.internal.post.service.PostSaveService;
 import lombok.RequiredArgsConstructor;
@@ -74,8 +71,8 @@ public class PostSaveController {
     }
 
     @GetMapping("/api/posts/{postId}")
-    public ResponseEntity<PostDetailResponseDto> getPost(@PathVariable Long postId) {
-        PostDetailResponseDto response = postQueryService.getPost(postId);
+    public ResponseEntity<PostItemResponseDto> getPost(@PathVariable Long postId) {
+        PostItemResponseDto response = postQueryService.getPost(postId);
 
         return ResponseEntity.ok(response);
     }

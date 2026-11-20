@@ -79,7 +79,7 @@ public class TeamQueryTxService {
 
         List<PostItemResponseDto> postsData = postPage.getContent()
                 .stream()
-                .map(PostItemResponseDto::of)
+                .map(PostItemResponseDto::createTeamPost)
                 .toList();
 
         TeamPageInfoForTeamResponseDto teams = TeamPageInfoForTeamResponseDto.of(team, teamPlayerCount);// 팀에 대한 정보 ... ( teamId, name, 속해있는 선수 숫자, 엠블렘 ... )

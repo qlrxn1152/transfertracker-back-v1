@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.post.service;
 
+import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
 import com.dhoon.transfertracker.internal.player.exception.NotFoundPlayerException;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
@@ -21,7 +22,6 @@ import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import com.google.api.gax.rpc.InvalidArgumentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,6 +46,7 @@ public class PostQueryService {
     private final TeamRepository teamRepository;
     private final PlayerRepository playerRepository;
     private final TeamPlayerRepository teamPlayerRepository;
+
     public PostsResponseDto getPosts(int page) {
         validatePageNotNegative(page);
         Pageable pageable = createPostPage(page);
@@ -54,11 +55,12 @@ public class PostQueryService {
 
         List<PostItemResponseDto> posts = postPage.getContent()
                 .stream()
-                .map(this::toPostItem)
+                .map(PostItemResponseDto::createPost)
                 .toList();
 
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
     }
+
 
     public PostsResponseDto getJournalistPosts(PostJournalist journalist, int page) {
         if (journalist == null) {
@@ -72,13 +74,13 @@ public class PostQueryService {
 
         List<PostItemResponseDto> posts = postPage.getContent()
                 .stream()
-                .map(this::toPostItem)
+                .map(PostItemResponseDto::createPost)
                 .toList();
 
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
     }
 
-    public PostDetailResponseDto getPost(Long postId) {
+    public PostItemResponseDto getPost(Long postId) {
         if (postId == null || postId <= 0) {
             throw new InvalidPostIdException();
         }
@@ -86,7 +88,7 @@ public class PostQueryService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(NotFoundPostException::new);
 
-        return PostDetailResponseDto.of(toPostItem(post));
+        return PostItemResponseDto.createPost(post);
     }
 
     public PostsResponseDto getTeamPosts(Long teamId, int page) {
@@ -98,13 +100,13 @@ public class PostQueryService {
         teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
 
-        Pageable pageable = createRelationPostPage(page);
+        Pageable pageable = createPostPage(page);
 
         Page<PostTeam> postPage = postTeamRepository.findAllByTeamId(teamId, pageable);
 
         List<PostItemResponseDto> posts = postPage.getContent()
                 .stream()
-                .map(PostItemResponseDto::of)
+                .map(PostItemResponseDto::createTeamPost)
                 .toList();
 
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
@@ -117,52 +119,31 @@ public class PostQueryService {
 
         validatePageNotNegative(page);
 
-        com.dhoon.transfertracker.internal.player.domain.Player player = playerRepository.findById(playerId)
+        playerRepository.findById(playerId)
                 .orElseThrow(NotFoundPlayerException::new);
 
-        Pageable relationPageable = createRelationPostPage(page);
+        Pageable pageable = createPostPage(page);
 
-        Page<PostPlayer> postPage = postPlayerRepository.findAllByPlayerId(playerId, relationPageable);
+        Page<PostPlayer> postPage = postPlayerRepository.findAllByPlayerId(playerId, pageable);
 
-        if (postPage.hasContent()) {
-            if (!teamPlayerRepository.existsByPlayerId(playerId)) {
-                List<PostItemResponseDto> posts = postPage.getContent()
-                        .stream()
-                        .map(PostItemResponseDto::createFaPlayer)
-                        .toList();
-
-                return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
-            }
-
-            TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(playerId)
-                    .orElseThrow(NotFoundPlayerException::new);
-
+        if (!teamPlayerRepository.existsByPlayerId(playerId)) {
             List<PostItemResponseDto> posts = postPage.getContent()
                     .stream()
-                    .map(postPlayer -> PostItemResponseDto.createTeamPlayer(postPlayer, teamPlayer))
+                    .map(PostItemResponseDto::createFaPlayer)
                     .toList();
 
             return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
         }
 
-        // Post 전환 이전에 연결 테이블이 비어 있던 게시물도 선수 상세에서 노출한다.
-        // 기존 TransferPost를 다시 조회하지 않고, 현재 Post 본문을 기준으로만 보완한다.
-        Page<Post> contentMatchedPostPage = postRepository.findAllByContentContainingIgnoreCase(
-                player.getDisplayName(), createPostPage(page)
-        );
+        TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(playerId)
+                .orElseThrow(NotFoundPlayerException::new);
 
-        List<PostItemResponseDto> posts = contentMatchedPostPage.getContent()
+        List<PostItemResponseDto> posts = postPage.getContent()
                 .stream()
-                .map(post -> toPostItem(post, player))
+                .map(postPlayer -> PostItemResponseDto.createTeamPlayer(postPlayer, teamPlayer))
                 .toList();
 
-        return PostsResponseDto.of(
-                posts,
-                contentMatchedPostPage.getTotalElements(),
-                contentMatchedPostPage.getTotalPages(),
-                contentMatchedPostPage.hasNext(),
-                contentMatchedPostPage.hasPrevious()
-        );
+        return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
     }
 
     // ======================================================================================================== //
@@ -173,37 +154,6 @@ public class PostQueryService {
                 Sort.by(Sort.Order.desc("contentCreatedAt"), Sort.Order.desc("id"))
         );
     }
-
-    /**
-     * PostTeam/PostPlayer 조회는 repository JPQL에서 post.contentCreatedAt 기준 정렬을 이미 지정한다.
-     * Pageable에 Post 속성 정렬을 같이 전달하면 관계 엔티티에 해당 필드가 없어서 Hibernate가 실패한다.
-     */
-    private Pageable createRelationPostPage(int page) {
-        return PageRequest.of(page, 30);
-    }
-
-    private PostItemResponseDto toPostItem(Post post) {
-        PostTeam postTeam = postTeamRepository.findAllByPostId(post.getId())
-                .stream()
-                .findFirst()
-                .orElse(null);
-        PostPlayer postPlayer = postPlayerRepository.findAllByPostId(post.getId())
-                .stream()
-                .findFirst()
-                .orElse(null);
-
-        return PostItemResponseDto.of(post, postTeam, postPlayer);
-    }
-
-    private PostItemResponseDto toPostItem(Post post, com.dhoon.transfertracker.internal.player.domain.Player player) {
-        PostTeam postTeam = postTeamRepository.findAllByPostId(post.getId())
-                .stream()
-                .findFirst()
-                .orElse(null);
-
-        return PostItemResponseDto.of(post, postTeam, player);
-    }
-
 
     private void validatePageNotNegative(int page) {
         if (page < 0) {

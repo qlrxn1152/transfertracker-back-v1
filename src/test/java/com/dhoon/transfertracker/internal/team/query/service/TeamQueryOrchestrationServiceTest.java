@@ -263,8 +263,8 @@ public class TeamQueryOrchestrationServiceTest {
                 )),
                 PostsResponseDto.of(
                         List.of(
-                                PostItemResponseDto.of(tpt2),
-                        PostItemResponseDto.of(tpt1)),
+                                PostItemResponseDto.createTeamPost(tpt2),
+                        PostItemResponseDto.createTeamPost(tpt1)),
                         2,
                         2,
                         false,

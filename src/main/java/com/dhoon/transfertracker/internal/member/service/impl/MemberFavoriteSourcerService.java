@@ -101,7 +101,7 @@ public class MemberFavoriteSourcerService {
 
         List<PostItemResponseDto> posts = journalistAllPosts.getContent()
                 .stream()
-                .map(PostItemResponseDto::of)
+                .map(PostItemResponseDto::createPost)
                 .toList();
 
         return PostsResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
@@ -134,7 +134,7 @@ public class MemberFavoriteSourcerService {
 
             List<PostItemResponseDto> posts = journalistAllPosts.getContent()
                     .stream()
-                    .map(PostItemResponseDto::of)
+                    .map(PostItemResponseDto::createPost)
                     .toList();
 
             allJournalistsPosts.add(PostsResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious));
