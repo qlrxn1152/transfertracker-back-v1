@@ -48,7 +48,7 @@ public class MemberNotificationService {
 
             memberTokens.forEach(memberFcmToken -> { // 1개의 기기
                 try {
-                    fcmNotificationService.sendTransferPostNotification(memberFcmToken.getToken(), team.getDisplayName()); // 알림발송
+                    fcmNotificationService.sendTeamPostNotification(memberFcmToken.getToken(), team.getDisplayName()); // 알림발송
                 } catch (FirebaseMessagingException e) {
                     throw new RuntimeException(e);
                 }

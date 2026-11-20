@@ -18,7 +18,7 @@ public class FcmNotificationService {
     private final ObjectProvider<FirebaseMessaging> firebaseMessagingProvider;
 
 
-    public String sendTransferPostNotification(String token, String teamName) throws FirebaseMessagingException {
+    public String sendTeamPostNotification(String token, String teamName, Long postId) throws FirebaseMessagingException {
         FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
         if (firebaseMessaging == null) {
             log.warn("FCM is disabled. Skipping push notification for teamName={}", teamName);
@@ -33,6 +33,8 @@ public class FcmNotificationService {
         Message message = Message.builder()
                 .setToken(token)
                 .setNotification(notification)
+                .putData("type", "NEW_POST")
+                .putData("postId", String.valueOf(postId))
                 .build();
 
         String messageId = firebaseMessaging.send(message);
@@ -46,7 +48,7 @@ public class FcmNotificationService {
         return messageId;
     }
 
-    public String sendJournalistPostCreatedNotification(PostJournalist journalist, String token) throws FirebaseMessagingException {
+    public String sendJournalistPostCreatedNotification(PostJournalist journalist, String token, Long postId) throws FirebaseMessagingException {
         FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
 
         if (firebaseMessaging == null) {
@@ -62,6 +64,8 @@ public class FcmNotificationService {
         Message message = Message.builder()
                 .setToken(token)
                 .setNotification(notification)
+                .putData("type", "NEW_POST")
+                .putData("postId", String.valueOf(postId))
                 .build();
 
         String messageId = firebaseMessaging.send(message);
@@ -69,6 +73,36 @@ public class FcmNotificationService {
         log.info(
                 "FCM 발송 요청 성공. journalist={}, messageId={}",
                 journalist,
+                messageId
+        );
+
+        return messageId;
+    }
+
+    public String sendPlayerPostNotification(String token, String playerName, Long postId) throws FirebaseMessagingException {
+        FirebaseMessaging firebaseMessaging = firebaseMessagingProvider.getIfAvailable();
+        if (firebaseMessaging == null) {
+            log.warn("FCM is disabled. Skipping push notification for playerName={}", playerName);
+            return null;
+        }
+
+        Notification notification = Notification.builder()
+                .setTitle("VEYRO")
+                .setBody("[" + playerName + "] 선수에 새로운 소식이 등록됐습니다!")
+                .build();
+
+        Message message = Message.builder()
+                .setToken(token)
+                .setNotification(notification)
+                .putData("type", "NEW_POST")
+                .putData("postId", String.valueOf(postId))
+                .build();
+
+        String messageId = firebaseMessaging.send(message);
+
+        log.info(
+                "FCM 발송 요청 성공. playerName={}, messageId={}",
+                playerName,
                 messageId
         );
 

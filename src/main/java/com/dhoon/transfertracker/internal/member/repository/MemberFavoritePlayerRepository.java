@@ -13,4 +13,6 @@ public interface MemberFavoritePlayerRepository extends JpaRepository<MemberFavo
     boolean existsByMemberIdAndPlayerId(Long memberId, Long playerId);
 
     List<MemberFavoritePlayer> findAllByMemberId(Long memberId);
+
+    List<MemberFavoritePlayer> findAllByPlayerId(Long playerId);
 }
