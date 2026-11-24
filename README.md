@@ -161,3 +161,28 @@ JUnit 5, Mockito, AssertJ를 활용하여 비즈니스 로직을 검증합니다
 
 - [ADR-001: 외부 API 호출과 DB 트랜잭션 분리](docs/decisions/ADR-001-transaction-boundary.md)
 
+---
+
+## 9. 트러블슈팅 및 성능 최적화
+
+서비스 개발 과정에서 발생한 기술적 문제를 분석하고, 실제 성능 측정을 기반으로 개선합니다.
+
+### 9-1. 게시물 조회 API 성능 최적화
+
+- **문제:** 게시물 100만 건 환경에서 최신 게시물 30건 조회 시 Full Table Scan 및 Filesort 발생
+- **원인:** 정렬 조건에 적합한 인덱스 부재
+- **해결:** InnoDB의 Index Extension을 고려한 `content_created_at` 단일 인덱스 적용
+- **검증:** MySQL EXPLAIN ANALYZE 및 k6 부하 테스트
+
+| 측정 지표 | Before | After |
+|---|---:|---:|
+| SQL 실행 시간 | 340ms | 0.583ms |
+| 평균 응답 시간 | 8.49s | 45.33ms |
+| p95 응답 시간 | 10.37s | 53.57ms |
+| 실제 처리량 | 20.41 RPS | 49.98 RPS |
+| Dropped Iterations | 1,587건 | 0건 |
+
+**성과: p95 응답 시간 99.48% 감소**
+
+[상세 문제 해결 과정 및 기술 블로그](https://velog.io/@qlrxn115/VEYRO-성능-개선기-1-게시물-100만건-조회-MySQL-인덱스를-통해-p95-응답-시간-99-단축)
+
