@@ -78,7 +78,6 @@ public class PostSyncStatus {
         else {
             currentStep = nextStep;
             currentStepStatus = PostSyncStatusType.PENDING;
-
         }
 
         this.retryCount = 0;

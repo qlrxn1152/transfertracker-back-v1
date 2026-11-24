@@ -67,6 +67,11 @@ public class SecurityConfig {
                         )
                         .hasRole("ADMIN")
 
+                        .requestMatchers(
+                                "/api/admin/**"
+                        )
+                        .hasRole("ADMIN")
+
                         // 게시물 조회 API는 로그인 없이도 사용할 수 있다.
                         // 명시적인 GET 매처를 먼저 둬서 /api/posts/players/{id}처럼
                         // 여러 path segment를 가진 조회 경로도 OAuth 인증 대상으로

@@ -4,6 +4,8 @@ import com.dhoon.transfertracker.external.openai.dto.request.PlayerNameTranslati
 import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;
 import com.dhoon.transfertracker.external.openai.dto.response.PlayerNameTranslationBatchResult;
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
+import com.dhoon.transfertracker.external.openai.exception.OpenAiApiException;
+import com.dhoon.transfertracker.external.openai.exception.OpenAiErrorType;
 import com.dhoon.transfertracker.internal.post.record.PostGenerationBatchResult;
 import com.dhoon.transfertracker.internal.post.record.PostGenerationBatchTarget;
 import com.dhoon.transfertracker.internal.post.record.TeamAssignPostsResult;
@@ -12,7 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -48,7 +54,7 @@ public class OpenAiClient {
 
                 "instructions", """
                         Translate the given English football posts into natural Korean.
-
+                        
                         Rules:
                         - Do not summarize or add information.
                         - Preserve player names, club names, transfer fees, dates, and numbers.
@@ -56,7 +62,7 @@ public class OpenAiClient {
                         - Preserve each postId exactly.
                         - Return the translated result for every input post.
                         - Return JSON only.
-
+                        
                         Response format:
                         {
                           "posts": [
@@ -72,47 +78,14 @@ public class OpenAiClient {
         );
 
 
+        JsonNode response = executeRequest(request);
 
-        JsonNode response = openAiRestClient.post()
-                .uri("/v1/responses")
-                .body(request)
-                .retrieve()
-                .body(JsonNode.class);
 
         String outputText = extractOutputText(response);
 
-        return objectMapper.readValue(
-                outputText,
-                TranslationBatchResult.class
-        );
-
-
+        return deserialize(outputText, TranslationBatchResult.class);
     }
 
-    private String extractOutputText(JsonNode response) {
-
-        JsonNode outputs = response.get("output");
-
-        for (JsonNode output : outputs) {
-
-            if (!"message".equals(output.get("type").asString())) {
-                continue;
-            }
-
-            JsonNode contents = output.get("content");
-
-            for (JsonNode content : contents) {
-
-                if ("output_text".equals(content.get("type").asString())) {
-                    return content.get("text").asString();
-                }
-            }
-        }
-
-        throw new IllegalStateException(
-                "OpenAI 응답에서 output_text를 찾을 수 없습니다."
-        );
-    }
 
     public PlayerNameTranslationBatchResult translatePlayerNames(
             List<PlayerNameTranslationTarget> targets
@@ -166,31 +139,11 @@ public class OpenAiClient {
                 );
 
 
-        JsonNode response =
-                openAiRestClient
-                        .post()
-                        .uri(
-                                "/v1/responses"
-                        )
-                        .body(
-                                request
-                        )
-                        .retrieve()
-                        .body(
-                                JsonNode.class
-                        );
+        JsonNode response = executeRequest(request);
 
+        String outputText = extractOutputText(response);
 
-        String outputText =
-                extractOutputText(
-                        response
-                );
-
-
-        return objectMapper.readValue(
-                outputText,
-                PlayerNameTranslationBatchResult.class
-        );
+        return deserialize(outputText, PlayerNameTranslationBatchResult.class);
     }
 
     public TeamAssignPostsResult classifyTeamsAndPlayers(TeamAssignPostsTarget targets) {
@@ -266,22 +219,12 @@ public class OpenAiClient {
                 "input", input
         );
 
-        JsonNode response = openAiRestClient.post()
-                .uri("/v1/responses")
-                .body(request)
-                .retrieve()
-                .body(JsonNode.class);
-
-        if (response == null) {
-            throw new IllegalStateException("OpenAI 응답이 비어 있습니다.");
-        }
+        JsonNode response = executeRequest(request);
 
         String outputText = extractOutputText(response);
 
-        TeamAssignPostsResult result = objectMapper.readValue(
-                outputText,
-                TeamAssignPostsResult.class
-        );
+
+        TeamAssignPostsResult result = deserialize(outputText, TeamAssignPostsResult.class);
 
         if (result == null || result.posts() == null) {
             throw new IllegalStateException("OpenAI 팀 분류 결과가 올바르지 않습니다.");
@@ -398,22 +341,13 @@ public class OpenAiClient {
                 "input", input
         );
 
-        JsonNode response = openAiRestClient.post()
-                .uri("/v1/responses")
-                .body(request)
-                .retrieve()
-                .body(JsonNode.class);
 
-        if (response == null) {
-            throw new IllegalStateException("OpenAI 응답이 비어 있습니다.");
-        }
+        JsonNode response = executeRequest(request);
 
         String outputText = extractOutputText(response);
 
-        PostGenerationBatchResult result = objectMapper.readValue(
-                outputText,
-                PostGenerationBatchResult.class
-        );
+        PostGenerationBatchResult result = deserialize(outputText, PostGenerationBatchResult.class);
+
 
         if (result == null || result.posts() == null
                 || result.posts().size() != targets.posts().size()) {
@@ -424,6 +358,86 @@ public class OpenAiClient {
 
         return result;
     }
+
+    private JsonNode executeRequest(Map<String, Object> request) {
+        try {
+            JsonNode response = openAiRestClient.post()
+                    .uri("/v1/responses")
+                    .body(request)
+                    .retrieve()
+                    .body(JsonNode.class);
+            if (response == null) {
+                throw new OpenAiApiException(OpenAiErrorType.INVALID_RESPONSE, null, "OpenAI API Empty Response", null);
+            }
+
+            return response;
+        } catch (RestClientResponseException e) {
+            int statusCode = e.getStatusCode().value();
+            OpenAiErrorType openAiErrorType = OpenAiErrorType.fromStatusCode(statusCode);
+            throw new OpenAiApiException(openAiErrorType, statusCode, "OpenAI API HTTP " + statusCode, e);
+        } catch (ResourceAccessException e) {
+            throw new OpenAiApiException(OpenAiErrorType.NETWORK_ERROR, null, "OpenAI API Network Error", e);
+        } catch (RestClientException e) {
+            throw new OpenAiApiException(OpenAiErrorType.UNKNOWN, null, "OpenAI API Request Failed", e);
+        }
+
+    }
+
+    private String extractOutputText(JsonNode response) {
+
+        JsonNode outputs = response.path("output");
+
+        if (!outputs.isArray() || outputs.isEmpty()) {
+            throw new OpenAiApiException(
+                    OpenAiErrorType.INVALID_RESPONSE,
+                    null,
+                    "OpenAI API Invalid Output",
+                    null
+            );
+        }
+
+        for (JsonNode output : outputs) {
+
+            if (!"message".equals(output.path("type").asString())) {
+                continue;
+            }
+
+            JsonNode contents = output.path("content");
+
+            if (!contents.isArray()) {
+                continue;
+            }
+
+            for (JsonNode content : contents) {
+
+                if (!"output_text".equals(content.path("type").asString())) {
+                    continue;
+                }
+
+                JsonNode text = content.path("text");
+
+                if (text.isTextual() && !text.asString().isBlank()) {
+                    return text.asString();
+                }
+            }
+        }
+
+        throw new OpenAiApiException(
+                OpenAiErrorType.INVALID_RESPONSE,
+                null,
+                "OpenAI API Output Text Not Found",
+                null
+        );
+    }
+
+    private <T> T deserialize(String outputText, Class<T> responseType) {
+        try {
+            return objectMapper.readValue(outputText, responseType);
+        } catch (JacksonException e) {
+            throw new OpenAiApiException(OpenAiErrorType.INVALID_RESPONSE, null, "OpenAI API JSON Deserialization Failed", e);
+        }
+    }
+
 
 
 

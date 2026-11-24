@@ -3,9 +3,12 @@ package com.dhoon.transfertracker.internal.post.sync.service;
 import com.dhoon.transfertracker.external.openai.client.OpenAiClient;
 import com.dhoon.transfertracker.external.openai.dto.request.TranslationTarget;
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationBatchResult;
+import com.dhoon.transfertracker.external.openai.exception.OpenAiApiException;
 import com.dhoon.transfertracker.external.x.client.XClient;
 import com.dhoon.transfertracker.internal.post.domain.Post;
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.internal.post.domain.PostSyncStatus;
+import com.dhoon.transfertracker.internal.post.domain.PostSyncStep;
 import com.dhoon.transfertracker.internal.post.notification.PostMemberNotificationService;
 import com.dhoon.transfertracker.internal.post.record.*;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,8 @@ import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.dhoon.transfertracker.internal.post.sync.service.PostSaveTxService.*;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -26,6 +31,7 @@ public class PostSaveOrchestrationService {
 
     private final PostSaveTxService txService;
     private final PostMemberNotificationService postMemberNotificationService;
+
 
 
     public String syncPosts(PostJournalist journalist, Long memberId) {
@@ -53,7 +59,7 @@ public class PostSaveOrchestrationService {
         List<TranslationTarget> translationTargets = new ArrayList<>();
         List<Long> postIds = new ArrayList<>();
 
-        List<PostGenerationResult> generatedPosts = generatePosts(journalist, userPosts).posts();
+        List<PostGenerationResult> generatedPosts = generateReconstructedPosts(journalist, userPosts).posts(); // 재구성포스트
 
         if (generatedPosts.isEmpty()) {
             log.info("신규 게시물이 없습니다. journalist = {}", journalist);
@@ -67,6 +73,7 @@ public class PostSaveOrchestrationService {
             TeamAssignPostTarget assignPostTarget = new TeamAssignPostTarget(savedPost.getId(), savedPost.getContent());
             assignPostTargets.add(assignPostTarget); // 저장된 게시물을, 할당 대상에 추가.
 
+
             TranslationTarget translationTarget = new TranslationTarget(savedPost.getId(), savedPost.getContent());
             translationTargets.add(translationTarget); // 저장된 게시물을, 번역 대상에 추가.
 
@@ -78,22 +85,90 @@ public class PostSaveOrchestrationService {
         sendNotification(postIds); // 알림발송
     }
 
-    private void sendNotification(List<Long> postIds) {
-        try {
-            postMemberNotificationService.sendNotification(postIds);
-        } catch (Exception e) {
-            log.error("게시물 저장 / 할당 / 번역 작업 완료, 알림 처리중 실패. postIds = {}", postIds, e);
-        }
-    }
 
-
-    private PostGenerationBatchResult generatePosts(PostJournalist journalist, JsonNode userPosts) {
+    private PostGenerationBatchResult generateReconstructedPosts(PostJournalist journalist, JsonNode userPosts) {
         List<PostGenerationTarget> generationTargets = new ArrayList<>();
 
         userPosts.forEach(post -> addGenerationTargetIfNew(journalist, post, generationTargets));
 
         PostGenerationBatchTarget generationBatchTarget = new PostGenerationBatchTarget(generationTargets);
         return openAiClient.generatePosts(generationBatchTarget);
+    }
+
+    private void assignTeamAndPlayerToPost(List<TeamAssignPostTarget> assignPostTargets) {
+        assignPostTargets.forEach(target -> {
+            Long postId = target.postId();
+            txService.startStep(postId, PostSyncStep.ASSIGN);
+        });
+
+        executeAssign(assignPostTargets);
+    }
+
+    private void executeAssign(List<TeamAssignPostTarget> assignPostTargets) {
+        TeamAssignPostsResult assignedResults;
+
+        try{
+            assignedResults = openAiClient.classifyTeamsAndPlayers(new TeamAssignPostsTarget(assignPostTargets));
+        } catch (OpenAiApiException e) {
+            assignPostTargets.forEach(target -> {
+                Long postId = target.postId();
+                txService.failStep(postId, PostSyncStep.ASSIGN, e.getMessage());
+            });
+            throw e;
+        }
+
+        // 포스트에 관련된 팀과 플레이어 할당
+        assignedResults.posts().forEach(txService::assignTeamPlayer);
+    }
+
+
+
+    private void translatePostsContent(List<TranslationTarget> translationTargets) {
+        translationTargets.forEach(target -> {
+            Long postId = target.getPostId();
+            txService.startStep(postId, PostSyncStep.TRANSLATE);
+        });
+
+        executeTranslate(translationTargets);
+    }
+
+    private void executeTranslate(List<TranslationTarget> translationTargets) {
+        TranslationBatchResult translatedResults;
+
+        try {
+            translatedResults = openAiClient.translate(translationTargets);
+        } catch (OpenAiApiException e) {
+            translationTargets.forEach(target -> {
+                Long postId = target.getPostId();
+                txService.failStep(postId, PostSyncStep.TRANSLATE, e.getMessage());
+            });
+            throw e;
+        }
+
+        // 포스트 영문내용 한국어로 번역
+        translatedResults.getPosts().forEach(txService::translateContent);
+    }
+
+
+
+
+    private void sendNotification(List<Long> postIds) {
+        postIds.forEach(postId -> txService.startStep(postId, PostSyncStep.NOTIFICATION));
+
+        executeNotification(postIds);
+    }
+
+    private void executeNotification(List<Long> postIds) {
+        try {
+            postMemberNotificationService.sendNotification(postIds);
+
+        } catch (Exception e) {
+            postIds.forEach(postId -> txService.failStep(postId, PostSyncStep.NOTIFICATION, "Notification Send Failed"));
+
+            log.error("게시물 저장 / 할당 / 번역 작업 완료, 알림 처리중 실패. postIds = {}", postIds, e);
+            throw e;
+        }
+        postIds.forEach(postId -> txService.completeStep(postId, PostSyncStep.NOTIFICATION));
     }
 
     private void addGenerationTargetIfNew(PostJournalist journalist, JsonNode post, List<PostGenerationTarget> generationTargets) {
@@ -110,19 +185,38 @@ public class PostSaveOrchestrationService {
         generationTargets.add(new PostGenerationTarget(externalPostId, journalist.getDisplayerName(), content));
     }
 
-    private void assignTeamAndPlayerToPost(List<TeamAssignPostTarget> assignPostTargets) {
-        TeamAssignPostsResult assignedResults = openAiClient.classifyTeamsAndPlayers(new TeamAssignPostsTarget(assignPostTargets)); // External API
+    public void retryPost(Long postId) {
+        PostRetryData retryData = txService.getPostRetryData(postId);
+        PostSyncStep failedStep = retryData.step();
 
-        // 포스트에 관련된 팀과 플레이어 할당
-        assignedResults.posts().forEach(txService::assignTeamPlayer);
+        TeamAssignPostTarget assignTarget = new TeamAssignPostTarget(
+                retryData.postId(),
+                retryData.content()
+        );
+
+        TranslationTarget translationTarget = new TranslationTarget(
+                retryData.postId(),
+                retryData.content()
+        );
+
+        txService.retryStep(postId, failedStep);
+
+        switch (failedStep) {
+            case ASSIGN -> {
+                executeAssign(List.of(assignTarget));
+
+                translatePostsContent(List.of(translationTarget));
+                sendNotification(List.of(postId));
+            }
+            case TRANSLATE -> {
+                executeTranslate(List.of(translationTarget));
+                sendNotification(List.of(postId));
+            }
+            case NOTIFICATION -> executeNotification(List.of(postId));
+        }
+
     }
 
 
-    private void translatePostsContent(List<TranslationTarget> translationTargets) {
-        TranslationBatchResult translatedResults = openAiClient.translate(translationTargets); // External API
-
-        // 포스트 영문내용 한국어로 번역
-        translatedResults.getPosts().forEach(txService::translateContent);
-    }
 
 }
