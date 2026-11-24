@@ -45,11 +45,13 @@ public class PostQueryService {
     private final PlayerRepository playerRepository;
     private final TeamPlayerRepository teamPlayerRepository;
 
+    private final PostQueryTxService queryTxService;
+
     public PostsResponseDto getPosts(int page) {
         validatePageNotNegative(page);
         Pageable pageable = createPostPage(page);
 
-        Page<Post> postPage = postRepository.findAll(pageable);
+        Page<Post> postPage = queryTxService.getPosts(pageable);
 
         List<PostItemResponseDto> posts = postPage.getContent()
                 .stream()
@@ -126,8 +128,6 @@ public class PostQueryService {
         );
 
         Page<PostPlayer> postPage = postPlayerRepository.findAllByPlayerId(playerId, pageable);
-
-        log.info("content = {}", postPage.getContent());
 
         if (!teamPlayerRepository.existsByPlayerId(playerId)) {
             List<PostItemResponseDto> posts = postPage.getContent()
