@@ -2,7 +2,6 @@ package com.dhoon.transfertracker.internal.post.sync.controller;
 
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.sync.service.PostSaveOrchestrationService;
-import com.dhoon.transfertracker.internal.post.sync.service.PostSaveService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

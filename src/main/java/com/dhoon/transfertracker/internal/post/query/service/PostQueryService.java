@@ -61,6 +61,10 @@ public class PostQueryService {
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
     }
 
+
+
+
+
     public PostsResponseDto getJournalistPosts(PostJournalist journalist, int page) {
         if (journalist == null) {
             throw new IllegalArgumentException("Journalist 는 null 일 수 없습니다.");
@@ -86,6 +90,9 @@ public class PostQueryService {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(NotFoundPostException::new);
+
+        List<PostTeam> postTeams = postTeamRepository.findAllByPostId(postId);
+        List<PostPlayer> postPlayers = postPlayerRepository.findAllByPostId(postId);
 
         return PostItemResponseDto.createPost(post);
     }

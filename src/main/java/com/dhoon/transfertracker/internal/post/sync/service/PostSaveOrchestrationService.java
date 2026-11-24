@@ -75,18 +75,16 @@ public class PostSaveOrchestrationService {
 
         assignTeamAndPlayerToPost(assignPostTargets); // 할당
         translatePostsContent(translationTargets); // 번역
+        sendNotification(postIds); // 알림발송
+    }
 
+    private void sendNotification(List<Long> postIds) {
         try {
             postMemberNotificationService.sendNotification(postIds);
         } catch (Exception e) {
             log.error("게시물 저장 / 할당 / 번역 작업 완료, 알림 처리중 실패. postIds = {}", postIds, e);
         }
     }
-
-
-
-
-
 
 
     private PostGenerationBatchResult generatePosts(PostJournalist journalist, JsonNode userPosts) {
