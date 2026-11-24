@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
                 @UniqueConstraint(name = "uk_post_external_post_id", columnNames = "external_post_id")
         },
         indexes = {
-                @Index(name = "idx_post_related", columnList = "is_transfer_related")
+                @Index(name = "idx_post_related", columnList = "is_transfer_related"),
+                @Index(name = "idx_post_content_created_at", columnList = "content_created_at")
         }
 )
 public class Post {

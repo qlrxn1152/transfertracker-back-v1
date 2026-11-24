@@ -48,6 +48,6 @@ export function handleSummary(data) {
     console.log('HTML 보고서 생성 완료');
 
     return {
-        'performance/results/posts-report.html': report,
+        'performance/results/posts-afterIndex-report.html': report,
     };
 }
