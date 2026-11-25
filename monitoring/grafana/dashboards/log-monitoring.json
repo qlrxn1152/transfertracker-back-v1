@@ -6,7 +6,7 @@
   "refresh": "15s",
   "schemaVersion": 41,
   "templating": {"list": [
-    {"name": "environment", "label": "Environment", "type": "query", "datasource": {"type": "loki", "uid": "loki"}, "definition": "label_values({application=\"veyro\"}, environment)", "query": {"query": "label_values({application=\"veyro\"}, environment)"}, "includeAll": false, "multi": false, "current": {"text": "local", "value": "local"}},
+    {"name": "environment", "label": "Environment", "type": "custom", "query": "local,performance", "includeAll": false, "multi": false, "current": {"text": "local", "value": "local"}},
     {"name": "level", "label": "Level", "type": "custom", "query": "INFO,WARN,ERROR", "includeAll": true, "allValue": ".*", "multi": true, "current": {"text": "All", "value": ["$__all"]}},
     {"name": "search", "label": "Text / requestId / memberId", "type": "textbox", "query": "", "current": {"text": "", "value": ""}}
   ]},
