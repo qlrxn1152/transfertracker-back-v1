@@ -1,0 +1,212 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: VEYRO backend alerts
+    folder: VEYRO
+    interval: 1m
+    rules:
+      - uid: veyro-target-down
+        title: VEYRO backend target is down
+        condition: B
+        for: 1m
+        noDataState: OK
+        execErrState: Error
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: min(up{application="veyro"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange: {from: 0, to: 0}
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator: {params: [1], type: lt}
+                  operator: {type: and}
+                  query: {params: [A]}
+                  reducer: {params: [], type: last}
+                  type: query
+              datasource: {type: __expr__, uid: __expr__}
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        annotations:
+          summary: VEYRO backend Prometheus target is unavailable for at least one minute.
+        labels:
+          component: backend
+          severity: critical
+
+      - uid: veyro-http-5xx-rate
+        title: VEYRO HTTP 5xx error rate is high
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: (sum(rate(http_server_requests_seconds_count{application="veyro",uri!~"/actuator.*",status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{application="veyro",uri!~"/actuator.*"}[5m])) * 100 > 5) and (sum(rate(http_server_requests_seconds_count{application="veyro",uri!~"/actuator.*"}[5m])) > 1)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange: {from: 0, to: 0}
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator: {params: [0], type: gt}
+                  operator: {type: and}
+                  query: {params: [A]}
+                  reducer: {params: [], type: last}
+                  type: query
+              datasource: {type: __expr__, uid: __expr__}
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        annotations:
+          summary: HTTP 5xx ratio exceeded 5% while the service handled more than 1 request/second.
+        labels:
+          component: http
+          severity: critical
+
+      - uid: veyro-hikari-pending
+        title: VEYRO HikariCP has pending threads
+        condition: B
+        for: 1m
+        noDataState: OK
+        execErrState: Error
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: max(hikaricp_connections_pending{application="veyro"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange: {from: 0, to: 0}
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator: {params: [0], type: gt}
+                  operator: {type: and}
+                  query: {params: [A]}
+                  reducer: {params: [], type: last}
+                  type: query
+              datasource: {type: __expr__, uid: __expr__}
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        annotations:
+          summary: At least one request has been waiting for a database connection for one minute.
+        labels:
+          component: database
+          severity: warning
+
+      - uid: veyro-connection-timeout
+        title: VEYRO database connection timeout occurred
+        condition: B
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: sum(increase(hikaricp_connections_timeout_total{application="veyro"}[5m]))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange: {from: 0, to: 0}
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator: {params: [0], type: gt}
+                  operator: {type: and}
+                  query: {params: [A]}
+                  reducer: {params: [], type: last}
+                  type: query
+              datasource: {type: __expr__, uid: __expr__}
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        annotations:
+          summary: One or more database connection acquisition timeouts occurred within five minutes.
+        labels:
+          component: database
+          severity: critical
+
+      - uid: veyro-post-sync-failed
+        title: VEYRO post sync has failed items
+        condition: B
+        for: 1m
+        noDataState: OK
+        execErrState: Error
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: sum(veyro_post_sync_status{status="failed"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange: {from: 0, to: 0}
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator: {params: [0], type: gt}
+                  operator: {type: and}
+                  query: {params: [A]}
+                  reducer: {params: [], type: last}
+                  type: query
+              datasource: {type: __expr__, uid: __expr__}
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        annotations:
+          summary: At least one post sync status has remained FAILED for one minute.
+        labels:
+          component: post-sync
+          severity: warning

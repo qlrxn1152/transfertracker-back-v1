@@ -1,7 +1,9 @@
 package com.dhoon.transfertracker.internal.member.kakao;
 
+import com.dhoon.transfertracker.monitoring.ExternalApiMetrics;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -21,6 +23,7 @@ public class KakaoOAuthClient {
     private static final String PROFILE_URL = "https://kapi.kakao.com/v2/user/me";
 
     private final RestClient.Builder restClientBuilder;
+    private final ObjectProvider<ExternalApiMetrics> externalApiMetricsProvider;
 
     @Value("${app.oauth.kakao.client-id:}")
     private String clientId;
@@ -50,23 +53,23 @@ public class KakaoOAuthClient {
         form.add("code", authorizationCode);
         if (!clientSecret.isBlank()) form.add("client_secret", clientSecret);
 
-        JsonNode tokenResponse = restClientBuilder.build().post()
+        JsonNode tokenResponse = record("token", () -> restClientBuilder.build().post()
                 .uri(TOKEN_URL)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(form)
                 .retrieve()
-                .body(JsonNode.class);
+                .body(JsonNode.class));
 
         String accessToken = tokenResponse == null ? "" : tokenResponse.path("access_token").asText();
         if (accessToken.isBlank()) {
             throw new ResponseStatusException(SERVICE_UNAVAILABLE, "카카오 인증 토큰을 받지 못했습니다.");
         }
 
-        JsonNode profileResponse = restClientBuilder.build().get()
+        JsonNode profileResponse = record("profile", () -> restClientBuilder.build().get()
                 .uri(PROFILE_URL)
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
-                .body(JsonNode.class);
+                .body(JsonNode.class));
 
         String kakaoId = profileResponse == null ? "" : profileResponse.path("id").asText();
         if (kakaoId.isBlank()) {
@@ -84,5 +87,10 @@ public class KakaoOAuthClient {
 
     private String encode(String value) {
         return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private <T> T record(String operation, java.util.function.Supplier<T> call) {
+        ExternalApiMetrics metrics = externalApiMetricsProvider.getIfAvailable();
+        return metrics == null ? call.get() : metrics.record("kakao", operation, call);
     }
 }

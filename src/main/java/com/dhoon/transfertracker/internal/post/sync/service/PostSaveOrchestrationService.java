@@ -11,6 +11,8 @@ import com.dhoon.transfertracker.internal.post.domain.PostSyncStatus;
 import com.dhoon.transfertracker.internal.post.domain.PostSyncStep;
 import com.dhoon.transfertracker.internal.post.notification.PostMemberNotificationService;
 import com.dhoon.transfertracker.internal.post.record.*;
+import com.dhoon.transfertracker.monitoring.PostRetryMetrics;
+import com.dhoon.transfertracker.monitoring.PostSyncMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,8 @@ public class PostSaveOrchestrationService {
 
     private final PostSaveTxService txService;
     private final PostMemberNotificationService postMemberNotificationService;
+    private final PostSyncMetrics postSyncMetrics;
+    private final PostRetryMetrics postRetryMetrics;
 
 
 
@@ -113,12 +117,17 @@ public class PostSaveOrchestrationService {
             assignPostTargets.forEach(target -> {
                 Long postId = target.postId();
                 txService.failStep(postId, PostSyncStep.ASSIGN, e.getMessage());
+                postSyncMetrics.failure(PostSyncStep.ASSIGN);
             });
             throw e;
         }
 
         // 포스트에 관련된 팀과 플레이어 할당
-        assignedResults.posts().forEach(txService::assignTeamPlayer);
+        assignedResults.posts().forEach(result -> {
+            txService.assignTeamPlayer(result);
+            // Tx service 호출이 정상 반환된 뒤에만 성공을 기록한다. (트랜잭션 커밋 완료 이후)
+            postSyncMetrics.success(PostSyncStep.ASSIGN);
+        });
     }
 
 
@@ -141,12 +150,16 @@ public class PostSaveOrchestrationService {
             translationTargets.forEach(target -> {
                 Long postId = target.getPostId();
                 txService.failStep(postId, PostSyncStep.TRANSLATE, e.getMessage());
+                postSyncMetrics.failure(PostSyncStep.TRANSLATE);
             });
             throw e;
         }
 
         // 포스트 영문내용 한국어로 번역
-        translatedResults.getPosts().forEach(txService::translateContent);
+        translatedResults.getPosts().forEach(result -> {
+            txService.translateContent(result);
+            postSyncMetrics.success(PostSyncStep.TRANSLATE);
+        });
     }
 
 
@@ -163,12 +176,18 @@ public class PostSaveOrchestrationService {
             postMemberNotificationService.sendNotification(postIds);
 
         } catch (Exception e) {
-            postIds.forEach(postId -> txService.failStep(postId, PostSyncStep.NOTIFICATION, "Notification Send Failed"));
+            postIds.forEach(postId -> {
+                txService.failStep(postId, PostSyncStep.NOTIFICATION, "Notification Send Failed");
+                postSyncMetrics.failure(PostSyncStep.NOTIFICATION);
+            });
 
             log.error("게시물 저장 / 할당 / 번역 작업 완료, 알림 처리중 실패. postIds = {}", postIds, e);
             throw e;
         }
-        postIds.forEach(postId -> txService.completeStep(postId, PostSyncStep.NOTIFICATION));
+        postIds.forEach(postId -> {
+            txService.completeStep(postId, PostSyncStep.NOTIFICATION);
+            postSyncMetrics.success(PostSyncStep.NOTIFICATION);
+        });
     }
 
     private void addGenerationTargetIfNew(PostJournalist journalist, JsonNode post, List<PostGenerationTarget> generationTargets) {
@@ -200,19 +219,25 @@ public class PostSaveOrchestrationService {
         );
 
         txService.retryStep(postId, failedStep);
+        postRetryMetrics.accepted(failedStep);
 
-        switch (failedStep) {
-            case ASSIGN -> {
-                executeAssign(List.of(assignTarget));
-
-                translatePostsContent(List.of(translationTarget));
-                sendNotification(List.of(postId));
+        try {
+            switch (failedStep) {
+                case ASSIGN -> {
+                    executeAssign(List.of(assignTarget));
+                    translatePostsContent(List.of(translationTarget));
+                    sendNotification(List.of(postId));
+                }
+                case TRANSLATE -> {
+                    executeTranslate(List.of(translationTarget));
+                    sendNotification(List.of(postId));
+                }
+                case NOTIFICATION -> executeNotification(List.of(postId));
             }
-            case TRANSLATE -> {
-                executeTranslate(List.of(translationTarget));
-                sendNotification(List.of(postId));
-            }
-            case NOTIFICATION -> executeNotification(List.of(postId));
+            postRetryMetrics.completed(failedStep);
+        } catch (RuntimeException exception) {
+            postRetryMetrics.failed(failedStep);
+            throw exception;
         }
 
     }

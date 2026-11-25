@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.external.fcm;
 
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.monitoring.NotificationMetrics;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FcmNotificationService {
 
     private final ObjectProvider<FirebaseMessaging> firebaseMessagingProvider;
+    private final NotificationMetrics notificationMetrics;
 
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public String sendTeamPostNotification(String token, String teamName, Long postId) throws FirebaseMessagingException {
@@ -39,7 +41,7 @@ public class FcmNotificationService {
                 .putData("postId", String.valueOf(postId))
                 .build();
 
-        String messageId = firebaseMessaging.send(message);
+        String messageId = send(firebaseMessaging, message, "team");
 
         log.info(
                 "FCM 발송 요청 성공. teamName={}, messageId={}",
@@ -71,7 +73,7 @@ public class FcmNotificationService {
                 .putData("postId", String.valueOf(postId))
                 .build();
 
-        String messageId = firebaseMessaging.send(message);
+        String messageId = send(firebaseMessaging, message, "journalist");
 
         log.info(
                 "FCM 발송 요청 성공. journalist={}, messageId={}",
@@ -101,7 +103,7 @@ public class FcmNotificationService {
                 .putData("postId", String.valueOf(postId))
                 .build();
 
-        String messageId = firebaseMessaging.send(message);
+        String messageId = send(firebaseMessaging, message, "player");
 
         log.info(
                 "FCM 발송 요청 성공. playerName={}, messageId={}",
@@ -111,5 +113,16 @@ public class FcmNotificationService {
 
         return messageId;
 
+    }
+
+    private String send(FirebaseMessaging firebaseMessaging, Message message, String channel) throws FirebaseMessagingException {
+        try {
+            String messageId = firebaseMessaging.send(message);
+            notificationMetrics.success(channel);
+            return messageId;
+        } catch (FirebaseMessagingException exception) {
+            notificationMetrics.failure(channel);
+            throw exception;
+        }
     }
 }

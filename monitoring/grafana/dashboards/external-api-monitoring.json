@@ -1,0 +1,15 @@
+{
+  "uid": "veyro-external-api-monitoring",
+  "title": "VEYRO - External API Monitoring",
+  "tags": ["veyro", "external-api"],
+  "time": {"from": "now-15m", "to": "now"},
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "templating": {"list": [{"name": "environment", "label": "Environment", "type": "query", "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(veyro_external_api_duration_seconds_count, environment)", "query": {"query": "label_values(veyro_external_api_duration_seconds_count, environment)"}, "includeAll": true, "allValue": ".*", "multi": true, "current": {"text": "All", "value": ["$__all"]}}]},
+  "panels": [
+    {"id": 1, "type": "timeseries", "title": "API Calls / min", "gridPos": {"x": 0, "y": 0, "w": 12, "h": 9}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (provider) (increase(veyro_external_api_duration_seconds_count{environment=~\"$environment\"}[1m]))", "legendFormat": "{{provider}}", "range": true}], "fieldConfig": {"defaults": {"decimals": 0, "min": 0}, "overrides": []}, "options": {"legend": {"displayMode": "table", "placement": "bottom"}}},
+    {"id": 2, "type": "timeseries", "title": "API Failure Rate", "gridPos": {"x": 12, "y": 0, "w": 12, "h": 9}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (provider) (rate(veyro_external_api_duration_seconds_count{environment=~\"$environment\",result=\"failure\"}[5m])) / sum by (provider) (rate(veyro_external_api_duration_seconds_count{environment=~\"$environment\"}[5m])) * 100", "legendFormat": "{{provider}}", "range": true}], "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "min": 0}, "overrides": []}, "options": {"legend": {"displayMode": "table", "placement": "bottom"}}},
+    {"id": 3, "type": "timeseries", "title": "Average API Response Time", "gridPos": {"x": 0, "y": 9, "w": 12, "h": 9}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (provider) (rate(veyro_external_api_duration_seconds_sum{environment=~\"$environment\"}[5m])) / sum by (provider) (rate(veyro_external_api_duration_seconds_count{environment=~\"$environment\"}[5m])) * 1000", "legendFormat": "{{provider}}", "range": true}], "fieldConfig": {"defaults": {"unit": "ms", "decimals": 2, "min": 0}, "overrides": []}, "options": {"legend": {"displayMode": "table", "placement": "bottom"}}},
+    {"id": 4, "type": "timeseries", "title": "External API Errors", "gridPos": {"x": 12, "y": 9, "w": 12, "h": 9}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (provider, error_type) (increase(veyro_external_api_duration_seconds_count{environment=~\"$environment\",result=\"failure\"}[5m]))", "legendFormat": "{{provider}} / {{error_type}}", "range": true}], "fieldConfig": {"defaults": {"decimals": 0, "min": 0}, "overrides": []}, "options": {"legend": {"displayMode": "table", "placement": "bottom"}}}
+  ]
+}

@@ -1,9 +1,11 @@
 package com.dhoon.transfertracker.external.football.client;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
+import com.dhoon.transfertracker.monitoring.ExternalApiMetrics;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
@@ -13,13 +15,19 @@ import tools.jackson.databind.JsonNode;
 public class ApiFootballHttpClient {
 
     private final RestClient footballRestClient;
+    private final ObjectProvider<ExternalApiMetrics> externalApiMetricsProvider;
 
-    public ApiFootballHttpClient(@Qualifier("footballRestClient") RestClient footballRestClient) {
+    public ApiFootballHttpClient(
+            @Qualifier("footballRestClient") RestClient footballRestClient,
+            ObjectProvider<ExternalApiMetrics> externalApiMetricsProvider
+    ) {
         this.footballRestClient = footballRestClient;
+        this.externalApiMetricsProvider = externalApiMetricsProvider;
     }
 
     public JsonNode callExternalPlayerApi(Long playerApiId) {
-        JsonNode node = footballRestClient.get()
+        return record("player_profile", () -> {
+            JsonNode node = footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/players")
                         .path("/profiles")
@@ -28,12 +36,13 @@ public class ApiFootballHttpClient {
                 )
                 .retrieve()
                 .body(JsonNode.class);
-
-        return node.get("response").get(0).get("player");
+            return node.get("response").get(0).get("player");
+        });
     }
 
     public JsonNode callExternalTeamApi(Long teamApiID) {
-        JsonNode node = footballRestClient.get()
+        return record("team_profile", () -> {
+            JsonNode node = footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/teams")
                         .queryParam("id", teamApiID)
@@ -41,23 +50,23 @@ public class ApiFootballHttpClient {
                 )
                 .retrieve()
                 .body(JsonNode.class);
-
-        return node.get("response").get(0).get("team");
+            return node.get("response").get(0).get("team");
+        });
     }
 
     public JsonNode callExternalPlayerTransferApi(Long playerApiId) {
-        return footballRestClient.get()
+        return record("player_transfers", () -> footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/transfers")
                         .queryParam("player", playerApiId)
                         .build()
                 )
                 .retrieve()
-                .body(JsonNode.class);
+                .body(JsonNode.class));
     }
 
     public JsonNode callExternalTeamPlayersApi(Long teamApiId) {
-        return footballRestClient.get()
+        return record("team_players", () -> footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/players")
                         .path("/squads")
@@ -65,22 +74,22 @@ public class ApiFootballHttpClient {
                         .build()
                 )
                 .retrieve()
-                .body(JsonNode.class);
+                .body(JsonNode.class));
     }
 
     public JsonNode callExternalTeamTransfersApi(Long teamIdApiId) {
-        return footballRestClient.get()
+        return record("team_transfers", () -> footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/transfers")
                         .queryParam("team", teamIdApiId)
                         .build()
                 )
                 .retrieve()
-                .body(JsonNode.class);
+                .body(JsonNode.class));
     }
 
     public JsonNode callExternalLeagueTeamsApi(LeagueCode leagueCode) {
-        return footballRestClient.get()
+        return record("league_teams", () -> footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/teams")
                         .queryParam("league", leagueCode.getApiFootballLeagueId())
@@ -88,7 +97,12 @@ public class ApiFootballHttpClient {
                         .build()
                 )
                 .retrieve()
-                .body(JsonNode.class);
+                .body(JsonNode.class));
+    }
+
+    private <T> T record(String operation, java.util.function.Supplier<T> call) {
+        ExternalApiMetrics metrics = externalApiMetricsProvider.getIfAvailable();
+        return metrics == null ? call.get() : metrics.record("api_football", operation, call);
     }
 
 

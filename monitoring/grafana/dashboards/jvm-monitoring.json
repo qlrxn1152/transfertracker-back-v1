@@ -1,0 +1,16 @@
+{
+  "uid": "veyro-jvm-monitoring",
+  "title": "VEYRO - JVM Monitoring",
+  "tags": ["veyro", "jvm"],
+  "time": {"from": "now-15m", "to": "now"},
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "templating": {"list": [{"name": "environment", "label": "Environment", "type": "query", "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(up{application=\"veyro\"}, environment)", "query": {"query": "label_values(up{application=\"veyro\"}, environment)"}, "includeAll": true, "allValue": ".*", "multi": true, "current": {"text": "All", "value": ["$__all"]}}]},
+  "panels": [
+    {"id": 1, "type": "stat", "title": "JVM Uptime", "gridPos": {"x": 0, "y": 0, "w": 8, "h": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "max(process_uptime_seconds{application=\"veyro\",environment=~\"$environment\"})", "instant": true, "range": false}], "fieldConfig": {"defaults": {"unit": "s", "decimals": 0}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "graphMode": "none"}},
+    {"id": 2, "type": "stat", "title": "Live Threads", "gridPos": {"x": 8, "y": 0, "w": 8, "h": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(jvm_threads_live_threads{application=\"veyro\",environment=~\"$environment\"})", "instant": true, "range": false}], "fieldConfig": {"defaults": {"decimals": 0}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "graphMode": "none"}},
+    {"id": 3, "type": "stat", "title": "Process CPU", "gridPos": {"x": 16, "y": 0, "w": 8, "h": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "avg(process_cpu_usage{application=\"veyro\",environment=~\"$environment\"}) * 100", "instant": true, "range": false}], "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "graphMode": "none"}},
+    {"id": 4, "type": "timeseries", "title": "JVM Heap Used", "gridPos": {"x": 0, "y": 5, "w": 12, "h": 9}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(jvm_memory_used_bytes{application=\"veyro\",environment=~\"$environment\",area=\"heap\"})", "legendFormat": "Used", "range": true}, {"refId": "B", "expr": "sum(jvm_memory_max_bytes{application=\"veyro\",environment=~\"$environment\",area=\"heap\"})", "legendFormat": "Max", "range": true}], "fieldConfig": {"defaults": {"unit": "bytes", "min": 0}, "overrides": []}, "options": {"legend": {"displayMode": "list", "placement": "bottom"}}},
+    {"id": 5, "type": "timeseries", "title": "JVM GC Pause", "gridPos": {"x": 12, "y": 5, "w": 12, "h": 9}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(rate(jvm_gc_pause_seconds_sum{application=\"veyro\",environment=~\"$environment\"}[1m])) * 1000", "legendFormat": "Pause time / sec", "range": true}], "fieldConfig": {"defaults": {"unit": "ms", "decimals": 2, "min": 0}, "overrides": []}, "options": {"legend": {"displayMode": "list", "placement": "bottom"}}}
+  ]
+}

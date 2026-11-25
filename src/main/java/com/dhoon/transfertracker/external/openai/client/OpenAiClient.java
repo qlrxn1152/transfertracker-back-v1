@@ -10,8 +10,10 @@ import com.dhoon.transfertracker.internal.post.record.PostGenerationBatchResult;
 import com.dhoon.transfertracker.internal.post.record.PostGenerationBatchTarget;
 import com.dhoon.transfertracker.internal.post.record.TeamAssignPostsResult;
 import com.dhoon.transfertracker.internal.post.record.TeamAssignPostsTarget;
+import com.dhoon.transfertracker.monitoring.ExternalApiMetrics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
@@ -32,15 +34,18 @@ public class OpenAiClient {
     private final RestClient openAiRestClient;
     private final ObjectMapper objectMapper;
     private final String model;
+    private final ObjectProvider<ExternalApiMetrics> externalApiMetricsProvider;
 
     public OpenAiClient(
             @Qualifier("openAiRestClient") RestClient openAiRestClient,
             ObjectMapper objectMapper,
-            @Value("${openai.api.model}") String model
+            @Value("${openai.api.model}") String model,
+            ObjectProvider<ExternalApiMetrics> externalApiMetricsProvider
     ) {
         this.openAiRestClient = openAiRestClient;
         this.objectMapper = objectMapper;
         this.model = model;
+        this.externalApiMetricsProvider = externalApiMetricsProvider;
     }
 
     public TranslationBatchResult translate(List<TranslationTarget> targets) {
@@ -361,11 +366,11 @@ public class OpenAiClient {
 
     private JsonNode executeRequest(Map<String, Object> request) {
         try {
-            JsonNode response = openAiRestClient.post()
+            JsonNode response = record(() -> openAiRestClient.post()
                     .uri("/v1/responses")
                     .body(request)
                     .retrieve()
-                    .body(JsonNode.class);
+                    .body(JsonNode.class));
             if (response == null) {
                 throw new OpenAiApiException(OpenAiErrorType.INVALID_RESPONSE, null, "OpenAI API Empty Response", null);
             }
@@ -381,6 +386,11 @@ public class OpenAiClient {
             throw new OpenAiApiException(OpenAiErrorType.UNKNOWN, null, "OpenAI API Request Failed", e);
         }
 
+    }
+
+    private <T> T record(java.util.function.Supplier<T> call) {
+        ExternalApiMetrics metrics = externalApiMetricsProvider.getIfAvailable();
+        return metrics == null ? call.get() : metrics.record("openai", "responses", call);
     }
 
     private String extractOutputText(JsonNode response) {

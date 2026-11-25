@@ -3,9 +3,35 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'veyro-backend'
+  - job_name: 'veyro-local'
     metrics_path: '/actuator/prometheus'
 
     static_configs:
       - targets:
           - 'host.docker.internal:8080'
+        labels:
+          environment: 'local'
+          application: 'veyro'
+
+  - job_name: 'veyro-performance'
+    metrics_path: '/actuator/prometheus'
+
+    static_configs:
+      - targets:
+          - 'host.docker.internal:8081'
+        labels:
+          environment: 'performance'
+          application: 'veyro'
+
+  # Railway public domain. The endpoint is intentionally limited to the
+  # Prometheus exposition endpoint and has no application credentials.
+  - job_name: 'veyro-prod'
+    scheme: https
+    metrics_path: '/actuator/prometheus'
+
+    static_configs:
+      - targets:
+          - 'transfertracker-api-production.up.railway.app'
+        labels:
+          environment: 'prod'
+          application: 'veyro'

@@ -1,0 +1,18 @@
+{
+  "uid": "veyro-log-monitoring",
+  "title": "VEYRO - Log Monitoring",
+  "tags": ["veyro", "logs"],
+  "time": {"from": "now-1h", "to": "now"},
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "templating": {"list": [
+    {"name": "environment", "label": "Environment", "type": "query", "datasource": {"type": "loki", "uid": "loki"}, "definition": "label_values({application=\"veyro\"}, environment)", "query": {"query": "label_values({application=\"veyro\"}, environment)"}, "includeAll": true, "allValue": ".*", "multi": true, "current": {"text": "All", "value": ["$__all"]}},
+    {"name": "level", "label": "Level", "type": "custom", "query": "INFO,WARN,ERROR", "includeAll": true, "allValue": ".*", "multi": true, "current": {"text": "All", "value": ["$__all"]}},
+    {"name": "search", "label": "Text / requestId / memberId", "type": "textbox", "query": "", "current": {"text": "", "value": ""}}
+  ]},
+  "panels": [
+    {"id": 1, "type": "logs", "title": "Application Logs", "gridPos": {"x": 0, "y": 0, "w": 24, "h": 15}, "datasource": {"type": "loki", "uid": "loki"}, "targets": [{"refId": "A", "expr": "{application=\"veyro\", environment=~\"$environment\"} |~ \"(?i)$level\" |= \"$search\"", "queryType": "range"}], "options": {"showTime": true, "wrapLogMessage": true, "prettifyJSON": false, "sortOrder": "Descending", "dedupStrategy": "none", "enableLogDetails": true}},
+    {"id": 2, "type": "timeseries", "title": "WARN / ERROR Log Rate", "gridPos": {"x": 0, "y": 15, "w": 12, "h": 8}, "datasource": {"type": "loki", "uid": "loki"}, "targets": [{"refId": "A", "expr": "sum(count_over_time({application=\"veyro\", environment=~\"$environment\"} |~ \" WARN | ERROR \" [5m]))", "legendFormat": "WARN / ERROR", "queryType": "range"}], "fieldConfig": {"defaults": {"decimals": 0, "min": 0}, "overrides": []}, "options": {"legend": {"displayMode": "list", "placement": "bottom"}}},
+    {"id": 3, "type": "logs", "title": "HTTP Access Logs", "gridPos": {"x": 12, "y": 15, "w": 12, "h": 8}, "datasource": {"type": "loki", "uid": "loki"}, "targets": [{"refId": "A", "expr": "{application=\"veyro\", environment=~\"$environment\"} |= \"HTTP 요청 처리완료\"", "queryType": "range"}], "options": {"showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "dedupStrategy": "none", "enableLogDetails": true}}
+  ]
+}

@@ -1,0 +1,42 @@
+// Host에서 실행되는 local/performance Spring Boot의 rolling log만 수집한다.
+// requestId/memberId/postId는 고유 값이므로 Loki label로 만들지 않고 본문 검색에 남긴다.
+
+local.file_match "veyro_local" {
+  path_targets = [
+    {
+      __path__    = "/var/log/veyro/veyro-local.log",
+      application = "veyro",
+      environment = "local",
+    },
+  ]
+}
+
+local.file_match "veyro_performance" {
+  path_targets = [
+    {
+      __path__    = "/var/log/veyro/veyro-performance.log",
+      application = "veyro",
+      environment = "performance",
+    },
+  ]
+}
+
+loki.source.file "local" {
+  targets               = local.file_match.veyro_local.targets
+  tail_from_end         = true
+  legacy_positions_file = "/var/lib/alloy/positions-local.yml"
+  forward_to            = [loki.write.default.receiver]
+}
+
+loki.source.file "performance" {
+  targets               = local.file_match.veyro_performance.targets
+  tail_from_end         = true
+  legacy_positions_file = "/var/lib/alloy/positions-performance.yml"
+  forward_to            = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
