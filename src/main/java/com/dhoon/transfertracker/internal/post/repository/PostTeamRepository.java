@@ -16,9 +16,10 @@ public interface PostTeamRepository extends JpaRepository<PostTeam, Long> {
             join fetch pt.team
             join fetch pt.post
             where pt.team.id = :teamId
-            order by pt.post.contentCreatedAt desc, pt.post.id desc
+            order by pt.postCreatedAt desc, pt.post.id desc
             """)
     Page<PostTeam> findAllByTeamId(Long teamId, Pageable pageable);
+
 
     boolean existsByPostId(Long postId);
 

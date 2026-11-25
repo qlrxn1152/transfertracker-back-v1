@@ -186,3 +186,5 @@ JUnit 5, Mockito, AssertJ를 활용하여 비즈니스 로직을 검증합니다
 
 [상세 문제 해결 과정 및 기술 블로그](https://velog.io/@qlrxn115/VEYRO-성능-개선기-1-게시물-100만건-조회-MySQL-인덱스를-통해-p95-응답-시간-99-단축)
 
+성능 테스트 실행 이력과 보고서 보관 방법은 [성능 테스트 가이드](docs/performance-testing.md)에서 확인할 수 있습니다.
+

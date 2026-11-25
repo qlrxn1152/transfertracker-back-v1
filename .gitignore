@@ -50,3 +50,7 @@ infra/pinpoint/logs/
 backups/
 
 logs/
+
+# Generated k6 performance test artifacts. Existing portfolio reports under
+# performance/results remain tracked and are intentionally not affected.
+performance/reports/

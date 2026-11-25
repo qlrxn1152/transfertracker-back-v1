@@ -97,6 +97,9 @@ public class PostQueryService {
         return PostItemResponseDto.createPost(post);
     }
 
+
+
+
     public PostsResponseDto getTeamPosts(Long teamId, int page) {
         if (teamId == null || teamId <= 0) {
             throw new InvalidTeamIdException();
@@ -106,7 +109,10 @@ public class PostQueryService {
         teamRepository.findById(teamId)
                 .orElseThrow(NotFoundTeamException::new);
 
-        Pageable pageable = createPostPage(page);
+        Pageable pageable = PageRequest.of(
+                page,
+                30
+        );
 
         Page<PostTeam> postPage = postTeamRepository.findAllByTeamId(teamId, pageable);
 
@@ -117,6 +123,14 @@ public class PostQueryService {
 
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
     }
+
+
+
+
+
+
+
+
 
     public PostsResponseDto getPlayerPosts(Long playerId, int page) {
         if (playerId == null || playerId <= 0) {

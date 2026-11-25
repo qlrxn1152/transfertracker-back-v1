@@ -61,6 +61,7 @@ public class PostItemResponseDto {
         );
     }
 
+
     public static PostItemResponseDto createFaPlayer(PostPlayer postPlayer) {
         Post post = postPlayer.getPost();
 
