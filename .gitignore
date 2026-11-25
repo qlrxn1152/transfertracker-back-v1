@@ -48,3 +48,5 @@ infra/pinpoint/logs/
 
 # Local database backups (may contain member and token data)
 backups/
+
+logs/

@@ -53,7 +53,8 @@ public class SecurityConfig {
 
                         // Health Check
                         .requestMatchers(
-                                "/actuator/health"
+                                "/actuator/health",
+                                "/actuator/prometheus"
                         )
                         .permitAll()
 
