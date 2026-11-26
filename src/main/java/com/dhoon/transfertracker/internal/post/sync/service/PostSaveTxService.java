@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.post.sync.service;
 
 import com.dhoon.transfertracker.external.openai.dto.response.TranslationResult;
+import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.post.domain.*;
 import com.dhoon.transfertracker.internal.post.exception.NotFoundPostException;
@@ -11,6 +12,7 @@ import com.dhoon.transfertracker.internal.post.repository.PostRepository;
 import com.dhoon.transfertracker.internal.post.repository.PostSyncStatusRepository;
 import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
+import com.dhoon.transfertracker.internal.team.domain.Team;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -80,6 +82,53 @@ public class PostSaveTxService {
                 );
 
         postSyncStatus.complete();
+    }
+
+    /**
+     * Applies only team/player relationships for legacy posts. It deliberately
+     * does not mutate PostSyncStatus, translate content, or send notifications.
+     */
+    public PostMappingAssignmentCount assignTeamPlayerForBackfill(TeamAssignPostResult assignResult) {
+        Post post = postRepository.findById(assignResult.postId())
+                .orElseThrow(NotFoundPostException::new);
+
+        int createdTeamMappings = assignResult.teamNames().stream()
+                .filter(teamName -> teamName != null && !teamName.isBlank())
+                .distinct()
+                .map(this::resolveTeam)
+                .flatMap(java.util.Optional::stream)
+                .mapToInt(team -> postTeamRepository.findByTeamIdAndPostId(team.getId(), post.getId())
+                        .map(ignored -> 0)
+                        .orElseGet(() -> {
+                            postTeamRepository.save(PostTeam.postAssignTeam(team, post));
+                            return 1;
+                        }))
+                .sum();
+
+        int createdPlayerMappings = assignResult.playerNames().stream()
+                .filter(playerName -> playerName != null && !playerName.isBlank())
+                .distinct()
+                .map(this::resolvePlayer)
+                .flatMap(java.util.Optional::stream)
+                .mapToInt(player -> postPlayerRepository.findByPlayerIdAndPostId(player.getId(), post.getId())
+                        .map(ignored -> 0)
+                        .orElseGet(() -> {
+                            postPlayerRepository.save(PostPlayer.postAssignPlayer(player, post));
+                            return 1;
+                        }))
+                .sum();
+
+        return new PostMappingAssignmentCount(createdTeamMappings, createdPlayerMappings);
+    }
+
+    private java.util.Optional<Team> resolveTeam(String teamName) {
+        java.util.List<Team> matches = teamRepository.findAllByAnyDisplayName(teamName);
+        return matches.size() == 1 ? java.util.Optional.of(matches.getFirst()) : java.util.Optional.empty();
+    }
+
+    private java.util.Optional<Player> resolvePlayer(String playerName) {
+        java.util.List<Player> matches = playerRepository.findAllByAnyDisplayName(playerName);
+        return matches.size() == 1 ? java.util.Optional.of(matches.getFirst()) : java.util.Optional.empty();
     }
 
     public void translateContent(TranslationResult translationResult) {
@@ -156,4 +205,6 @@ public class PostSaveTxService {
     }
 
     public record PostRetryData(Long postId, String content, PostSyncStep step) { }
+
+    public record PostMappingAssignmentCount(int createdTeamMappings, int createdPlayerMappings) { }
 }

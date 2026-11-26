@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +33,13 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     List<Player> findPlayerNameTranslationTargets(Pageable pageable);
 
     Optional<Player> findByPlayerName(String playerName);
+
+    @Query("""
+            select p from Player p
+            where lower(p.playerName) = lower(:playerName)
+               or lower(p.playerNameKo) = lower(:playerName)
+            """)
+    List<Player> findAllByAnyDisplayName(@Param("playerName") String playerName);
 
 
 

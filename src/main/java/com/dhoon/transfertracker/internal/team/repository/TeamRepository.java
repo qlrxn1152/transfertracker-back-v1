@@ -26,4 +26,11 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     Optional<Team> findByAnyDisplayName(String teamName);
 
     Optional<Team> findByTeamName(String teamName);
+
+    @Query("""
+            select t from Team t
+            where lower(t.teamName) = lower(:teamName)
+               or lower(t.teamNameKo) = lower(:teamName)
+            """)
+    List<Team> findAllByAnyDisplayName(String teamName);
 }
