@@ -35,8 +35,8 @@ public class TeamSyncOrchestrationService {
      * 외부 API를 호출해서, 해당 리그에 해당 시즌에 속했던 팀들을 가지고 오고, 해당 팀들을 리그에 배치합니다.
      * @param leagueCode -> ENUM
      */
-    public LeagueTeamsResponseDto syncLeagueTeams(LeagueCode leagueCode) {
-        JsonNode node = apiFootballHttpClient.callExternalLeagueTeamsApi(leagueCode);
+    public LeagueTeamsResponseDto syncLeagueTeams(LeagueCode leagueCode, Integer season) {
+        JsonNode node = apiFootballHttpClient.callExternalLeagueTeamsApi(leagueCode, season);
 
         List<TeamItemResponseDto> teams = new ArrayList<>();
 
