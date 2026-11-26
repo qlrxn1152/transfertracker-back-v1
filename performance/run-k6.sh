@@ -82,10 +82,11 @@ REPORTS_ROOT="$PROJECT_ROOT/performance/reports"
 DATE_DIRECTORY="$REPORTS_ROOT/$RUN_DATE"
 mkdir -p "$DATE_DIRECTORY"
 
-RUN_DIRECTORY="$DATE_DIRECTORY/$RUN_TIME"
+RUN_DIRECTORY="$DATE_DIRECTORY/${RUN_TIME}-${SCENARIO}"
 suffix=1
+
 while ! mkdir "$RUN_DIRECTORY" 2>/dev/null; do
-  RUN_DIRECTORY="$DATE_DIRECTORY/$RUN_TIME-$(printf '%02d' "$suffix")"
+  RUN_DIRECTORY="$DATE_DIRECTORY/${RUN_TIME}-${SCENARIO}-$(printf '%02d' "$suffix")"
   suffix=$((suffix + 1))
 done
 

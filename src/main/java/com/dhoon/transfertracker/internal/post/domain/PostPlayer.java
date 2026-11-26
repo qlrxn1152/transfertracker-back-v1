@@ -18,7 +18,9 @@ import java.time.LocalDateTime;
                 @UniqueConstraint(name = "uk_post_player_player_post", columnNames = {"player_id", "post_id"})
         },
         indexes = {
-                @Index(name = "idx_post_player_post", columnList = "post_id")
+                @Index(name = "idx_post_player_post", columnList = "post_id"),
+                @Index(name = "idx_post_player_player_created_post", columnList = "player_id, post_created_at DESC, post_id DESC")
+
         }
 )
 public class PostPlayer {
@@ -38,6 +40,9 @@ public class PostPlayer {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "post_created_at", nullable = false, updatable = false)
+    private LocalDateTime postCreatedAt;
+
 
 
     public static PostPlayer postAssignPlayer(Player player, Post post) {
@@ -50,5 +55,6 @@ public class PostPlayer {
         this.player = player;
         this.post = post;
         this.createdAt = LocalDateTime.now();
+        this.postCreatedAt = post.getContentCreatedAt();
     }
 }

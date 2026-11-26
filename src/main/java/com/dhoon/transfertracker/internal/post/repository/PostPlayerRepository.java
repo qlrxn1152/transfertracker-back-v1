@@ -21,14 +21,22 @@ public interface PostPlayerRepository extends JpaRepository<PostPlayer, Long> {
             """)
     List<PostPlayer> findAllByPostId(Long postId);
 
-    @Query("""
-            select pp from PostPlayer pp
-            join fetch pp.player
-            join fetch pp.post
-            where pp.player.id = :playerId
-            order by pp.post.contentCreatedAt desc, pp.post.id desc
-            """)
+    @Query(
+            value = """
+        select pp from PostPlayer pp
+        join fetch pp.player
+        join fetch pp.post
+        where pp.player.id = :playerId
+        order by pp.postCreatedAt desc, fk(pp.post) desc
+        """,
+            countQuery = """
+        select count(pp)
+        from PostPlayer pp
+        where pp.player.id = :playerId
+        """
+    )
     Page<PostPlayer> findAllByPlayerId(Long playerId, Pageable pageable);
+
 
 
 }

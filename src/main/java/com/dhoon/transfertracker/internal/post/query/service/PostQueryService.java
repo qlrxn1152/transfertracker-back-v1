@@ -146,8 +146,7 @@ public class PostQueryService {
 
         Pageable pageable = PageRequest.of(
                 page,
-                10,
-                Sort.by(Sort.Order.desc("post.contentCreatedAt"), Sort.Order.desc("post.id"))
+                10
         );
 
         Page<PostPlayer> postPage = postPlayerRepository.findAllByPlayerId(playerId, pageable);
