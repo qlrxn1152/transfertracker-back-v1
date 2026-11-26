@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
         },
         indexes = {
                 @Index(name = "idx_post_team_post", columnList = "post_id"),
-                @Index(name = "idx_post_team_get_team_post", columnList = "team_id, post_created_at DESC, post_id DESC")
+                @Index(name = "idx_post_team_team_created_post", columnList = "team_id, post_created_at DESC, post_id DESC")
         }
 )
 public class PostTeam {

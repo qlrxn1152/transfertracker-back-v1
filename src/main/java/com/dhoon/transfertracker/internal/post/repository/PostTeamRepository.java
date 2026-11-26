@@ -11,13 +11,20 @@ import java.util.Optional;
 
 public interface PostTeamRepository extends JpaRepository<PostTeam, Long> {
 
-    @Query("""
-            select pt from PostTeam pt
-            join fetch pt.team
-            join fetch pt.post
-            where pt.team.id = :teamId
-            order by pt.postCreatedAt desc, pt.post.id desc
-            """)
+    @Query(
+            value = """
+        select pt from PostTeam pt
+        join fetch pt.team
+        join fetch pt.post
+        where pt.team.id = :teamId
+        order by pt.postCreatedAt desc, fk(pt.post) desc
+        """,
+            countQuery = """
+        select count(pt)
+        from PostTeam pt
+        where pt.team.id = :teamId
+        """
+    )
     Page<PostTeam> findAllByTeamId(Long teamId, Pageable pageable);
 
 
