@@ -71,8 +71,8 @@ public class TransferQueryRepository {
                 pageable,
                 total == null ? 0L : total
         );
-
     }
+
 
     private BooleanExpression fullTextMatch(String keyWord) {
         if (keyWord == null || keyWord.isBlank()) {

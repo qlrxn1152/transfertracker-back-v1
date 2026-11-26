@@ -15,7 +15,8 @@ public interface MemberFavoriteTeamRepository extends JpaRepository<MemberFavori
 
     @Query("""
     SELECT mf FROM MemberFavoriteTeam mf
-    join fetch mf.member
+    JOIN FETCH mf.member
+    JOIN FETCH mf.team
     WHERE mf.team.id = :teamId
     """)
     List<MemberFavoriteTeam> findAllByTeamId(Long teamId);

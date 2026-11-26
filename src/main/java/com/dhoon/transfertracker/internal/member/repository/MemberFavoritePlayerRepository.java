@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.member.repository;
 
 import com.dhoon.transfertracker.internal.member.domain.MemberFavoritePlayer;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,5 +15,11 @@ public interface MemberFavoritePlayerRepository extends JpaRepository<MemberFavo
 
     List<MemberFavoritePlayer> findAllByMemberId(Long memberId);
 
+    @Query("""
+    SELECT mf FROM MemberFavoritePlayer mf
+    JOIN FETCH mf.member
+    JOIN FETCH mf.player
+    WHERE mf.player.id = :playerId
+    """)
     List<MemberFavoritePlayer> findAllByPlayerId(Long playerId);
 }

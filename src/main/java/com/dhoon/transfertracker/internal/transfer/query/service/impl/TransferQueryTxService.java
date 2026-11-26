@@ -58,7 +58,7 @@ public class TransferQueryTxService implements TransferService {
 
     @Override
     public AllTransfersResponseDto getTransfers(Pageable pageable, String keyWord, LeagueCode leagueCode, Long teamId) {
-        Page<Transfer> transferPage = transferQueryRepository.findTransfers(pageable, keyWord, leagueCode, teamId);
+        Page<Transfer> transferPage = transferQueryRepository.findTransfers(pageable, keyWord, leagueCode, teamId); // count 쿼리
 
         List<TransferResponseDto> transfers = transferPage.getContent()
                 .stream()
@@ -67,6 +67,7 @@ public class TransferQueryTxService implements TransferService {
 
         return AllTransfersResponseDto.of(transfers, transferPage.hasNext(), transferPage.hasPrevious());
     }
+
 
     @Override
     public AllTransfersResponseDto getTeamTransfers(Long teamId, Pageable pageable, String keyWord) {

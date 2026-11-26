@@ -57,6 +57,9 @@ dependencies {
 	// Firebase
 	implementation 'com.google.firebase:firebase-admin:9.11.0'
 
+	// Kafka
+	implementation 'org.springframework.boot:spring-boot-starter-kafka'
+
 	// Unit Test: JUnit Jupiter, Mockito, AssertJ
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 

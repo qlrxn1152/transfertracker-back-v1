@@ -1,9 +1,12 @@
 package com.dhoon.transfertracker.config;
 
 import com.dhoon.transfertracker.internal.member.auth.MemberJwtAuthenticationConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,6 +33,7 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
     private String allowedOriginPatterns;
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -43,51 +47,53 @@ public class SecurityConfig {
                 .addFilterAfter(new MemberLoggingFilter(), BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
 
-                        // 회원가입 / 로그인
-                        .requestMatchers(
-                                "/api/members/signup",
-                                "/api/members/login",
-                                "/api/auth/kakao/**"
-                        )
-                        .permitAll()
 
-                        // Health Check
-                        .requestMatchers(
-                                "/actuator/health",
-                                "/actuator/prometheus"
-                        )
-                        .permitAll()
 
-                        // Actuator
-                        .requestMatchers(
-                                "/actuator/**"
-                        )
-                        .hasRole("ADMIN")
+                                    // 회원가입 / 로그인
+                                    .requestMatchers(
+                                            "/api/members/signup",
+                                            "/api/members/login",
+                                            "/api/auth/kakao/**"
+                                    )
+                                    .permitAll()
 
-                        // 외부 데이터 동기화
-                        .requestMatchers(
-                                "/external/**"
-                        )
-                        .hasRole("ADMIN")
+                                    // Health Check
+                                    .requestMatchers(
+                                            "/actuator/health",
+                                            "/actuator/prometheus"
+                                    )
+                                    .permitAll()
 
-                        .requestMatchers(
-                                "/api/admin/**"
-                        )
-                        .hasRole("ADMIN")
+                                    // Actuator
+                                    .requestMatchers(
+                                            "/actuator/**"
+                                    )
+                                    .hasRole("ADMIN")
 
-                        // 일반 API
-                        .requestMatchers(
-                                "/api/teams/**",
-                                "/api/members/**",
-                                "/api/players/**",
-                                "/api/team-players/**",
-                                "/api/transfers/**",
-                                "/api/posts/**"
-                        )
-                        .permitAll()
+                                    // 외부 데이터 동기화
+                                    .requestMatchers(
+                                            "/external/**"
+                                    )
+                                    .hasRole("ADMIN")
 
-                        .anyRequest()
-                        .authenticated()
+                                    .requestMatchers(
+                                            "/api/admin/**"
+                                    )
+                                    .hasRole("ADMIN")
+
+                                    // 일반 API
+                                    .requestMatchers(
+                                            "/api/teams/**",
+                                            "/api/members/**",
+                                            "/api/players/**",
+                                            "/api/team-players/**",
+                                            "/api/transfers/**",
+                                            "/api/posts/**"
+                                    )
+                                    .permitAll()
+
+                                    .anyRequest()
+                                    .authenticated()
                 )
 
                 .oauth2ResourceServer(oauth2 ->
