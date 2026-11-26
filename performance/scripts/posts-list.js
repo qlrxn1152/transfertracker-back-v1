@@ -1,3 +1,4 @@
+
 import http from 'k6/http';
 import { check } from 'k6';
 import { simpleReport } from './k6-simple-report.js';
@@ -5,9 +6,10 @@ import { simpleReport } from './k6-simple-report.js';
 const baseUrl = __ENV.BASE_URL || 'http://localhost:8081';
 const legacyHtmlReportPath = 'performance/results/posts-afterIndex-report.html';
 
-// Keep the scenario definition in a stable init-context value. k6 normalizes
-// the exported options before handleSummary(), so reading options.scenarios
-// there is not reliable.
+const scenario = __ENV.PERF_SCENARIO || 'posts-list';
+const endpoint = '/api/posts?page=0';
+
+// Keep the scenario definition in a stable init-context value.
 const postsListScenario = {
     executor: 'constant-arrival-rate',
     rate: 50,
@@ -42,7 +44,7 @@ export const options = {
 
 export default function () {
     const response = http.get(
-        `${baseUrl}/api/posts?page=0`
+        `${baseUrl}${endpoint}`
     );
 
     check(response, {
@@ -51,19 +53,28 @@ export default function () {
 }
 
 export function handleSummary(data) {
-    const report = simpleReport(data);
+    const report = simpleReport(data, {
+        scenario,
+        endpoint: `GET ${endpoint}`,
+    });
+
     const reportDirectory = __ENV.REPORT_DIR;
 
     if (!reportDirectory) {
-        console.log(`HTML 보고서 생성 완료: ${legacyHtmlReportPath}`);
+        console.log(
+            `HTML 보고서 생성 완료: ${legacyHtmlReportPath}`
+        );
 
         return {
             [legacyHtmlReportPath]: report,
         };
     }
 
-    const thresholdPassed = Object.values(data.metrics).every((metric) =>
-        Object.values(metric.thresholds || {}).every((threshold) => threshold.ok === true)
+    const thresholdPassed = Object.values(data.metrics).every(
+        (metric) =>
+            Object.values(metric.thresholds || {}).every(
+                (threshold) => threshold.ok === true
+            )
     );
 
     const metadata = {
@@ -72,9 +83,10 @@ export function handleSummary(data) {
         finishedAt: null,
         actualDurationSeconds: null,
         environment: __ENV.PERF_ENVIRONMENT || null,
-        scenario: __ENV.PERF_SCENARIO || 'posts-list',
+        scenario,
         testScript: __ENV.PERF_TEST_SCRIPT || null,
         baseUrl,
+
         git: {
             commitSha: __ENV.PERF_GIT_COMMIT || null,
             branch: __ENV.PERF_GIT_BRANCH || null,
@@ -84,18 +96,24 @@ export function handleSummary(data) {
                     ? false
                     : null,
         },
+
         k6Version: __ENV.PERF_K6_VERSION || null,
+
         configuration: {
             executor: postsListScenario.executor || null,
             rate: postsListScenario.rate ?? null,
             timeUnit: postsListScenario.timeUnit || null,
+
             targetRps: postsListScenario.timeUnit === '1s'
                 ? postsListScenario.rate
                 : null,
+
             duration: postsListScenario.duration || null,
             preAllocatedVUs: postsListScenario.preAllocatedVUs ?? null,
             maxVUs: postsListScenario.maxVUs ?? null,
+            endpoint,
         },
+
         result: {
             status: 'pending',
             thresholdPassed,
@@ -103,11 +121,19 @@ export function handleSummary(data) {
         },
     };
 
-    console.log(`성능 테스트 결과 생성 완료: ${reportDirectory}`);
+    console.log(
+        `성능 테스트 결과 생성 완료: ${reportDirectory}`
+    );
 
     return {
         [`${reportDirectory}/report.html`]: report,
-        [`${reportDirectory}/summary.json`]: JSON.stringify(data, null, 2),
-        [`${reportDirectory}/metadata.json`]: JSON.stringify(metadata, null, 2),
+
+        [`${reportDirectory}/summary.json`]: JSON.stringify(
+            data, null, 2
+        ),
+
+        [`${reportDirectory}/metadata.json`]: JSON.stringify(
+            metadata, null, 2
+        ),
     };
 }

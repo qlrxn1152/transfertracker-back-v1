@@ -1,4 +1,8 @@
-export function simpleReport(data) {
+
+export function simpleReport(data, {
+    scenario = 'unknown',
+    endpoint = 'unknown'
+} = {}) {
     const metrics = data.metrics;
 
     const duration = metrics.http_req_duration.values;
@@ -23,6 +27,15 @@ export function simpleReport(data) {
         dropped === 0 &&
         metrics.checks?.values?.rate === 1;
 
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function formatTime(ms) {
         if (!Number.isFinite(ms)) {
             return '-';
@@ -34,7 +47,10 @@ export function simpleReport(data) {
     }
 
     function formatNumber(value) {
-        return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return String(value).replace(
+            /\B(?=(\d{3})+(?!\d))/g,
+            ','
+        );
     }
 
     function metricCard(label, value, description, color = '') {
@@ -125,6 +141,8 @@ export function simpleReport(data) {
         .subtitle {
             color: #94a3b8;
             font-size: 14px;
+            margin-bottom: 6px;
+            overflow-wrap: anywhere;
         }
 
         .status {
@@ -306,7 +324,11 @@ export function simpleReport(data) {
         <h1>VEYRO Performance Report</h1>
 
         <div class="subtitle">
-            GET /api/posts?page=0
+            Scenario: ${escapeHtml(scenario)}
+        </div>
+
+        <div class="subtitle">
+            ${escapeHtml(endpoint)}
         </div>
 
         <div class="status ${
@@ -474,7 +496,7 @@ export function simpleReport(data) {
                 </tr>
 
                 <tr>
-                    <td>HTTP 200 검증</td>
+                    <td>응답 검증 (Checks)</td>
                     <td>100%</td>
                     <td>
                         ${(
@@ -494,6 +516,7 @@ export function simpleReport(data) {
                         }
                     </td>
                 </tr>
+
             </tbody>
         </table>
     </div>
