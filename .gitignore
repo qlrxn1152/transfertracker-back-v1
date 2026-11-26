@@ -54,3 +54,5 @@ logs/
 # Generated k6 performance test artifacts. Existing portfolio reports under
 # performance/results remain tracked and are intentionally not affected.
 performance/reports/
+performance/.env.performance
+performance/.runtime/

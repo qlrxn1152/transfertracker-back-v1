@@ -61,6 +61,31 @@ public class PostQueryService {
         return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
     }
 
+    public PostsResponseDto getTeamPosts(Long teamId, int page) {
+        if (teamId == null || teamId <= 0) {
+            throw new InvalidTeamIdException();
+        }
+        validatePageNotNegative(page);
+
+        teamRepository.findById(teamId)
+                .orElseThrow(NotFoundTeamException::new);
+
+        Pageable pageable = PageRequest.of(
+                page,
+                30
+        );
+
+        Page<PostTeam> postPage = postTeamRepository.findAllByTeamId(teamId, pageable);
+
+        List<PostItemResponseDto> posts = postPage.getContent()
+                .stream()
+                .map(PostItemResponseDto::createTeamPost)
+                .toList();
+
+        return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
+    }
+
+
 
 
 
@@ -100,29 +125,6 @@ public class PostQueryService {
 
 
 
-    public PostsResponseDto getTeamPosts(Long teamId, int page) {
-        if (teamId == null || teamId <= 0) {
-            throw new InvalidTeamIdException();
-        }
-        validatePageNotNegative(page);
-
-        teamRepository.findById(teamId)
-                .orElseThrow(NotFoundTeamException::new);
-
-        Pageable pageable = PageRequest.of(
-                page,
-                30
-        );
-
-        Page<PostTeam> postPage = postTeamRepository.findAllByTeamId(teamId, pageable);
-
-        List<PostItemResponseDto> posts = postPage.getContent()
-                .stream()
-                .map(PostItemResponseDto::createTeamPost)
-                .toList();
-
-        return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
-    }
 
 
 

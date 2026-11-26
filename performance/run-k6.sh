@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Creates immutable k6 report artifacts without changing the test scenario itself.
-# Usage: ./performance/run-k6.sh [posts-list|team-posts]
+# Usage: ./performance/run-k6.sh [scenario]
 
 set -uo pipefail
 
@@ -19,17 +19,42 @@ RPS="${RPS:-50}"
 DURATION="${DURATION:-1m}"
 PINPOINT_AGENT="${PERF_PINPOINT_AGENT:-unknown}"
 AUTH_TOKEN="${AUTH_TOKEN:-}"
+PLAYER_ID="${PLAYER_ID:-}"
+POST_ID="${POST_ID:-}"
+TRANSFER_ID="${TRANSFER_ID:-}"
+JOURNALIST="${JOURNALIST:-}"
+KEYWORD="${KEYWORD:-}"
+LEAGUE_CODE="${LEAGUE_CODE:-}"
+PRE_ALLOCATED_VUS="${PRE_ALLOCATED_VUS:-50}"
+MAX_VUS="${MAX_VUS:-200}"
+PERF_SUITE_MANIFEST="${PERF_SUITE_MANIFEST:-}"
+API_CASE=""
 
 case "$SCENARIO" in
   posts-list)
-    TEST_SCRIPT_RELATIVE="performance/scripts/posts-list.js"
+    # Keep the legacy script available for direct k6 invocation, but use the
+    # common implementation here so wrapper executions accept the standard
+    # load environment variables and validate the paged response shape.
+    TEST_SCRIPT_RELATIVE="performance/scripts/read-api.js"
+    API_CASE="posts-list"
     ;;
   team-posts)
     TEST_SCRIPT_RELATIVE="performance/scripts/team-posts.js"
     ;;
+  post-journalist|post-player|post-detail|post-sources|players-list|players-keyword|players-league|players-team|player-detail|teams-list|teams-league|team-detail|team-info|team-players|transfers-list|transfers-keyword|transfers-league|transfers-team-filter|team-transfers|player-transfers|transfer-detail|member-me|member-favorite-teams|member-favorite-players|member-favorite-player-detail|member-followed-journalists|member-journalist-posts|member-journalists-posts)
+    TEST_SCRIPT_RELATIVE="performance/scripts/read-api.js"
+    API_CASE="$SCENARIO"
+    ;;
+  mixed-read)
+    TEST_SCRIPT_RELATIVE="performance/scripts/mixed/read-traffic.js"
+    ;;
+  post|player|team|transfer|member|all-read)
+    exec "$PROJECT_ROOT/performance/run-suite.sh" "$SCENARIO"
+    ;;
   *)
     echo "지원하지 않는 성능 테스트 시나리오입니다: $SCENARIO" >&2
-    echo "현재 지원: posts-list, team-posts" >&2
+    echo "현재 지원: posts-list, team-posts, post-*, players-*, teams-*, transfers-*, member-*, mixed-read" >&2
+    echo "순차 스위트: post, player, team, transfer, member, all-read" >&2
     exit 2
     ;;
 esac
@@ -139,6 +164,15 @@ EOF
   -e "DURATION=$DURATION" \
   -e "PERF_PINPOINT_AGENT=$PINPOINT_AGENT" \
   -e "AUTH_TOKEN=$AUTH_TOKEN" \
+  -e "API_CASE=$API_CASE" \
+  -e "PLAYER_ID=$PLAYER_ID" \
+  -e "POST_ID=$POST_ID" \
+  -e "TRANSFER_ID=$TRANSFER_ID" \
+  -e "JOURNALIST=$JOURNALIST" \
+  -e "KEYWORD=$KEYWORD" \
+  -e "LEAGUE_CODE=$LEAGUE_CODE" \
+  -e "PRE_ALLOCATED_VUS=$PRE_ALLOCATED_VUS" \
+  -e "MAX_VUS=$MAX_VUS" \
   "$PROJECT_ROOT/$TEST_SCRIPT_RELATIVE"
 K6_EXIT_CODE=$?
 
@@ -207,5 +241,9 @@ printf 'HTML Report:   %s/report.html\n' "$RUN_DIRECTORY_RELATIVE"
 printf 'JSON Summary:  %s/summary.json\n' "$RUN_DIRECTORY_RELATIVE"
 printf 'Metadata:      %s/metadata.json\n' "$RUN_DIRECTORY_RELATIVE"
 printf '\n========================================\n'
+
+if [[ -n "$PERF_SUITE_MANIFEST" ]]; then
+  printf '%s\t%s\t%s\n' "$SCENARIO" "$K6_EXIT_CODE" "$RUN_DIRECTORY" >> "$PERF_SUITE_MANIFEST"
+fi
 
 exit "$K6_EXIT_CODE"

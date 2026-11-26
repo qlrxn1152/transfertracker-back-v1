@@ -99,7 +99,6 @@ public class MemberFavoriteTeamService {
                     .stream()
                     .map(MemberFavoriteTeamDetailPostResponseDto::of)
                     .forEach(postDetails::add);
-
         }
 
 
