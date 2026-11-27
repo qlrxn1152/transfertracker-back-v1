@@ -100,6 +100,7 @@ public class SecurityConfig {
                                             "/api/transfers/**",
                                             "/api/posts/**",
                                             "/api/fixtures/**",
+                                            "/api/standings",
                                             "/api/standings/**"
                                     )
                                     .permitAll()
