@@ -49,7 +49,8 @@ public record FixtureEventResponse(
     public record PlayerResponse(
             Long playerId,
             Long apiFootballId,
-            String playerName
+            String playerName,
+            String displayName
     ) {
 
         public static PlayerResponse from(Player player) {
@@ -61,7 +62,8 @@ public record FixtureEventResponse(
             return new PlayerResponse(
                     player.getId(),
                     player.getApiFootballId(),
-                    player.getPlayerName()
+                    player.getPlayerName(),
+                    player.getDisplayName()
             );
         }
     }
