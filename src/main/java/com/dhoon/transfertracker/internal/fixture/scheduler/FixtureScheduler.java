@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.fixture.scheduler;
 
 import com.dhoon.transfertracker.internal.fixture.service.FixtureEventSyncService;
+import com.dhoon.transfertracker.internal.fixture.service.FixtureLineupSyncService;
 import com.dhoon.transfertracker.internal.fixture.service.FixtureSyncService;
 import com.dhoon.transfertracker.internal.fixture.service.FixtureSyncTxService;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
@@ -22,11 +23,11 @@ public class FixtureScheduler {
     private final FixtureSyncService fixtureSyncService;
     private final FixtureSyncTxService fixtureSyncTxService;
     private final FixtureEventSyncService fixtureEventSyncService;
+    private final FixtureLineupSyncService fixtureLineupSyncService;
 
     @Scheduled(fixedDelay = 30_000)
     public void syncLiveFixtures() {
-        boolean hasSyncFixture =
-                fixtureSyncTxService.existsFixturesToSyncLive();
+        boolean hasSyncFixture = fixtureSyncTxService.existsFixturesToSyncLive();
 
         if (!hasSyncFixture) {
             log.debug("실시간 경기 동기화 대상 없음");
@@ -41,9 +42,6 @@ public class FixtureScheduler {
     }
 
 
-
-
-
     @Scheduled(fixedDelay = 300_000)
     public void syncFixtureCompletion() {
         log.info("경기 종료 동기화 시작");
@@ -52,6 +50,16 @@ public class FixtureScheduler {
         fixtureEventSyncService.syncCompletedFixtureEvents();
 
         log.info("경기 종료 동기화 완료");
+    }
+
+    @Scheduled(fixedDelay = 300_000)
+    public void syncFixtureLineups() {
+
+        log.debug("경기 라인업 자동 동기화 시작");
+
+        fixtureLineupSyncService.syncUpcomingFixtureLineups();
+
+        log.debug("경기 라인업 자동 동기화 종료");
     }
 
 
@@ -68,4 +76,6 @@ public class FixtureScheduler {
             fixtureSyncService.syncLeagueFixtures(leagueCode, season);
         }
     }
+
+
 }

@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.fixture.controller;
 import com.dhoon.transfertracker.internal.fixture.dto.record.FixtureDetailResponse;
 import com.dhoon.transfertracker.internal.fixture.dto.record.FixtureResponse;
 import com.dhoon.transfertracker.internal.fixture.service.FixtureEventSyncService;
+import com.dhoon.transfertracker.internal.fixture.service.FixtureLineupSyncService;
 import com.dhoon.transfertracker.internal.fixture.service.FixtureQueryService;
 import com.dhoon.transfertracker.internal.fixture.service.FixtureSyncService;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
@@ -25,7 +26,7 @@ public class FixtureController {
     private final FixtureQueryService fixtureQueryService;
 
     private final FixtureEventSyncService fixtureEventSyncService;
-
+    private final FixtureLineupSyncService fixtureLineupSyncService;
 
     @PostMapping("/api/admin/fixtures/sync")
     public ResponseEntity<Void> syncFixtures(@RequestParam LeagueCode leagueCode, @RequestParam Integer season) {
@@ -51,6 +52,13 @@ public class FixtureController {
     @PostMapping("/api/admin/fixtures/{fixtureApiId}/events/sync")
     public ResponseEntity<Void> syncFixtureEvents(@PathVariable Long fixtureApiId) {
         fixtureEventSyncService.syncFixtureEvents(fixtureApiId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/admin/fixtures/{fixtureApiId}/lineups/sync")
+    public ResponseEntity<Void> syncFixtureLineups(@PathVariable Long fixtureApiId) {
+        fixtureLineupSyncService.syncFixtureLineups(fixtureApiId);
 
         return ResponseEntity.noContent().build();
     }

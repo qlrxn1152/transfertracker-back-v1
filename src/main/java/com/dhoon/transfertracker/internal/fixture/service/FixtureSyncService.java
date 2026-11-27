@@ -43,13 +43,23 @@ public class FixtureSyncService {
 
         List<ApiFootballFixtureResponse> fixtures = new ArrayList<>();
 
-        Map<Long, List<ApiFootballFixtureEventResponse>> eventsByFixtureId = new HashMap<>();
+        Map<Long, List<ApiFootballFixtureEventResponse>> eventsByFixtureId =
+                new HashMap<>();
 
         for (JsonNode node : root.get("response")) {
 
-            ApiFootballFixtureResponse fixture = ApiFootballFixtureResponse.from(node);
+            Long leagueApiId = node.path("league").path("id").asLong();
+
+            // 지원하지 않는 리그는 건너뛴다.
+            if (!LeagueCode.isSupported(leagueApiId)) {
+                continue;
+            }
+
+            ApiFootballFixtureResponse fixture =
+                    ApiFootballFixtureResponse.from(node);
 
             fixtures.add(fixture);
+
             JsonNode eventsNode = node.get("events");
 
             if (eventsNode == null || !eventsNode.isArray()) {
@@ -66,6 +76,7 @@ public class FixtureSyncService {
         }
 
         fixtureSyncTxService.updateFixture(fixtures);
+
         eventsByFixtureId.forEach(eventSyncTxService::syncFixtureEvents);
     }
 

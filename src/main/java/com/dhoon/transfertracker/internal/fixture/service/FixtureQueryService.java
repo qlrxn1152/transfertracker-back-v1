@@ -1,12 +1,13 @@
 package com.dhoon.transfertracker.internal.fixture.service;
 
-import com.dhoon.transfertracker.internal.fixture.domain.Fixture;
-import com.dhoon.transfertracker.internal.fixture.domain.FixtureEvent;
-import com.dhoon.transfertracker.internal.fixture.domain.FixtureStatus;
+import com.dhoon.transfertracker.internal.fixture.domain.*;
 import com.dhoon.transfertracker.internal.fixture.dto.record.FixtureDetailResponse;
+import com.dhoon.transfertracker.internal.fixture.dto.record.FixtureLineupResponse;
 import com.dhoon.transfertracker.internal.fixture.dto.record.FixtureResponse;
 import com.dhoon.transfertracker.internal.fixture.exception.NotFoundFixtureException;
 import com.dhoon.transfertracker.internal.fixture.repository.FixtureEventRepository;
+import com.dhoon.transfertracker.internal.fixture.repository.FixtureLineupPlayerRepository;
+import com.dhoon.transfertracker.internal.fixture.repository.FixtureLineupRepository;
 import com.dhoon.transfertracker.internal.fixture.repository.FixtureRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
@@ -23,7 +24,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,6 +38,8 @@ public class FixtureQueryService {
     private final FixtureRepository fixtureRepository;
     private final TeamRepository teamRepository;
     private final FixtureEventRepository fixtureEventRepository;
+    private final FixtureLineupRepository fixtureLineupRepository;
+    private final FixtureLineupPlayerRepository fixtureLineupPlayerRepository;
 
     private static final List<FixtureStatus> LIVE_STATUSES =
             List.of(
@@ -80,12 +86,42 @@ public class FixtureQueryService {
     }
 
     public FixtureDetailResponse getFixture(Long fixtureId) {
-        Fixture fixture = fixtureRepository.findByFixtureIdWithLazy(fixtureId)
-                .orElseThrow(NotFoundFixtureException::new);
 
-        List<FixtureEvent> fixtureEvents = fixtureEventRepository.findAllByFixtureId(fixture.getId());
+        Fixture fixture = fixtureRepository.findByFixtureIdWithLazy(fixtureId).orElseThrow(NotFoundFixtureException::new);
 
-        return FixtureDetailResponse.from(fixture, fixtureEvents);
+        List<FixtureEvent> fixtureEvents = fixtureEventRepository.findAllByFixtureId(fixtureId);
+
+        List<FixtureLineup> fixtureLineups = fixtureLineupRepository.findAllByFixtureId(fixtureId);
+
+        List<FixtureLineupResponse> lineups = List.of();
+
+        if (!fixtureLineups.isEmpty()) {
+
+            List<FixtureLineupPlayer> lineupPlayers = fixtureLineupPlayerRepository.findAllByFixtureId(fixtureId);
+
+            Map<Long, List<FixtureLineupPlayer>> playersByLineupId =
+                    lineupPlayers.stream()
+                            .collect(Collectors.groupingBy(
+                                    player -> player.getFixtureLineup().getId()
+                            ));
+
+            lineups = fixtureLineups.stream()
+                    .sorted(Comparator.comparingInt(lineup ->
+                            lineup.getTeam().getId()
+                                    .equals(fixture.getHomeTeam().getId())
+                                    ? 0 : 1
+                    ))
+                    .map(lineup -> FixtureLineupResponse.from(
+                            lineup,
+                            playersByLineupId.getOrDefault(
+                                    lineup.getId(),
+                                    List.of()
+                            )
+                    ))
+                    .toList();
+        }
+
+        return FixtureDetailResponse.from(fixture, fixtureEvents, lineups);
     }
 
     public List<FixtureResponse> getTeamUpcomingFixtures(Long teamId) {

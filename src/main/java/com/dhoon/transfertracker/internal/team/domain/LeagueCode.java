@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Objects;
 
 @Getter
 @RequiredArgsConstructor
@@ -39,5 +41,12 @@ public enum LeagueCode {
         }
 
         return date.getMonthValue() < 7 ? year - 1 : year;
+    }
+
+    public static boolean isSupported(Long leagueApiId) {
+        return Arrays.stream(values())
+                .anyMatch(league ->
+                        Objects.equals(league.getApiFootballLeagueId(), leagueApiId)
+                );
     }
 }

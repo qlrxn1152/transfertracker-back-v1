@@ -112,5 +112,15 @@ public interface FixtureRepository extends JpaRepository<Fixture, Long> {
     """)
     List<Fixture> findFixturesToSyncEvents(Collection<FixtureStatus> statuses, Pageable pageable);
 
+    @Query("""
+        SELECT f
+        FROM Fixture f
+        WHERE f.lineupSyncCompleted = false
+          AND f.kickoffAt BETWEEN :from AND :to
+          AND f.status IN :statuses
+        ORDER BY f.kickoffAt ASC, f.id ASC
+        """)
+    List<Fixture> findFixturesToSyncLineups(Instant from, Instant to, Collection<FixtureStatus> statuses, Pageable pageable);
+
 
 }

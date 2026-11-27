@@ -7,18 +7,21 @@ import java.util.List;
 
 public record FixtureDetailResponse(
         FixtureResponse fixture,
-        List<FixtureEventResponse> events
+        List<FixtureEventResponse> events,
+        List<FixtureLineupResponse> lineups
 ) {
 
     public static FixtureDetailResponse from(
             Fixture fixture,
-            List<FixtureEvent> events
+            List<FixtureEvent> events,
+            List<FixtureLineupResponse> lineups
     ) {
         return new FixtureDetailResponse(
                 FixtureResponse.from(fixture),
                 events.stream()
                         .map(FixtureEventResponse::from)
-                        .toList()
+                        .toList(),
+                lineups
         );
     }
 }

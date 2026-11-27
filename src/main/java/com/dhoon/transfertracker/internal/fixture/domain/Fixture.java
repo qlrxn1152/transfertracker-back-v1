@@ -72,8 +72,15 @@ public class Fixture {
     @Column(name = "event_sync_completed", nullable = false)
     private boolean eventSyncCompleted = false;
 
+    @Column(name = "lineup_sync_completed", nullable = false)
+    private boolean lineupSyncCompleted = false;
+
     public void completeEventSync() {
         this.eventSyncCompleted = true;
+    }
+
+    public void completeLineupSync() {
+        this.lineupSyncCompleted = true;
     }
 
     public static Fixture createFixture(
