@@ -1,9 +1,9 @@
 package com.dhoon.transfertracker.internal.fixture.service;
 
+import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
 import com.dhoon.transfertracker.external.football.dto.ApiFootballFixtureResponse;
 import com.dhoon.transfertracker.internal.fixture.domain.Fixture;
 import com.dhoon.transfertracker.internal.fixture.domain.FixtureStatus;
-import com.dhoon.transfertracker.internal.fixture.exception.AlreadyExistFixtureException;
 import com.dhoon.transfertracker.internal.fixture.repository.FixtureRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
@@ -15,10 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,6 +29,19 @@ public class FixtureSyncTxService {
     private final FixtureRepository fixtureRepository;
 
     private final TeamRepository teamRepository;
+
+    private static final List<FixtureStatus> COMPLETION_CHECK_STATUSES =
+            List.of(
+                    FixtureStatus.NOT_STARTED,
+                    FixtureStatus.FIRST_HALF,
+                    FixtureStatus.HALF_TIME,
+                    FixtureStatus.SECOND_HALF,
+                    FixtureStatus.EXTRA_TIME,
+                    FixtureStatus.BREAK_TIME,
+                    FixtureStatus.PENALTY_IN_PROGRESS,
+                    FixtureStatus.LIVE
+            );
+
 
     public void syncFixtures(List<ApiFootballFixtureResponse> fixtures) {
 
@@ -124,5 +135,47 @@ public class FixtureSyncTxService {
 
         }
     }
+
+    public void updateFixture(List<ApiFootballFixtureResponse> fixtures) {
+        if ( fixtures.isEmpty() ) {
+            log.info("업데이트할 매치가 존재하지 않습니다. 작업을 종료합니다");
+            return;
+        }
+
+        for (ApiFootballFixtureResponse fixture : fixtures) {
+            Long fixtureApiId = fixture.apiFootballId();
+
+            fixtureRepository.findByApiFootballId(fixtureApiId)
+                    .ifPresent(f -> {
+                        log.info("경기 업데이트 fixtureId={}", f.getId());
+
+                        f.updateFixture(
+                                fixture.kickoffAt(),
+                                FixtureStatus.fromApiCode(fixture.status()),
+                                fixture.elapsed(),
+                                fixture.extra(),
+                                fixture.homeScore(),
+                                fixture.awayScore(),
+                                fixture.venueName()
+                        );
+                    });
+
+        }
+
+    }
+
+    public boolean existsFixturesToSyncLive() {
+        Instant now = Instant.now();
+        Instant startAt = now.minus(3, ChronoUnit.HOURS);
+
+        return fixtureRepository.existsByKickoffAtBetweenAndStatusIn(startAt, now, COMPLETION_CHECK_STATUSES);
+    }
+
+    public List<Fixture> getFixturesToCheckCompletion() {
+        Instant threshold = Instant.now()
+                .minus(120, ChronoUnit.MINUTES);
+        return fixtureRepository.findFixturesToCheckCompletion(threshold, COMPLETION_CHECK_STATUSES);
+    }
+
 
 }

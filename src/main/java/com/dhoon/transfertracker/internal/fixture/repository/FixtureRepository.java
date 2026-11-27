@@ -83,4 +83,26 @@ public interface FixtureRepository extends JpaRepository<Fixture, Long> {
     """)
     List<Fixture> findTeamRecentFixtures(Long teamId, Collection<FixtureStatus> statuses);
 
+    Optional<Fixture> findByApiFootballId(Long apiFootballId);
+
+    @Query("""
+    SELECT f FROM Fixture f
+    WHERE f.kickoffAt <= :threshold
+    AND f.status IN :statuses
+    """)
+    List<Fixture> findFixturesToCheckCompletion(Instant threshold, Collection<FixtureStatus> statuses);
+
+    @Query("""
+    SELECT f FROM Fixture f
+    JOIN FETCH f.homeTeam ht
+    JOIN FETCH f.awayTeam at
+    WHERE f.status IN :statuses
+    ORDER BY f.kickoffAt ASC, f.id ASC
+    """)
+    List<Fixture> findLiveFixtures(Collection<FixtureStatus> statuses);
+
+
+    boolean existsByKickoffAtBetweenAndStatusIn(Instant startAt, Instant endAt, Collection<FixtureStatus> statuses);
+
+
 }

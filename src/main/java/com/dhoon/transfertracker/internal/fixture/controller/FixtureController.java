@@ -29,6 +29,21 @@ public class FixtureController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/api/admin/fixtures/sync/live")
+    public ResponseEntity<Void> syncLiveFixtures() {
+        fixtureSyncService.syncLiveFixtures();
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/admin/fixtures/sync/completion")
+    public ResponseEntity<Void> syncFixtureCompletion() {
+        fixtureSyncService.syncFixtureCompletion();
+
+        return ResponseEntity.noContent().build();
+    }
+
+
     @GetMapping("/api/fixtures")
     public ResponseEntity<List<FixtureResponse>> getDateFixtures(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, @RequestParam(required = false) LeagueCode leagueCode) {
         List<FixtureResponse> response = fixtureQueryService.getFixturesByDate(date, leagueCode);
@@ -60,6 +75,13 @@ public class FixtureController {
     @GetMapping("/api/fixtures/teams/{teamId}/recent")
     public ResponseEntity<List<FixtureResponse>> getTeamRecentFixtures(@PathVariable Long teamId) {
         List<FixtureResponse> response = fixtureQueryService.getTeamRecentFixtures(teamId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/fixtures/live")
+    public ResponseEntity<List<FixtureResponse>> getLiveFixtures() {
+        List<FixtureResponse> response = fixtureQueryService.getLiveFixtures();
 
         return ResponseEntity.ok(response);
     }

@@ -31,6 +31,17 @@ public class FixtureQueryService {
     private final FixtureRepository fixtureRepository;
     private final TeamRepository teamRepository;
 
+    private static final List<FixtureStatus> LIVE_STATUSES =
+            List.of(
+                    FixtureStatus.FIRST_HALF,
+                    FixtureStatus.HALF_TIME,
+                    FixtureStatus.SECOND_HALF,
+                    FixtureStatus.EXTRA_TIME,
+                    FixtureStatus.BREAK_TIME,
+                    FixtureStatus.PENALTY_IN_PROGRESS,
+                    FixtureStatus.LIVE
+            );
+
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     public List<FixtureResponse> getFixturesByDate(LocalDate date, LeagueCode leagueCode) {
@@ -90,6 +101,13 @@ public class FixtureQueryService {
         );
 
         return fixtureRepository.findTeamRecentFixtures(teamId, statuses)
+                .stream()
+                .map(FixtureResponse::from)
+                .toList();
+    }
+
+    public List<FixtureResponse> getLiveFixtures() {
+        return fixtureRepository.findLiveFixtures(LIVE_STATUSES)
                 .stream()
                 .map(FixtureResponse::from)
                 .toList();

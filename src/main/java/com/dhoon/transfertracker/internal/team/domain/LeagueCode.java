@@ -3,6 +3,8 @@ package com.dhoon.transfertracker.internal.team.domain;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDate;
+
 @Getter
 @RequiredArgsConstructor
 public enum LeagueCode {
@@ -27,5 +29,15 @@ public enum LeagueCode {
         }
 
         throw new IllegalArgumentException("Invalid League API ID: " + leagueApiId);
+    }
+
+    public int resolveSeason(LocalDate date) {
+        int year = date.getYear();
+
+        if (this == K_LEAGUE) {
+            return year;
+        }
+
+        return date.getMonthValue() < 7 ? year - 1 : year;
     }
 }
