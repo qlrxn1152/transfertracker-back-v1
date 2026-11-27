@@ -1,7 +1,7 @@
 package com.dhoon.transfertracker.internal.fixture.service;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
-import com.dhoon.transfertracker.external.football.dto.ApiFootballFixtureResponse;
+import com.dhoon.transfertracker.internal.fixture.dto.record.ApiFootballFixtureResponse;
 import com.dhoon.transfertracker.internal.fixture.domain.Fixture;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import lombok.RequiredArgsConstructor;

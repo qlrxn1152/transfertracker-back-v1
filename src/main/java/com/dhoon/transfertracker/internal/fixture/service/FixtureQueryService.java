@@ -1,9 +1,12 @@
 package com.dhoon.transfertracker.internal.fixture.service;
 
 import com.dhoon.transfertracker.internal.fixture.domain.Fixture;
+import com.dhoon.transfertracker.internal.fixture.domain.FixtureEvent;
 import com.dhoon.transfertracker.internal.fixture.domain.FixtureStatus;
+import com.dhoon.transfertracker.internal.fixture.dto.record.FixtureDetailResponse;
 import com.dhoon.transfertracker.internal.fixture.dto.record.FixtureResponse;
 import com.dhoon.transfertracker.internal.fixture.exception.NotFoundFixtureException;
+import com.dhoon.transfertracker.internal.fixture.repository.FixtureEventRepository;
 import com.dhoon.transfertracker.internal.fixture.repository.FixtureRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
@@ -30,6 +33,7 @@ public class FixtureQueryService {
 
     private final FixtureRepository fixtureRepository;
     private final TeamRepository teamRepository;
+    private final FixtureEventRepository fixtureEventRepository;
 
     private static final List<FixtureStatus> LIVE_STATUSES =
             List.of(
@@ -75,11 +79,13 @@ public class FixtureQueryService {
         return teamFixtures.map(FixtureResponse::from);
     }
 
-    public FixtureResponse getFixture(Long fixtureId) {
+    public FixtureDetailResponse getFixture(Long fixtureId) {
         Fixture fixture = fixtureRepository.findByFixtureIdWithLazy(fixtureId)
                 .orElseThrow(NotFoundFixtureException::new);
 
-        return FixtureResponse.from(fixture);
+        List<FixtureEvent> fixtureEvents = fixtureEventRepository.findAllByFixtureId(fixture.getId());
+
+        return FixtureDetailResponse.from(fixture, fixtureEvents);
     }
 
     public List<FixtureResponse> getTeamUpcomingFixtures(Long teamId) {

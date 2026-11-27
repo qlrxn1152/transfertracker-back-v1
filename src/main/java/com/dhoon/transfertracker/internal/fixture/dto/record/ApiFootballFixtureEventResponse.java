@@ -4,6 +4,8 @@ import tools.jackson.databind.JsonNode;
 
 public record ApiFootballFixtureEventResponse(
         Long teamApiId,
+        String teamName,
+
         Long playerApiId,
         String playerName,
         Long relatedPlayerApiId,
@@ -14,44 +16,58 @@ public record ApiFootballFixtureEventResponse(
         String detail,
         String comments
 ) {
+
     public static ApiFootballFixtureEventResponse from(JsonNode node) {
 
-        JsonNode team = node.get("team");
-        JsonNode player = node.get("player");
-        JsonNode relatedPlayer = node.get("assist");
-        JsonNode time = node.get("time");
-        JsonNode type = node.get("type");
-        JsonNode detail = node.get("detail");
-        JsonNode comments = node.get("comments");
+        JsonNode team = node.path("team");
+        JsonNode player = node.path("player");
+        JsonNode relatedPlayer = node.path("assist");
+        JsonNode time = node.path("time");
 
+        Long teamApiId = getNullableLong(team.path("id"));
+        Integer elapsed = getNullableInt(time.path("elapsed"));
+        String type = getNullableString(node.path("type"));
+        String detail = getNullableString(node.path("detail"));
+
+        if (teamApiId == null || elapsed == null
+                || type == null || detail == null) {
+            throw new IllegalArgumentException(
+                    "경기 이벤트 필수 데이터가 누락되었습니다."
+            );
+        }
 
         return new ApiFootballFixtureEventResponse(
-                team.get("id").asLong(),
+                teamApiId,
+                getNullableString(team.get("name")),
 
-                getNullableLong(player.get("id")),
-                getNullableString(player.get("name")),
+                getNullableLong(player.path("id")),
+                getNullableString(player.path("name")),
 
-                getNullableLong(relatedPlayer.get("id")),
-                getNullableString(relatedPlayer.get("name")),
+                getNullableLong(relatedPlayer.path("id")),
+                getNullableString(relatedPlayer.path("name")),
 
-                getNullableInt(time.get("elapsed")),
-                getNullableInt(time.get("extra")),
+                elapsed,
+                getNullableInt(time.path("extra")),
 
-                getNullableString(type),
-                getNullableString(detail),
-                getNullableString(comments)
+                type,
+                detail,
+                getNullableString(node.path("comments"))
         );
     }
 
     private static Integer getNullableInt(JsonNode node) {
-        return node == null || node.isNull() ? null : node.asInt();
+        return isNullOrMissing(node) ? null : node.asInt();
     }
 
     private static Long getNullableLong(JsonNode node) {
-        return node == null || node.isNull() ? null : node.asLong();
+        return isNullOrMissing(node) ? null : node.asLong();
     }
 
     private static String getNullableString(JsonNode node) {
-        return node == null || node.isNull() ? null : node.asString();
+        return isNullOrMissing(node) ? null : node.asString();
+    }
+
+    private static boolean isNullOrMissing(JsonNode node) {
+        return node == null || node.isNull() || node.isMissingNode();
     }
 }

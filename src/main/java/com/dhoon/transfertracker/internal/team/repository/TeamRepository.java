@@ -37,4 +37,5 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findAllByAnyDisplayName(String teamName);
 
     List<Team> findAllByApiFootballIdIn(Collection<Long> apiFootballIds);
+
 }

@@ -1,4 +1,4 @@
-package com.dhoon.transfertracker.external.football.dto;
+package com.dhoon.transfertracker.internal.fixture.dto.record;
 
 import tools.jackson.databind.JsonNode;
 

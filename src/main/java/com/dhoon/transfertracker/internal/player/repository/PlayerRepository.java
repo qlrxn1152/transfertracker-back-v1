@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
                or lower(p.playerNameKo) = lower(:playerName)
             """)
     List<Player> findAllByAnyDisplayName(@Param("playerName") String playerName);
+
+    List<Player> findAllByApiFootballIdIn(Collection<Long> apiFootballIds);
 
 
 

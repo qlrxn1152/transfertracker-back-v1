@@ -141,6 +141,19 @@ public class ApiFootballHttpClient {
                 .body(JsonNode.class));
     }
 
+    public JsonNode callExternalFixtureEventApi(Long fixtureApiId) {
+        return record("fixture_events", () -> footballRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/fixtures")
+                        .path("/events")
+                        .queryParam("fixture", fixtureApiId)
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class));
+    }
+
+
 
 
 
