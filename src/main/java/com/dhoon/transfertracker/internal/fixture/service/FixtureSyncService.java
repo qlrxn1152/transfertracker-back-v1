@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,4 +31,7 @@ public class FixtureSyncService {
 
         txService.syncFixtures(fixtures);
     }
+
+
+
 }

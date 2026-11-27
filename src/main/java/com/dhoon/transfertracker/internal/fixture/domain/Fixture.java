@@ -49,7 +49,7 @@ public class Fixture {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private FixtureStatus status; // 전반인지 후반인지 ..
+    private FixtureStatus status;
 
     @Column(name = "elapsed")
     private Integer elapsed; // 경기 시작하고 몇분 지났는지

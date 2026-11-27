@@ -23,8 +23,6 @@ public class PostCreatedConsumer {
                 event.posts().size());
 
         postProcessingService.process(event.posts());
-
-
     }
 
 }

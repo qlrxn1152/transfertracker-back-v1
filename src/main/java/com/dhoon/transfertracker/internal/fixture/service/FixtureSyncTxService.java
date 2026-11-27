@@ -122,12 +122,7 @@ public class FixtureSyncTxService {
                     venueName
             );
 
-
-
-
-
         }
-
-
     }
+
 }
