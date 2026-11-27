@@ -10,11 +10,11 @@ import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemRespon
 import com.dhoon.transfertracker.internal.team.query.service.impl.TeamQueryTxService;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostSource;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPostTeam;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostRepository;
-import com.dhoon.transfertracker.internal.transferpost.repository.TransferPostTeamRepository;
+import com.dhoon.transfertracker.internal.post.domain.Post;
+import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
+import com.dhoon.transfertracker.internal.post.domain.PostTeam;
+import com.dhoon.transfertracker.internal.post.repository.PostRepository;
+import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.assertj.core.api.Assertions;
@@ -36,7 +36,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,10 +77,10 @@ public class TeamRepositoryTest {
     private TeamPlayerRepository teamPlayerRepository;
 
     @Autowired
-    private TransferPostTeamRepository transferPostTeamRepository;
+    private PostTeamRepository postTeamRepository;
 
     @Autowired
-    private TransferPostRepository transferPostRepository;
+    private PostRepository postRepository;
 
     @Test
     @DisplayName(value = "존재하는 팀을 조회 후, 존재하는경우 팀을 반환한다.")
@@ -194,27 +194,11 @@ public class TeamRepositoryTest {
         TeamPlayer teamPlayer1 = teamPlayerRepository.save(TeamPlayer.of(team, player1));
         TeamPlayer teamPlayer2 = teamPlayerRepository.save(TeamPlayer.of(team, player2));
 
-        Instant now = Instant.parse("2026-11-08T12:00:00Z");
+        Post post1 = savePost("Romano transfer news 1", "post-100", LocalDateTime.of(2026, 11, 8, 11, 0));
+        Post post2 = savePost("Romano transfer news 2", "post-101", LocalDateTime.of(2026, 11, 8, 11, 30));
 
-        TransferPost post1 = transferPostRepository.save(TransferPost.of(
-                TransferPostSource.FABRIZIO_ROMANO,
-                "Romano transfer news 1",
-                "post-100",
-                now.minusSeconds(3600),
-                true
-        ));
-
-        TransferPost post2 = transferPostRepository.save(TransferPost.of(
-                TransferPostSource.FABRIZIO_ROMANO,
-                "Romano transfer news 2",
-                "post-101",
-                now.minusSeconds(1800),
-                true
-        ));
-
-
-        TransferPostTeam teamPost1 = transferPostTeamRepository.save(TransferPostTeam.postAssignTeam(team, post1));
-        TransferPostTeam teamPost2 = transferPostTeamRepository.save(TransferPostTeam.postAssignTeam(team, post2));
+        postTeamRepository.save(PostTeam.postAssignTeam(team, post1));
+        postTeamRepository.save(PostTeam.postAssignTeam(team, post2));
 
         em.flush();
         em.clear();
@@ -223,7 +207,7 @@ public class TeamRepositoryTest {
         Team findTeam = teamRepository.findById(team.getId()).orElseThrow();
         long teamPlayerCount = teamPlayerRepository.countByTeamId(team.getId());
         List<TeamPlayer> teamPlayers = teamPlayerRepository.findAllByTeamIdWithLazyEntity(team.getId());
-        Page<TransferPostTeam> teamPosts = transferPostTeamRepository.findAllByTeamId(team.getId(),
+        Page<PostTeam> teamPosts = postTeamRepository.findAllByTeamId(team.getId(),
                 PageRequest.of(
                         0,
                         20,
@@ -249,7 +233,7 @@ public class TeamRepositoryTest {
         assertThat(teamPosts.hasPrevious()).isFalse();
         assertThat(teamPosts.hasNext()).isFalse();
         assertThat(teamPosts.getContent()).hasSize(2);
-        assertThat(teamPosts.getContent()).extracting(TransferPostTeam::getPost).extracting(TransferPost::getExternalPostId)
+        assertThat(teamPosts.getContent()).extracting(PostTeam::getPost).extracting(Post::getExternalPostId)
                 .containsExactly("post-101", "post-100");
     }
 
@@ -259,27 +243,11 @@ public class TeamRepositoryTest {
         // given
         Team team = teamRepository.save(Team.of("testTeam", 111L));
 
-        Instant now = Instant.parse("2026-11-08T12:00:00Z");
+        Post post1 = savePost("Romano transfer news 1", "post-100", LocalDateTime.of(2026, 11, 8, 11, 0));
+        Post post2 = savePost("Romano transfer news 2", "post-101", LocalDateTime.of(2026, 11, 8, 11, 30));
 
-        TransferPost post1 = transferPostRepository.save(TransferPost.of(
-                TransferPostSource.FABRIZIO_ROMANO,
-                "Romano transfer news 1",
-                "post-100",
-                now.minusSeconds(3600),
-                true
-        ));
-
-        TransferPost post2 = transferPostRepository.save(TransferPost.of(
-                TransferPostSource.FABRIZIO_ROMANO,
-                "Romano transfer news 2",
-                "post-101",
-                now.minusSeconds(1800),
-                true
-        ));
-
-
-        TransferPostTeam teamPost1 = transferPostTeamRepository.save(TransferPostTeam.postAssignTeam(team, post1));
-        TransferPostTeam teamPost2 = transferPostTeamRepository.save(TransferPostTeam.postAssignTeam(team, post2));
+        postTeamRepository.save(PostTeam.postAssignTeam(team, post1));
+        postTeamRepository.save(PostTeam.postAssignTeam(team, post2));
 
         em.flush();
         em.clear();
@@ -288,7 +256,7 @@ public class TeamRepositoryTest {
         Team findTeam = teamRepository.findById(team.getId()).orElseThrow();
         long teamPlayerCount = teamPlayerRepository.countByTeamId(team.getId());
         List<TeamPlayer> teamPlayers = teamPlayerRepository.findAllByTeamIdWithLazyEntity(team.getId());
-        Page<TransferPostTeam> teamPosts = transferPostTeamRepository.findAllByTeamId(team.getId(),
+        Page<PostTeam> teamPosts = postTeamRepository.findAllByTeamId(team.getId(),
                 PageRequest.of(
                         0,
                         20,
@@ -310,7 +278,7 @@ public class TeamRepositoryTest {
         assertThat(teamPosts.hasPrevious()).isFalse();
         assertThat(teamPosts.hasNext()).isFalse();
         assertThat(teamPosts.getContent()).hasSize(2);
-        assertThat(teamPosts.getContent()).extracting(TransferPostTeam::getPost).extracting(TransferPost::getExternalPostId)
+        assertThat(teamPosts.getContent()).extracting(PostTeam::getPost).extracting(Post::getExternalPostId)
                 .containsExactly("post-101", "post-100");
 
     }
@@ -332,7 +300,7 @@ public class TeamRepositoryTest {
         Team findTeam = teamRepository.findById(team.getId()).orElseThrow();
         long teamPlayerCount = teamPlayerRepository.countByTeamId(team.getId());
         List<TeamPlayer> teamPlayers = teamPlayerRepository.findAllByTeamIdWithLazyEntity(team.getId());
-        Page<TransferPostTeam> teamPosts = transferPostTeamRepository.findAllByTeamId(team.getId(),
+        Page<PostTeam> teamPosts = postTeamRepository.findAllByTeamId(team.getId(),
                 PageRequest.of(
                         0,
                         20,
@@ -358,6 +326,12 @@ public class TeamRepositoryTest {
         assertThat(teamPosts.hasPrevious()).isFalse();
         assertThat(teamPosts.hasNext()).isFalse();
         assertThat(teamPosts.getContent()).isEmpty();
+    }
+
+    private Post savePost(String content, String externalPostId, LocalDateTime createdAt) {
+        Post post = Post.createPost(PostJournalist.FABRIZIO_ROMANO, content, externalPostId, true);
+        ReflectionTestUtils.setField(post, "contentCreatedAt", createdAt);
+        return postRepository.save(post);
     }
 
 }
