@@ -81,8 +81,17 @@ public class SecurityConfig {
                                     )
                                     .hasRole("ADMIN")
 
+                                    .requestMatchers(
+                                            HttpMethod.GET,
+                                            "/api/fixtures/*/statistics",
+                                            "/api/fixtures/*/player-statistics",
+                                            "/api/players/*/season-statistics",
+                                            "/api/player-rankings"
+                                    ).permitAll()
 
-                                    // 일반 API
+
+
+                        // 일반 API
                                     .requestMatchers(
                                             "/api/teams/**",
                                             "/api/members/**",
@@ -90,7 +99,8 @@ public class SecurityConfig {
                                             "/api/team-players/**",
                                             "/api/transfers/**",
                                             "/api/posts/**",
-                                            "/api/fixtures/**"
+                                            "/api/fixtures/**",
+                                            "/api/standings/**"
                                     )
                                     .permitAll()
 

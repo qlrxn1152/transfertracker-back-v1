@@ -75,6 +75,12 @@ public class Fixture {
     @Column(name = "lineup_sync_completed", nullable = false)
     private boolean lineupSyncCompleted = false;
 
+    @Column(name = "statistics_sync_completed", nullable = false)
+    private boolean statisticsSyncCompleted = false;
+
+    @Column(name = "player_statistics_sync_completed", nullable = false)
+    private boolean playerStatisticsSyncCompleted = false;
+
     public void completeEventSync() {
         this.eventSyncCompleted = true;
     }
@@ -130,6 +136,8 @@ public class Fixture {
         this.venueName = venueName;
         this.updatedAt = Instant.now();
     }
+    public void completeStatisticsSync() { this.statisticsSyncCompleted = true; }
+    public void completePlayerStatisticsSync() { this.playerStatisticsSyncCompleted = true; }
 
 
 

@@ -1,10 +1,6 @@
 package com.dhoon.transfertracker.internal.player.repository;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
-import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
-import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
-import com.dhoon.transfertracker.internal.transferpost.domain.TransferPost;
-import com.dhoon.transfertracker.internal.transferpost.domain.TranslateStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -43,6 +39,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     List<Player> findAllByAnyDisplayName(@Param("playerName") String playerName);
 
     List<Player> findAllByApiFootballIdIn(Collection<Long> apiFootballIds);
+
+
 
 
 

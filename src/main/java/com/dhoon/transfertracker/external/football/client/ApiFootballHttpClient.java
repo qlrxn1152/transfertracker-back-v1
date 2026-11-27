@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.external.football.client;
 
+import com.dhoon.transfertracker.internal.player.domain.PlayerRankingType;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.monitoring.ExternalApiMetrics;
 import lombok.extern.slf4j.Slf4j;
@@ -163,6 +164,35 @@ public class ApiFootballHttpClient {
                 )
                 .retrieve()
                 .body(JsonNode.class));
+    }
+
+    public JsonNode callExternalLeagueStandingApi(Long leagueApiId, Integer season) {
+        return record("league_standings", () -> footballRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/standings")
+                        .queryParam("league", leagueApiId)
+                        .queryParam("season", season)
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class));
+    }
+
+    public JsonNode callExternalFixtureStatisticsApi(Long fixtureApiId) {
+        return record("fixture_statistics", () -> footballRestClient.get().uri(b -> b.path("/fixtures/statistics").queryParam("fixture", fixtureApiId).build()).retrieve().body(JsonNode.class));
+    }
+    public JsonNode callExternalFixturePlayerStatisticsApi(Long fixtureApiId) {
+        return record("fixture_player_statistics", () -> footballRestClient.get().uri(b -> b.path("/fixtures/players").queryParam("fixture", fixtureApiId).build()).retrieve().body(JsonNode.class));
+    }
+    public JsonNode callExternalPlayerSeasonStatisticsApi(Long playerApiId, Integer season) {
+        return record("player_season_statistics", () -> footballRestClient.get().uri(b -> b.path("/players").queryParam("id", playerApiId).queryParam("season", season).build()).retrieve().body(JsonNode.class));
+    }
+    public JsonNode callExternalPlayerRankingApi(Long leagueApiId, Integer season, PlayerRankingType type) {
+        String path = type == PlayerRankingType.GOALS ? "/players/topscorers" : "/players/topassists";
+        return record("player_rankings", () -> footballRestClient.get().uri(b -> b.path(path).queryParam("league", leagueApiId).queryParam("season", season).build()).retrieve().body(JsonNode.class));
+    }
+    public JsonNode callExternalLeaguePlayerSeasonStatisticsApi(Long leagueApiId, Integer season, Integer page) {
+        return record("league_player_season_statistics", () -> footballRestClient.get().uri(b -> b.path("/players").queryParam("league", leagueApiId).queryParam("season", season).queryParam("page", page).build()).retrieve().body(JsonNode.class));
     }
 
 

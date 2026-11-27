@@ -123,4 +123,20 @@ public interface FixtureRepository extends JpaRepository<Fixture, Long> {
     List<Fixture> findFixturesToSyncLineups(Instant from, Instant to, Collection<FixtureStatus> statuses, Pageable pageable);
 
 
+    @Query("""
+    SELECT f FROM Fixture f
+    WHERE f.status IN :statuses AND f.statisticsSyncCompleted = false AND f.kickoffAt >= :from
+    ORDER BY f.kickoffAt DESC, f.id ASC
+    """)
+    List<Fixture> findFixturesToSyncStatistics(Collection<FixtureStatus> statuses, Instant from, Pageable pageable);
+
+    @Query("""
+    SELECT f FROM Fixture f
+    WHERE f.status IN :statuses AND f.playerStatisticsSyncCompleted = false AND f.kickoffAt >= :from
+    ORDER BY f.kickoffAt DESC, f.id ASC
+    """)
+    List<Fixture> findFixturesToSyncPlayerStatistics(Collection<FixtureStatus> statuses, Instant from, Pageable pageable);
+
+
+
 }
