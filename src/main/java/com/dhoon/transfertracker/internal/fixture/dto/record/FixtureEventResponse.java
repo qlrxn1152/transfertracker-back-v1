@@ -50,7 +50,8 @@ public record FixtureEventResponse(
             Long playerId,
             Long apiFootballId,
             String playerName,
-            String displayName
+            String displayName,
+            String photoUrl
     ) {
 
         public static PlayerResponse from(Player player) {
@@ -63,7 +64,8 @@ public record FixtureEventResponse(
                     player.getId(),
                     player.getApiFootballId(),
                     player.getPlayerName(),
-                    player.getDisplayName()
+                    player.getDisplayName(),
+                    "https://media.api-sports.io/football/players/" + player.getApiFootballId() + ".png"
             );
         }
     }
