@@ -75,6 +75,11 @@ public class SecurityConfigTest {
             return "OK";
         }
 
+        @GetMapping("/api/fixtures/{fixtureId}")
+        public String fixture() {
+            return "OK";
+        }
+
 
     }
 
@@ -108,6 +113,13 @@ public class SecurityConfigTest {
     @DisplayName("로그인하지 않아도 선수별 게시물을 조회할 수 있다.")
     void playerPosts_arePublic() throws Exception {
         mockMvc.perform(get("/api/posts/players/3113"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("로그인하지 않아도 경기 상세를 조회할 수 있다.")
+    void fixture_isPublic() throws Exception {
+        mockMvc.perform(get("/api/fixtures/1"))
                 .andExpect(status().isOk());
     }
 
