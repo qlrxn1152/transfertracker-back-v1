@@ -1,0 +1,2 @@
+ALTER TABLE fixture
+    ADD COLUMN event_sync_completed BOOLEAN NOT NULL DEFAULT FALSE;

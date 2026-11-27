@@ -8,10 +8,11 @@ import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.NotFoundTeamException;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -175,6 +176,7 @@ public class FixtureSyncTxService {
                 .minus(120, ChronoUnit.MINUTES);
         return fixtureRepository.findFixturesToCheckCompletion(threshold, COMPLETION_CHECK_STATUSES);
     }
+
 
 
 }

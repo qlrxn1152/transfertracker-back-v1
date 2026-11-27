@@ -1,5 +1,6 @@
 package com.dhoon.transfertracker.internal.fixture.scheduler;
 
+import com.dhoon.transfertracker.internal.fixture.service.FixtureEventSyncService;
 import com.dhoon.transfertracker.internal.fixture.service.FixtureSyncService;
 import com.dhoon.transfertracker.internal.fixture.service.FixtureSyncTxService;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
@@ -20,6 +21,7 @@ public class FixtureScheduler {
 
     private final FixtureSyncService fixtureSyncService;
     private final FixtureSyncTxService fixtureSyncTxService;
+    private final FixtureEventSyncService fixtureEventSyncService;
 
     @Scheduled(fixedDelay = 30_000)
     public void syncLiveFixtures() {
@@ -38,14 +40,20 @@ public class FixtureScheduler {
         log.info("실시간 경기 동기화 완료");
     }
 
+
+
+
+
     @Scheduled(fixedDelay = 300_000)
     public void syncFixtureCompletion() {
         log.info("경기 종료 동기화 시작");
 
         fixtureSyncService.syncFixtureCompletion();
+        fixtureEventSyncService.syncCompletedFixtureEvents();
 
         log.info("경기 종료 동기화 완료");
     }
+
 
     @Scheduled(cron = "0 0 10 * * *", zone = "Asia/Seoul")
     public void syncSeasonFixtures() {

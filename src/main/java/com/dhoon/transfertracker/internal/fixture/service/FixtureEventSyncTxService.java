@@ -3,6 +3,7 @@ package com.dhoon.transfertracker.internal.fixture.service;
 import com.dhoon.transfertracker.internal.fixture.domain.Fixture;
 import com.dhoon.transfertracker.internal.fixture.domain.FixtureEvent;
 import com.dhoon.transfertracker.internal.fixture.domain.FixtureEventType;
+import com.dhoon.transfertracker.internal.fixture.domain.FixtureStatus;
 import com.dhoon.transfertracker.internal.fixture.dto.record.ApiFootballFixtureEventResponse;
 import com.dhoon.transfertracker.internal.fixture.exception.NotFoundFixtureException;
 import com.dhoon.transfertracker.internal.fixture.repository.FixtureEventRepository;
@@ -16,6 +17,7 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.team.sync.service.impl.TeamSyncTxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,6 +69,13 @@ public class FixtureEventSyncTxService {
 
         fixtureEventRepository.saveAll(fixtureEvents);
 
+        if (fixture.getStatus() == FixtureStatus.FINISHED
+                || fixture.getStatus() == FixtureStatus.AFTER_EXTRA_TIME
+                || fixture.getStatus() == FixtureStatus.AFTER_PENALTY) {
+
+            fixture.completeEventSync();
+        }
+
         log.info("경기 이벤트 동기화 완료. fixtureId={}, eventCount={}",
                 fixture.getId(), fixtureEvents.size());
     }
@@ -94,5 +103,21 @@ public class FixtureEventSyncTxService {
                 .orElseGet(() -> playerRepository.save(
                         Player.of(playerName, playerApiId)
                 ));
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<Long> getFixturesToSyncEvents() {
+
+        List<FixtureStatus> statuses = List.of(
+                FixtureStatus.FINISHED,
+                FixtureStatus.AFTER_EXTRA_TIME,
+                FixtureStatus.AFTER_PENALTY
+        );
+
+        return fixtureRepository.findFixturesToSyncEvents(statuses, PageRequest.of(0, 20))
+                .stream()
+                .map(Fixture::getApiFootballId)
+                .toList();
     }
 }

@@ -104,5 +104,13 @@ public interface FixtureRepository extends JpaRepository<Fixture, Long> {
 
     boolean existsByKickoffAtBetweenAndStatusIn(Instant startAt, Instant endAt, Collection<FixtureStatus> statuses);
 
+    @Query("""
+    SELECT f FROM Fixture f
+    WHERE f.status IN :statuses
+    AND f.eventSyncCompleted = false
+    ORDER BY f.kickoffAt DESC
+    """)
+    List<Fixture> findFixturesToSyncEvents(Collection<FixtureStatus> statuses, Pageable pageable);
+
 
 }

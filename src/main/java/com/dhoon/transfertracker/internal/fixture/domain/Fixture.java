@@ -69,6 +69,13 @@ public class Fixture {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "event_sync_completed", nullable = false)
+    private boolean eventSyncCompleted = false;
+
+    public void completeEventSync() {
+        this.eventSyncCompleted = true;
+    }
+
     public static Fixture createFixture(
             Long apiFootballId,
             Team homeTeam,

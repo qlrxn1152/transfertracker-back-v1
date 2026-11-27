@@ -81,12 +81,6 @@ public class SecurityConfig {
                                     )
                                     .hasRole("ADMIN")
 
-                                    // 공개 경기 조회 (동기화·관리 API는 /api/admin 아래에서 계속 보호)
-                                    .requestMatchers(
-                                            HttpMethod.GET,
-                                            "/api/fixtures/**"
-                                    )
-                                    .permitAll()
 
                                     // 일반 API
                                     .requestMatchers(
@@ -95,7 +89,8 @@ public class SecurityConfig {
                                             "/api/players/**",
                                             "/api/team-players/**",
                                             "/api/transfers/**",
-                                            "/api/posts/**"
+                                            "/api/posts/**",
+                                            "/api/fixtures/**"
                                     )
                                     .permitAll()
 

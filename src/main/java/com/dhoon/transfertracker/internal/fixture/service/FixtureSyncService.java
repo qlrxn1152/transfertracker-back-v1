@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.fixture.service;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
+import com.dhoon.transfertracker.internal.fixture.dto.record.ApiFootballFixtureEventResponse;
 import com.dhoon.transfertracker.internal.fixture.dto.record.ApiFootballFixtureResponse;
 import com.dhoon.transfertracker.internal.fixture.domain.Fixture;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
@@ -10,7 +11,9 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -18,7 +21,8 @@ import java.util.List;
 public class FixtureSyncService {
 
     private final ApiFootballHttpClient apiFootballHttpClient;
-    private final FixtureSyncTxService txService;
+    private final FixtureSyncTxService fixtureSyncTxService;
+    private final FixtureEventSyncTxService eventSyncTxService;
 
 
     // 리그의 해당 시즌에 속한 경기들
@@ -31,7 +35,7 @@ public class FixtureSyncService {
             fixtures.add(ApiFootballFixtureResponse.from(node));
         }
 
-        txService.syncFixtures(fixtures);
+        fixtureSyncTxService.syncFixtures(fixtures);
     }
 
     public void syncLiveFixtures() {
@@ -39,16 +43,34 @@ public class FixtureSyncService {
 
         List<ApiFootballFixtureResponse> fixtures = new ArrayList<>();
 
+        Map<Long, List<ApiFootballFixtureEventResponse>> eventsByFixtureId = new HashMap<>();
+
         for (JsonNode node : root.get("response")) {
-            fixtures.add(ApiFootballFixtureResponse.from(node));
+
+            ApiFootballFixtureResponse fixture = ApiFootballFixtureResponse.from(node);
+
+            fixtures.add(fixture);
+            JsonNode eventsNode = node.get("events");
+
+            if (eventsNode == null || !eventsNode.isArray()) {
+                continue;
+            }
+
+            List<ApiFootballFixtureEventResponse> events = new ArrayList<>();
+
+            for (JsonNode eventNode : eventsNode) {
+                events.add(ApiFootballFixtureEventResponse.from(eventNode));
+            }
+
+            eventsByFixtureId.put(fixture.apiFootballId(), events);
         }
 
-        txService.updateFixture(fixtures);
+        fixtureSyncTxService.updateFixture(fixtures);
+        eventsByFixtureId.forEach(eventSyncTxService::syncFixtureEvents);
     }
 
-
     public void syncFixtureCompletion() {
-        List<Fixture> fixtures = txService.getFixturesToCheckCompletion();
+        List<Fixture> fixtures = fixtureSyncTxService.getFixturesToCheckCompletion();
 
         List<ApiFootballFixtureResponse> records = new ArrayList<>();
 
@@ -59,7 +81,7 @@ public class FixtureSyncService {
             response.forEach(node -> records.add(ApiFootballFixtureResponse.from(node)));
         });
 
-        txService.updateFixture(records);
+        fixtureSyncTxService.updateFixture(records);
     }
 
 

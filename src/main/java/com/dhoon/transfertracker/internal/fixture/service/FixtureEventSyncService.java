@@ -40,4 +40,14 @@ public class FixtureEventSyncService {
         txService.syncFixtureEvents(fixtureApiId, events);
     }
 
+    public void syncCompletedFixtureEvents() {
+
+        List<Long> fixtureApiIds = txService.getFixturesToSyncEvents();
+
+        for (Long fixtureApiId : fixtureApiIds) {
+            syncFixtureEvents(fixtureApiId);
+        }
+
+    }
+
 }
