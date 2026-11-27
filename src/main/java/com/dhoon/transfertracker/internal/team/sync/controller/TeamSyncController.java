@@ -27,9 +27,9 @@ public class TeamSyncController {
     }
 
 
-    @PostMapping("/external/api/teams/league/{leagueCode}")
-    public ResponseEntity<LeagueTeamsResponseDto> syncLeagueTeams(@PathVariable LeagueCode leagueCode) {
-        LeagueTeamsResponseDto response = teamSyncOrchestrationService.syncLeagueTeams(leagueCode);
+    @PostMapping("/external/api/teams/league/{leagueCode}/saeson/{season}")
+    public ResponseEntity<LeagueTeamsResponseDto> syncLeagueTeams(@PathVariable LeagueCode leagueCode, @PathVariable Integer season) {
+        LeagueTeamsResponseDto response = teamSyncOrchestrationService.syncLeagueTeams(leagueCode, season);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

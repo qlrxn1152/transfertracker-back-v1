@@ -88,17 +88,61 @@ public class ApiFootballHttpClient {
                 .body(JsonNode.class));
     }
 
-    public JsonNode callExternalLeagueTeamsApi(LeagueCode leagueCode) {
+    public JsonNode callExternalLeagueTeamsApi(LeagueCode leagueCode, Integer season) {
         return record("league_teams", () -> footballRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/teams")
                         .queryParam("league", leagueCode.getApiFootballLeagueId())
-                        .queryParam("season", 2024) // 무료버전은 2022 ~ 2024 까지 요청이 가능하므로, 최신 데이터는 직접 ..
+                        .queryParam("season", season)
                         .build()
                 )
                 .retrieve()
                 .body(JsonNode.class));
     }
+
+
+    ///  ====================================================
+
+    // 특정 리그의 특정 시즌 경기들 조회
+    public JsonNode callExternalLeagueFixturesApi(LeagueCode leagueCode, Integer season) {
+        return record("league_fixtures", () -> footballRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/fixtures")
+                        .queryParam("league", leagueCode.getApiFootballLeagueId())
+                        .queryParam("season", season)
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class)
+        );
+    }
+
+    // 진행중인 경기들
+    public JsonNode callExternalLiveFixturesApi() {
+        return record("live_fixtures", () -> footballRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/fixtures")
+                        .queryParam("live", "all")
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class));
+    }
+
+    // 경기 상세
+    public JsonNode callExternalFixtureApi(Long fixtureApiId) {
+        return record("fixture_detail", () -> footballRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/fixtures")
+                        .queryParam("id", fixtureApiId)
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class));
+    }
+
+
+
 
     private <T> T record(String operation, java.util.function.Supplier<T> call) {
         ExternalApiMetrics metrics = externalApiMetricsProvider.getIfAvailable();
