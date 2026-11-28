@@ -51,20 +51,14 @@ public class PostQueryService {
         validatePageNotNegative(page);
         Pageable pageable = createPostPage(page);
 
-        Page<Post> postPage = queryTxService.getPosts(pageable);
+        Page<PostItemResponseDto> postPage = queryTxService.getPosts(pageable)
+                .map(PostItemResponseDto::createPost);
 
-        List<PostItemResponseDto> posts = postPage.getContent()
-                .stream()
-                .map(PostItemResponseDto::createPost)
-                .toList();
-
-        return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
+        return PostsResponseDto.of(postPage);
     }
 
     public PostsResponseDto getTeamPosts(Long teamId, int page) {
-        if (teamId == null || teamId <= 0) {
-            throw new InvalidTeamIdException();
-        }
+        validateTeamId(teamId);
         validatePageNotNegative(page);
 
         teamRepository.findById(teamId)
@@ -75,20 +69,11 @@ public class PostQueryService {
                 30
         );
 
-        Page<PostTeam> postPage = postTeamRepository.findAllByTeamId(teamId, pageable);
+        Page<PostItemResponseDto> postPage = postTeamRepository.findAllByTeamId(teamId, pageable)
+                .map(PostItemResponseDto::createTeamPost);
 
-        List<PostItemResponseDto> posts = postPage.getContent()
-                .stream()
-                .map(PostItemResponseDto::createTeamPost)
-                .toList();
-
-        return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
+        return PostsResponseDto.of(postPage);
     }
-
-
-
-
-
 
     public PostsResponseDto getJournalistPosts(PostJournalist journalist, int page) {
         if (journalist == null) {
@@ -98,20 +83,18 @@ public class PostQueryService {
         validatePageNotNegative(page);
         Pageable pageable = createPostPage(page);
 
-        Page<Post> postPage = postRepository.findAllByJournalist(journalist, pageable);
+        Page<PostItemResponseDto> postPage = postRepository.findAllByJournalist(journalist, pageable)
+                .map(PostItemResponseDto::createPost);
 
-        List<PostItemResponseDto> posts = postPage.getContent()
-                .stream()
-                .map(PostItemResponseDto::createPost)
-                .toList();
-
-        return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
+        return PostsResponseDto.of(postPage);
     }
 
+
+
+
+
     public PostItemResponseDto getPost(Long postId) {
-        if (postId == null || postId <= 0) {
-            throw new InvalidPostIdException();
-        }
+        validatePostId(postId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(NotFoundPostException::new);
@@ -122,27 +105,11 @@ public class PostQueryService {
         return PostItemResponseDto.createPost(post);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
     public PostsResponseDto getPlayerPosts(Long playerId, int page) {
-        if (playerId == null || playerId <= 0) {
-            throw new InvalidPlayerIdException();
-        }
-
+        validatePlayerId(playerId);
         validatePageNotNegative(page);
 
-        playerRepository.findById(playerId)
-                .orElseThrow(NotFoundPlayerException::new);
+        playerRepository.findById(playerId).orElseThrow(NotFoundPlayerException::new);
 
         Pageable pageable = PageRequest.of(
                 page,
@@ -150,28 +117,29 @@ public class PostQueryService {
         );
 
         Page<PostPlayer> postPage = postPlayerRepository.findAllByPlayerId(playerId, pageable);
+        Page<PostItemResponseDto> response;
 
-        if (!teamPlayerRepository.existsByPlayerId(playerId)) {
-            List<PostItemResponseDto> posts = postPage.getContent()
-                    .stream()
-                    .map(PostItemResponseDto::createFaPlayer)
-                    .toList();
+        if (teamPlayerRepository.existsByPlayerId(playerId)) {
+            TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(playerId)
+                    .orElseThrow(NotFoundPlayerException::new);
 
-            return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
+            response = postPage.map(postPlayer -> PostItemResponseDto.createTeamPlayer(postPlayer, teamPlayer));
+
+            return PostsResponseDto.of(response);
         }
 
-        TeamPlayer teamPlayer = teamPlayerRepository.findByPlayerId(playerId)
-                .orElseThrow(NotFoundPlayerException::new);
+        response = postPage.map(PostItemResponseDto::createFaPlayer);
 
-        List<PostItemResponseDto> posts = postPage.getContent()
-                .stream()
-                .map(postPlayer -> PostItemResponseDto.createTeamPlayer(postPlayer, teamPlayer))
-                .toList();
-
-        return PostsResponseDto.of(posts, postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
+        return PostsResponseDto.of(response);
     }
 
+
+
+
+
+
     // ======================================================================================================== //
+
     private Pageable createPostPage(int page) {
         return PageRequest.of(
                 page,
@@ -183,6 +151,24 @@ public class PostQueryService {
     private void validatePageNotNegative(int page) {
         if (page < 0) {
             throw new InvalidPageException();
+        }
+    }
+
+    private static void validateTeamId(Long teamId) {
+        if (teamId == null || teamId <= 0) {
+            throw new InvalidTeamIdException();
+        }
+    }
+
+    private static void validatePostId(Long postId) {
+        if (postId == null || postId <= 0) {
+            throw new InvalidPostIdException();
+        }
+    }
+
+    private static void validatePlayerId(Long playerId) {
+        if (playerId == null || playerId <= 0) {
+            throw new InvalidPlayerIdException();
         }
     }
 

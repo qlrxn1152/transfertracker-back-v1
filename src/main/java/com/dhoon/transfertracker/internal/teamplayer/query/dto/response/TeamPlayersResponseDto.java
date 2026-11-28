@@ -15,8 +15,10 @@ public class TeamPlayersResponseDto {
 
     private List<TeamPlayerItemResponseDto> teamPlayers = new ArrayList<>();
 
+    private long teamPlayerCount;
+
     public static TeamPlayersResponseDto of(List<TeamPlayerItemResponseDto> players) {
-        return new TeamPlayersResponseDto(players);
+        return new TeamPlayersResponseDto(players, players.size());
     }
 
 }

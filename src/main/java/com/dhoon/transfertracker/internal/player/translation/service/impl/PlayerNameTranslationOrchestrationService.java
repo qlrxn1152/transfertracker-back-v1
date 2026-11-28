@@ -21,10 +21,10 @@ import java.util.stream.Collectors;
 public class PlayerNameTranslationOrchestrationService {
 
     // 한번에 몇명의 번역대상을 가지고올지.
-    private static final int FETCH_SIZE = 10000;
+    private static final int FETCH_SIZE = 300;
 
     // OpenAI -> 한번에 몇명의 번역대상을 넘길지
-    private static final int OPEN_AI_BATCH_SIZE = 500;
+    private static final int OPEN_AI_BATCH_SIZE = 50;
 
     private final PlayerNameTranslationTxService txService;
     private final OpenAiClient openAiClient;

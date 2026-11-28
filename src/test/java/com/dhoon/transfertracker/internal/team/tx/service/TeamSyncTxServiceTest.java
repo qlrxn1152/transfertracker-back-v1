@@ -2,7 +2,7 @@ package com.dhoon.transfertracker.internal.team.tx.service;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.team.sync.dto.response.TeamSaveResponseDto;
 import com.dhoon.transfertracker.internal.team.sync.service.impl.TeamSyncTxService;
@@ -102,8 +102,8 @@ public class TeamSyncTxServiceTest {
         TeamItemResponseDto response = teamSyncTxService.getOrCreateTeamAndAssignLeagueResponse(teamData, LeagueCode.EPL);
 
         // then
-        assertThat(response.getTeamName()).isEqualTo("testTeam");
-        assertThat(response.getTeamId()).isEqualTo(1L);
+        assertThat(response.teamName()).isEqualTo("testTeam");
+        assertThat(response.teamId()).isEqualTo(1L);
         assertThat(team.getLeagueCode()).isEqualTo(LeagueCode.EPL);
 
         verify(teamRepository, times(1)).findByApiFootballId(123L);
@@ -137,8 +137,8 @@ public class TeamSyncTxServiceTest {
 
         Team savedTeam = captor.getValue();
 
-        assertThat(response.getTeamName()).isEqualTo("testTeam");
-        assertThat(response.getTeamId()).isEqualTo(1L);
+        assertThat(response.teamName()).isEqualTo("testTeam");
+        assertThat(response.teamId()).isEqualTo(1L);
 
         assertThat(savedTeam.getDisplayName()).isEqualTo("testTeam");
         assertThat(savedTeam.getId()).isEqualTo(1L);

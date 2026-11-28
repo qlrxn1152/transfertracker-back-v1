@@ -1,9 +1,9 @@
 package com.dhoon.transfertracker.internal.team.query.controller;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamDetailResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.query.service.impl.TeamQueryOrchestrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +43,8 @@ public class TeamQueryController {
     }
 
     @GetMapping("/api/teams/test/{teamId}")
-    public ResponseEntity<TeamPageInfosResponseDto> getTeamInfo(@PathVariable Long teamId, @RequestParam(defaultValue = "0") int page) {
-        TeamPageInfosResponseDto response = teamQueryOrchestrationService.getTeamInfo(teamId, page);
+    public ResponseEntity<TeamDetailResponseDto> getTeamInfo(@PathVariable Long teamId, @RequestParam(defaultValue = "0") int page) {
+        TeamDetailResponseDto response = teamQueryOrchestrationService.getTeamInfo(teamId, page);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

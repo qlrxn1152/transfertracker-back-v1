@@ -91,20 +91,11 @@ public class MemberFavoriteSourcerService {
                 Sort.by(Sort.Order.desc("contentCreatedAt"), Sort.Order.desc("id"))
         );
 
+        Page<PostItemResponseDto> postPage = postRepository.findAllByJournalist(journalist, pageable)
+                .map(PostItemResponseDto::createPost);
 
-        Page<Post> journalistAllPosts = postRepository.findAllByJournalist(journalist, pageable);
 
-        long totalPostCount = journalistAllPosts.getTotalElements();
-        int totalPageCount = journalistAllPosts.getTotalPages();
-        boolean hasNext = journalistAllPosts.hasNext();
-        boolean hasPrevious = journalistAllPosts.hasPrevious();
-
-        List<PostItemResponseDto> posts = journalistAllPosts.getContent()
-                .stream()
-                .map(PostItemResponseDto::createPost)
-                .toList();
-
-        return PostsResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
+        return PostsResponseDto.of(postPage);
     }
 
     public MemberFavoriteSourcersAllPostsResponseDto getAllJournalistPosts(Long memberId, int page) {
@@ -125,19 +116,10 @@ public class MemberFavoriteSourcerService {
         for (MemberFavoriteSourcer favoriteSourcer : memberFollowingJournalists) {
             PostJournalist journalist = favoriteSourcer.getJournalist();
 
-            Page<Post> journalistAllPosts = postRepository.findAllByJournalist(journalist, pageable);
+            Page<PostItemResponseDto> postPage = postRepository.findAllByJournalist(journalist, pageable)
+                    .map(PostItemResponseDto::createPost);
 
-            long totalPostCount = journalistAllPosts.getTotalElements();
-            int totalPageCount = journalistAllPosts.getTotalPages();
-            boolean hasNext = journalistAllPosts.hasNext();
-            boolean hasPrevious = journalistAllPosts.hasPrevious();
-
-            List<PostItemResponseDto> posts = journalistAllPosts.getContent()
-                    .stream()
-                    .map(PostItemResponseDto::createPost)
-                    .toList();
-
-            allJournalistsPosts.add(PostsResponseDto.of(posts, totalPostCount, totalPageCount, hasNext, hasPrevious));
+            allJournalistsPosts.add(PostsResponseDto.of(postPage));
         }
 
         return MemberFavoriteSourcersAllPostsResponseDto.of(allJournalistsPosts);

@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -18,7 +19,7 @@ public class PostsResponseDto {
     private boolean hasNext;
     private boolean hasPrevious;
 
-    public static PostsResponseDto of(List<PostItemResponseDto> posts, long totalPostCount, int totalPageCount, boolean hasNext, boolean hasPrevious) {
-        return new PostsResponseDto(posts, totalPostCount, totalPageCount, hasNext, hasPrevious);
+    public static PostsResponseDto of(Page<PostItemResponseDto> postPage) {
+        return new PostsResponseDto(postPage.getContent(), postPage.getTotalElements(), postPage.getTotalPages(), postPage.hasNext(), postPage.hasPrevious());
     }
 }

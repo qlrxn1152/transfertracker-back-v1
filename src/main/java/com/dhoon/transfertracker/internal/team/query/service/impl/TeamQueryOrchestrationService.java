@@ -1,9 +1,9 @@
 package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamDetailResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueException;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class TeamQueryOrchestrationService {
 
 
 
-    public TeamPageInfosResponseDto getTeamInfo(Long teamId, int page) {
+    public TeamDetailResponseDto getTeamInfo(Long teamId, int page) {
         validateTeamId(teamId);
 
         if (page < 0) {

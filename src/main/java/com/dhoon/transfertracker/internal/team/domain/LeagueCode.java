@@ -33,16 +33,11 @@ public enum LeagueCode {
 
     private final long apiFootballLeagueId;
 
-    public static LeagueCode fromApiFootballLeagueId(
-            Long leagueApiId
-    ) {
+    public static LeagueCode fromApiFootballLeagueId(Long leagueApiId) {
 
         for (LeagueCode leagueCode : values()) {
 
-            if (Objects.equals(
-                    leagueCode.getApiFootballLeagueId(),
-                    leagueApiId
-            )) {
+            if (Objects.equals(leagueCode.getApiFootballLeagueId(), leagueApiId)) {
                 return leagueCode;
             }
         }

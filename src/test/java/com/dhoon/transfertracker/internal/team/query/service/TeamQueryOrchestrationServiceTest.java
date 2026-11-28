@@ -5,10 +5,10 @@ import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueException;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfoForTeamResponseDto;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
-import com.dhoon.transfertracker.internal.team.query.dto.response.TeamsResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamDetailResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamItemResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamSummaryResponseDto;
+import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamsResponseDto;
 import com.dhoon.transfertracker.internal.team.query.service.impl.TeamQueryOrchestrationService;
 import com.dhoon.transfertracker.internal.team.query.service.impl.TeamQueryTxService;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
@@ -25,6 +25,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -66,8 +68,8 @@ public class TeamQueryOrchestrationServiceTest {
         // then
         assertThat(response).isEqualTo(expect);
 
-        assertThat(response.getTeamId()).isEqualTo(1L);
-        assertThat(response.getTeamName()).isEqualTo("testTeam");
+        assertThat(response.teamId()).isEqualTo(1L);
+        assertThat(response.teamName()).isEqualTo("testTeam");
 
         verify(txService, times(1)).getTeam(1L);
     }
@@ -124,8 +126,8 @@ public class TeamQueryOrchestrationServiceTest {
         // then
         assertThat(response).isEqualTo(expect);
 
-        assertThat(response.getTeams()).hasSize(2);
-        assertThat(response.getTeams()).extracting(TeamItemResponseDto::getTeamName)
+        assertThat(response.teams()).hasSize(2);
+        assertThat(response.teams()).extracting(TeamItemResponseDto::teamName)
                 .containsExactlyInAnyOrder("team-1", "team-2");
 
         verify(txService, times(1)).getTeams();
@@ -149,7 +151,7 @@ public class TeamQueryOrchestrationServiceTest {
 
         // then
         assertThat(response).isEqualTo(expect);
-        assertThat(response.getTeams()).isEmpty();
+        assertThat(response.teams()).isEmpty();
 
         verify(txService, times(1)).getTeams();
     }
@@ -180,8 +182,8 @@ public class TeamQueryOrchestrationServiceTest {
         // then
         assertThat(response).isEqualTo(expect);
 
-        assertThat(response.getTeams()).hasSize(2);
-        assertThat(response.getTeams()).extracting(TeamItemResponseDto::getTeamName)
+        assertThat(response.teams()).hasSize(2);
+        assertThat(response.teams()).extracting(TeamItemResponseDto::teamName)
                 .containsExactlyInAnyOrder("team-1", "team-2");
 
         verify(txService, times(1)).getLeagueTeams(LeagueCode.LA_LIGA);
@@ -209,7 +211,7 @@ public class TeamQueryOrchestrationServiceTest {
 
         // then
         assertThat(response).isEqualTo(expect);
-        assertThat(response.getTeams()).isEmpty();
+        assertThat(response.teams()).isEmpty();
 
         verify(txService, times(1)).getLeagueTeams(LeagueCode.EPL);
     }
@@ -255,21 +257,18 @@ public class TeamQueryOrchestrationServiceTest {
                         false
                 ));
 
-        TeamPageInfosResponseDto expect = TeamPageInfosResponseDto.of(
-                TeamPageInfoForTeamResponseDto.of(team, 2),
+        Page<PostItemResponseDto> postPage = new PageImpl<>(List.of(
+                PostItemResponseDto.createTeamPost(tpt2),
+                PostItemResponseDto.createTeamPost(tpt1)
+        ));
+
+        TeamDetailResponseDto expect = TeamDetailResponseDto.of(
+                TeamSummaryResponseDto.of(team),
                 TeamPlayersResponseDto.of(List.of(
                         TeamPlayerItemResponseDto.of(tp1),
                         TeamPlayerItemResponseDto.of(tp2)
                 )),
-                PostsResponseDto.of(
-                        List.of(
-                                PostItemResponseDto.createTeamPost(tpt2),
-                        PostItemResponseDto.createTeamPost(tpt1)),
-                        2,
-                        2,
-                        false,
-                        false
-                )
+                PostsResponseDto.of(postPage)
         );
 
         int page = 0;
@@ -288,26 +287,26 @@ public class TeamQueryOrchestrationServiceTest {
 
 
         // when
-        TeamPageInfosResponseDto response = orchestrationService.getTeamInfo(1L, page);
+        TeamDetailResponseDto response = orchestrationService.getTeamInfo(1L, page);
 
         // then
         assertThat(response).isEqualTo(expect);
 
-        assertThat(response.getPlayers().getTeamPlayers()).hasSize(2);
-        assertThat(response.getPlayers().getTeamPlayers()).extracting(TeamPlayerItemResponseDto::getPlayerName)
+        assertThat(response.players().getTeamPlayers()).hasSize(2);
+        assertThat(response.players().getTeamPlayers()).extracting(TeamPlayerItemResponseDto::getPlayerName)
                 .containsExactlyInAnyOrder("player-1", "player-2");
+        assertThat(response.players().getTeamPlayerCount()).isEqualTo(2);
 
-        assertThat(response.getTeams().getTeamPlayerCount()).isEqualTo(2);
-        assertThat(response.getTeams().getTeamId()).isEqualTo(1L);
-        assertThat(response.getTeams().getTeamName()).isEqualTo("testTeam");
+        assertThat(response.teams().teamId()).isEqualTo(1L);
+        assertThat(response.teams().teamName()).isEqualTo("testTeam");
 
-        assertThat(response.getPosts().getPosts()).hasSize(2);
-        assertThat(response.getPosts().isHasNext()).isFalse();
-        assertThat(response.getPosts().isHasPrevious()).isFalse();
-        assertThat(response.getPosts().getTotalPostCount()).isEqualTo(2L);
-        assertThat(response.getPosts().getTotalPageCount()).isEqualTo(2);
+        assertThat(response.posts().getPosts()).hasSize(2);
+        assertThat(response.posts().isHasNext()).isFalse();
+        assertThat(response.posts().isHasPrevious()).isFalse();
+        assertThat(response.posts().getTotalPostCount()).isEqualTo(2L);
+        assertThat(response.posts().getTotalPageCount()).isEqualTo(1);
 
-        assertThat(response.getPosts().getPosts()).extracting(PostItemResponseDto::getExternalPostId)
+        assertThat(response.posts().getPosts()).extracting(PostItemResponseDto::getExternalPostId)
                 .containsExactly("post-101", "post-100");
     }
 
