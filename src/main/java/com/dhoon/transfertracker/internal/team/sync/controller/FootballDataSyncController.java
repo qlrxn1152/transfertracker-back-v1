@@ -2,7 +2,11 @@ package com.dhoon.transfertracker.internal.team.sync.controller;
 
 import com.dhoon.transfertracker.internal.team.sync.dto.FootballDataSyncProgress;
 import com.dhoon.transfertracker.internal.team.sync.dto.record.FootballDataSyncResponse;
+import com.dhoon.transfertracker.internal.team.sync.dto.request.TeamCollectionImportRequest;
+import com.dhoon.transfertracker.internal.team.sync.dto.response.TeamCollectionImportResponse;
 import com.dhoon.transfertracker.internal.team.sync.service.impl.FootballDataSyncOrchestrationService;
+import com.dhoon.transfertracker.internal.team.sync.service.impl.TeamCollectionImportService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +18,14 @@ public class FootballDataSyncController {
 
     private final FootballDataSyncOrchestrationService
             footballDataSyncOrchestrationService;
+    private final TeamCollectionImportService teamCollectionImportService;
+
+    @PostMapping("/teams/import-collection")
+    public TeamCollectionImportResponse importCollectionTeams(
+            @Valid @RequestBody TeamCollectionImportRequest request
+    ) {
+        return teamCollectionImportService.importTeams(request);
+    }
 
     @PostMapping("/sync/all")
     public FootballDataSyncResponse syncAll() {
