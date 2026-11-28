@@ -1,0 +1,3 @@
+ALTER TABLE team
+    ADD COLUMN country VARCHAR(100) NULL,
+    ADD COLUMN national BOOLEAN NULL;

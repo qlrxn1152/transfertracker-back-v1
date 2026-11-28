@@ -33,4 +33,5 @@ public class TeamSyncController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
 }

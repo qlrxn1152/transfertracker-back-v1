@@ -32,6 +32,25 @@ public class Team {
     @Column(name = "team_name_ko", unique = true)
     private String teamNameKo;
 
+    @Column(name = "country")
+    private String country;
+
+    @Column(name = "national")
+    private Boolean national;
+
+    public void updateTeamMetadata(
+            String country,
+            Boolean national
+    ) {
+        if (country != null && !country.isBlank()) {
+            this.country = country;
+        }
+
+        if (national != null) {
+            this.national = national;
+        }
+    }
+
 
 
 

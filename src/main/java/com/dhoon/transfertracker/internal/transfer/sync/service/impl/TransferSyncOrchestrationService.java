@@ -43,26 +43,58 @@ public class TransferSyncOrchestrationService {
      * 외부 API 를 호출해서, 해당 팀의 선수들을 DB 에 저장하는 작업.
      * @param teamApiId -> 외부 API ID
      */
-    public TeamTransfersSaveResponseDto syncTeamTransfers(Long teamApiId) {
+    public TeamTransfersSaveResponseDto syncTeamTransfers(
+            Long teamApiId
+    ) {
+        JsonNode responses = fetchTeamTransfers(teamApiId);
+
+        return saveTeamTransfers(teamApiId, responses);
+    }
+    public JsonNode fetchTeamTransfers(Long teamApiId) {
+        return callExternalTeamTransferApiAndReturnResponse(teamApiId);
+    }
+
+    public TeamTransfersSaveResponseDto saveTeamTransfers(
+            Long teamApiId,
+            JsonNode responses
+    ) {
+
         String teamName = txService.getDisplayTeamName(teamApiId);
 
-        JsonNode responses = callExternalTeamTransferApiAndReturnResponse(teamApiId);
+        List<PlayerTransfersResponseDto> successesPlayerTransfers =
+                new ArrayList<>();
 
-        List<PlayerTransfersResponseDto> successesPlayerTransfers = new ArrayList<>();
         Set<Long> failedPlayerIds = new HashSet<>();
+
         int totalPlayerCount = responses.size();
 
-        syncTeamPlayerTransfers(teamApiId, responses, successesPlayerTransfers, failedPlayerIds);
-        return TeamTransfersSaveResponseDto.of(teamName, successesPlayerTransfers, failedPlayerIds, totalPlayerCount);
+        syncTeamPlayerTransfers(
+                teamApiId,
+                responses,
+                successesPlayerTransfers,
+                failedPlayerIds
+        );
+
+        return TeamTransfersSaveResponseDto.of(
+                teamName,
+                successesPlayerTransfers,
+                failedPlayerIds,
+                totalPlayerCount
+        );
     }
 
 
     // ====================== //
     private JsonNode callExternalTeamTransferApiAndReturnResponse(Long teamApiId) {
-        JsonNode node = apiFootballHttpClient.callExternalTeamTransfersApi(teamApiId);
 
+        JsonNode node = apiFootballHttpClient
+                .callExternalTeamTransfersApi(teamApiId);
 
-        if (node == null || !node.isObject()) {
+        if (node == null
+                || !node.isObject()
+                || !node.has("errors")
+                || !node.path("errors").isEmpty()) {
+
             throw new InvalidExternalApiResponseException();
         }
 
@@ -74,7 +106,6 @@ public class TransferSyncOrchestrationService {
 
         return responses;
     }
-
 
     //  ================================================== //
     private void syncTeamPlayerTransfers(Long teamApiId, JsonNode responses, List<PlayerTransfersResponseDto> successesPlayerTransfers, Set<Long> failedPlayerIds) {

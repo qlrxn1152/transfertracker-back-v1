@@ -24,8 +24,15 @@ public class TeamPlayerSyncTxService {
     private final PlayerRepository playerRepository;
 
     public TeamPlayerSaveResponseDto getOrCreateTeamPlayerResponse(JsonNode playerData, JsonNode teamData) {
-        Player player = getOrCreatePlayer(playerData);
         Team team = getOrCreateTeam(teamData);
+
+        if (Boolean.TRUE.equals(team.getNational())) {
+            throw new IllegalArgumentException(
+                    "국가대표팀은 클럽 소속팀으로 배정할 수 없습니다."
+            );
+        }
+
+        Player player = getOrCreatePlayer(playerData);
         TeamPlayer teamPlayer = getOrCreateTeamPlayer(player, team);
 
         return TeamPlayerSaveResponseDto.of(teamPlayer);
@@ -33,6 +40,9 @@ public class TeamPlayerSyncTxService {
 
 
 
+    public void saveNationalTeamPlayer(JsonNode playerData) {
+        getOrCreatePlayer(playerData);
+    }
 
 
 

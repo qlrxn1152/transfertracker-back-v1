@@ -101,6 +101,21 @@ public class ApiFootballHttpClient {
                 .body(JsonNode.class));
     }
 
+    public JsonNode callExternalLeagueTeamsApi(
+            Long leagueApiId,
+            Integer season
+    ) {
+        return record("league_teams", () -> footballRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/teams")
+                        .queryParam("league", leagueApiId)
+                        .queryParam("season", season)
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class));
+    }
+
 
     ///  ====================================================
 
@@ -195,6 +210,18 @@ public class ApiFootballHttpClient {
         return record("league_player_season_statistics", () -> footballRestClient.get().uri(b -> b.path("/players").queryParam("league", leagueApiId).queryParam("season", season).queryParam("page", page).build()).retrieve().body(JsonNode.class));
     }
 
+    public JsonNode callExternalCompetitionSeasonApi(
+            Long leagueApiId
+    ) {
+        return record("competition_seasons", () -> footballRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/leagues")
+                        .queryParam("id", leagueApiId)
+                        .build()
+                )
+                .retrieve()
+                .body(JsonNode.class));
+    }
 
 
 
