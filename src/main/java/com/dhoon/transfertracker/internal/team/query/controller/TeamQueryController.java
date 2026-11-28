@@ -9,44 +9,42 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
 @RequiredArgsConstructor
+@RequestMapping("/api/teams")
 public class TeamQueryController {
 
     private final TeamQueryOrchestrationService teamQueryOrchestrationService;
 
-    @GetMapping("/api/teams/{teamId}")
+    @GetMapping("/{teamId}")
     public ResponseEntity<TeamItemResponseDto> getTeam(@PathVariable Long teamId) {
         TeamItemResponseDto response = teamQueryOrchestrationService.getTeam(teamId);
 
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/teams")
+    @GetMapping()
     public ResponseEntity<TeamsResponseDto> getTeams() {
         TeamsResponseDto response = teamQueryOrchestrationService.getTeams();
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/teams/league")
+    @GetMapping("/league")
     public ResponseEntity<TeamsResponseDto> getLeagueTeams(@RequestParam LeagueCode leagueCode) {
         TeamsResponseDto response = teamQueryOrchestrationService.getLeagueTeams(leagueCode);
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/teams/test/{teamId}")
+    @GetMapping("/{teamId}/detail")
     public ResponseEntity<TeamDetailResponseDto> getTeamInfo(@PathVariable Long teamId, @RequestParam(defaultValue = "0") int page) {
         TeamDetailResponseDto response = teamQueryOrchestrationService.getTeamInfo(teamId, page);
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(response);
     }
 
 }

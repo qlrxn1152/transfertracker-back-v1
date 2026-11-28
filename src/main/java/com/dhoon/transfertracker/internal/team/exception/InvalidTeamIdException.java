@@ -1,7 +1,9 @@
 package com.dhoon.transfertracker.internal.team.exception;
 
-public class InvalidTeamIdException extends RuntimeException {
+import com.dhoon.transfertracker.global.exception.BusinessException;
+
+public class InvalidTeamIdException extends BusinessException {
     public InvalidTeamIdException() {
-        super("잘못된 TeamId 값입니다.");
+        super(TeamErrorCode.INVALID_TEAM_ID);
     }
 }

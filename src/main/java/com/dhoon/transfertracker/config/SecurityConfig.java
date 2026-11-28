@@ -47,8 +47,6 @@ public class SecurityConfig {
                 .addFilterAfter(new MemberLoggingFilter(), BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
 
-
-
                                     // 회원가입 / 로그인
                                     .requestMatchers(
                                             "/api/members/signup",
