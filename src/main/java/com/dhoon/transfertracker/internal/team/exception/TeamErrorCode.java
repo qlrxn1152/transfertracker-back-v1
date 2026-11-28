@@ -18,7 +18,7 @@ public enum TeamErrorCode implements ErrorCode {
     INVALID_TEAM_ID(
             HttpStatus.BAD_REQUEST,
             "INVALID_TEAM_ID",
-            "유효하지 않은 팀 ID입니다."
+            "존재하지 않는 팀입니다."
     ),
 
     INVALID_LEAGUE_CODE(

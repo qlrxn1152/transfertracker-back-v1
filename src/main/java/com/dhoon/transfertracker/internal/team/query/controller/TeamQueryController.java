@@ -26,7 +26,7 @@ public class TeamQueryController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<TeamsResponseDto> getTeams() {
         TeamsResponseDto response = teamQueryOrchestrationService.getTeams();
 
