@@ -19,40 +19,118 @@ public class TeamPlayerSyncOrchestrationService {
     private final TeamPlayerSyncTxService txService;
     private final ApiFootballHttpClient footballHttpClient;
 
-
-    /**
-     * 외부 API 를 호출해서, 해당 팀의 선수들을 DB 에 저장하는 작업.
-     * @param teamApiId -> 외부 API ID
-     */
+    // 기존 Controller 호환
     public TeamPlayersSaveResponseDto syncTeamPlayers(Long teamApiId) {
-        JsonNode node = footballHttpClient.callExternalTeamPlayersApi(teamApiId);
 
-        JsonNode teamData = node.get("response").get(0).get("team");
-        JsonNode playersData = node.get("response").get(0).get("players");
+        JsonNode responseData = fetchSquad(teamApiId);
 
-        List<TeamPlayerSaveResponseDto> response = new ArrayList<>();
+        return saveTeamPlayers(responseData);
+    }
 
-        playersData.forEach(player -> {
-            if (!hasValidPlayerId(player)) {
-                log.warn("선수 식별자가 없는 API-Football 선수단 항목을 건너뜁니다. teamApiId={}, player={}", teamApiId, player);
-                return;
+    public int syncNationalTeamPlayers(Long teamApiId) {
+
+        JsonNode responseData = fetchSquad(teamApiId);
+
+        return saveNationalTeamPlayers(responseData);
+    }
+
+    // 외부 API 호출만 담당
+    public JsonNode fetchSquad(Long teamApiId) {
+
+        JsonNode root = footballHttpClient
+                .callExternalTeamPlayersApi(teamApiId);
+
+        if (root == null
+                || !root.has("errors")
+                || !root.path("errors").isEmpty()
+                || !root.path("response").isArray()
+                || root.path("response").size() != 1) {
+
+            throw new IllegalStateException(
+                    "유효하지 않은 선수단 응답. teamApiId="
+                            + teamApiId
+            );
+        }
+
+        JsonNode responseData = root.path("response").get(0);
+
+        JsonNode teamData = responseData.path("team");
+        JsonNode playersData = responseData.path("players");
+
+        if (teamData.path("id").asLong() != teamApiId
+                || !playersData.isArray()
+                || playersData.isEmpty()) {
+
+            throw new IllegalStateException(
+                    "유효하지 않은 선수단 정보. teamApiId="
+                            + teamApiId
+            );
+        }
+
+        for (JsonNode player : playersData) {
+
+            if (!hasValidPlayerId(player)
+                    || !player.path("name").isTextual()
+                    || player.path("name").asText().isBlank()) {
+
+                throw new IllegalStateException(
+                        "유효하지 않은 선수 정보. teamApiId="
+                                + teamApiId
+                );
             }
+        }
 
-            TeamPlayerSaveResponseDto saveTeamPlayerResponse = txService.getOrCreateTeamPlayerResponse(player, teamData);
+        return responseData;
+    }
 
-            response.add(saveTeamPlayerResponse);
-        });
+    // 클럽 선수단 DB 저장
+    public TeamPlayersSaveResponseDto saveTeamPlayers(
+            JsonNode responseData
+    ) {
 
-        return TeamPlayersSaveResponseDto.of(response);
+        JsonNode teamData = responseData.path("team");
+        JsonNode playersData = responseData.path("players");
+
+        List<TeamPlayerSaveResponseDto> responses =
+                new ArrayList<>();
+
+        for (JsonNode player : playersData) {
+
+            responses.add(
+                    txService.getOrCreateTeamPlayerResponse(
+                            player,
+                            teamData
+                    )
+            );
+        }
+
+        return TeamPlayersSaveResponseDto.of(responses);
+    }
+
+    // 국가대표 선수 DB 저장
+    public int saveNationalTeamPlayers(JsonNode responseData) {
+
+        JsonNode playersData = responseData.path("players");
+
+        int successCount = 0;
+
+        for (JsonNode player : playersData) {
+
+            txService.saveNationalTeamPlayer(player);
+
+            successCount++;
+        }
+
+        return successCount;
     }
 
     private boolean hasValidPlayerId(JsonNode player) {
-        JsonNode id = player == null ? null : player.get("id");
+
+        JsonNode id = player.get("id");
 
         return id != null
                 && id.isIntegralNumber()
                 && id.canConvertToLong()
                 && id.asLong() > 0;
     }
-
 }

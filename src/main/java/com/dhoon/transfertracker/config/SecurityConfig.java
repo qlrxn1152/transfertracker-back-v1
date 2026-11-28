@@ -89,6 +89,9 @@ public class SecurityConfig {
                                             "/api/player-rankings"
                                     ).permitAll()
 
+                                    .requestMatchers(HttpMethod.GET, "/api/competitions/**")
+                                    .permitAll()
+
 
 
                         // 일반 API

@@ -22,6 +22,7 @@ public class TeamSyncTxService {
 
     public TeamSaveResponseDto getOrCreateTeamResponse(JsonNode teamData) {
         Team team = getOrCreateTeam(teamData);
+
         return TeamSaveResponseDto.of(team);
     }
 
@@ -49,9 +50,36 @@ public class TeamSyncTxService {
     private TeamItemResponseDto getOrCreateTeamAndAssignLeague(JsonNode teamData, LeagueCode leagueCode) {
         Team team = getOrCreateTeam(teamData);
 
-        team.assignTeamLeague(leagueCode);
+        if (leagueCode.isDomesticLeague()) {
+            team.assignTeamLeague(leagueCode);
+        }
 
         return TeamItemResponseDto.of(team);
+    }
+
+    public void syncCollectionTeam(
+            JsonNode teamData,
+            LeagueCode domesticLeague
+    ) {
+
+        Team team = getOrCreateTeam(teamData);
+
+        String country = teamData.path("country").isTextual()
+                ? teamData.path("country").asText()
+                : null;
+
+        Boolean national = teamData.path("national").isBoolean()
+                ? teamData.path("national").asBoolean()
+                : null;
+
+        team.updateTeamMetadata(country, national);
+
+        if (domesticLeague != null
+                && domesticLeague.isDomesticLeague()
+                && Boolean.FALSE.equals(national)) {
+
+            team.assignTeamLeague(domesticLeague);
+        }
     }
 
 }

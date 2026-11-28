@@ -95,7 +95,6 @@ public class OpenAiClient {
 
         JsonNode response = executeRequest(request);
 
-
         String outputText = extractOutputText(response);
 
         return deserialize(outputText, TranslationBatchResult.class);
