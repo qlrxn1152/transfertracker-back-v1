@@ -2,7 +2,6 @@ package com.dhoon.transfertracker.internal.transfer.query.service.impl;
 
 import com.dhoon.transfertracker.internal.player.domain.Player;
 import com.dhoon.transfertracker.internal.player.exception.InvalidPlayerIdException;
-import com.dhoon.transfertracker.internal.player.query.dto.response.PlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
@@ -46,9 +45,9 @@ public class TransferQueryOrchestrationServiceTest {
         Player player = Player.of("testPlayer", 111L);
         ReflectionTestUtils.setField(player, "id", 1L);
 
-        Team team1 = Team.of("team-1", 33L);
-        Team team2 = Team.of("team-2", 33L);
-        Team team3 = Team.of("team-3", 33L);
+        Team team1 = Team.createTeam("team-1", 33L);
+        Team team2 = Team.createTeam("team-2", 33L);
+        Team team3 = Team.createTeam("team-3", 33L);
 
         Transfer transfer1 = Transfer.of(player, team2, team1, "55M", LocalDate.parse("2026-01-01"));
         Transfer transfer2 = Transfer.of(player, team3, team2, "55M", LocalDate.parse("2026-05-01"));
@@ -85,8 +84,8 @@ public class TransferQueryOrchestrationServiceTest {
         Player player = Player.of("testPlayer", 111L);
         ReflectionTestUtils.setField(player, "id", 1L);
 
-        Team team1 = Team.of("team-1", 33L);
-        Team team2 = Team.of("team-2", 33L);
+        Team team1 = Team.createTeam("team-1", 33L);
+        Team team2 = Team.createTeam("team-2", 33L);
 
         Transfer transfer = Transfer.of(player, team2, team1, "55M", LocalDate.parse("2026-01-01"));
 

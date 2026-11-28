@@ -52,7 +52,7 @@ public class TeamQueryOrchestrationServiceTest {
         String teamName = "testTeam";
         Long teamApiId = 111L;
         Long teamId = 1L;
-        Team team = Team.of(teamName, teamApiId);
+        Team team = Team.createTeam(teamName, teamApiId);
         ReflectionTestUtils.setField(team, "id", teamId);
 
         TeamItemResponseDto expect = TeamItemResponseDto.of(team);
@@ -78,7 +78,7 @@ public class TeamQueryOrchestrationServiceTest {
         // given
         String teamName = "testTeam";
         Long teamApiId = 111L;
-        Team team = Team.of(teamName, teamApiId);
+        Team team = Team.createTeam(teamName, teamApiId);
         ReflectionTestUtils.setField(team, "id", 1L);
 
         Long nullTeamId = null;
@@ -102,13 +102,13 @@ public class TeamQueryOrchestrationServiceTest {
     @DisplayName(value = "존재하는 리그에 속한 모든팀들을 조회할 수 있다.")
     void getTeams() throws Exception {
         // given
-        Team t1 = Team.of("team-1", 111L);
+        Team t1 = Team.createTeam("team-1", 111L);
         t1.assignTeamLeague(LeagueCode.LA_LIGA);
 
-        Team t2 = Team.of("team-2", 222L);
+        Team t2 = Team.createTeam("team-2", 222L);
         t2.assignTeamLeague(LeagueCode.EPL);
 
-        Team t3 = Team.of("team-3", 333L);
+        Team t3 = Team.createTeam("team-3", 333L);
 
         TeamsResponseDto expect = TeamsResponseDto.of(List.of(
                 TeamItemResponseDto.of(t1),
@@ -135,9 +135,9 @@ public class TeamQueryOrchestrationServiceTest {
     @DisplayName(value = "리그에 존재하는 팀이 없을경우, 빈 리스트를 반환한다.")
     void getTeams_empty() throws Exception {
         // given
-        Team t1 = Team.of("team-1", 111L);
-        Team t2 = Team.of("team-2", 222L);
-        Team t3 = Team.of("team-3", 333L);
+        Team t1 = Team.createTeam("team-1", 111L);
+        Team t2 = Team.createTeam("team-2", 222L);
+        Team t3 = Team.createTeam("team-3", 333L);
 
         TeamsResponseDto expect = TeamsResponseDto.of(List.of());
 
@@ -158,12 +158,12 @@ public class TeamQueryOrchestrationServiceTest {
     @DisplayName(value = "특정 리그에 존재하는 팀만 조회할 수 있다.")
     void getLeagueTeams() throws Exception {
         // given
-        Team t1 = Team.of("team-1", 111L);
-        Team t2 = Team.of("team-2", 222L);
+        Team t1 = Team.createTeam("team-1", 111L);
+        Team t2 = Team.createTeam("team-2", 222L);
         t1.assignTeamLeague(LeagueCode.LA_LIGA);
         t2.assignTeamLeague(LeagueCode.LA_LIGA);
 
-        Team t3 = Team.of("team-3", 333L);
+        Team t3 = Team.createTeam("team-3", 333L);
         t3.assignTeamLeague(LeagueCode.K_LEAGUE);
 
         TeamsResponseDto expect = TeamsResponseDto.of(List.of(
@@ -191,12 +191,12 @@ public class TeamQueryOrchestrationServiceTest {
     @DisplayName(value = "특정 리그에 존재하는 팀이 없을경우, 빈 리스트를 반환한다.")
     void getLeagueTeams_empty() throws Exception {
         // given
-        Team t1 = Team.of("team-1", 111L);
-        Team t2 = Team.of("team-2", 222L);
+        Team t1 = Team.createTeam("team-1", 111L);
+        Team t2 = Team.createTeam("team-2", 222L);
         t1.assignTeamLeague(LeagueCode.LA_LIGA);
         t2.assignTeamLeague(LeagueCode.LA_LIGA);
 
-        Team t3 = Team.of("team-3", 333L);
+        Team t3 = Team.createTeam("team-3", 333L);
         t3.assignTeamLeague(LeagueCode.K_LEAGUE);
 
         TeamsResponseDto expect = TeamsResponseDto.of(List.of());
@@ -230,7 +230,7 @@ public class TeamQueryOrchestrationServiceTest {
         // given
         Instant now = Instant.parse("2026-11-08T12:00:00Z");
 
-        Team team = Team.of("testTeam", 111L);
+        Team team = Team.createTeam("testTeam", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
         TeamPlayer tp1 = TeamPlayer.of(team, Player.of("player-1", 33L));
@@ -334,7 +334,7 @@ public class TeamQueryOrchestrationServiceTest {
     @DisplayName(value = "page 의 값이 음수인경우, 팀 상세 조회시 예외가 발생한다.")
     void getTeamInfo_invalid_page() throws Exception {
         // given
-        Team team = Team.of("teamName", 111L);
+        Team team = Team.createTeam("teamName", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
         int negativePage = -1;

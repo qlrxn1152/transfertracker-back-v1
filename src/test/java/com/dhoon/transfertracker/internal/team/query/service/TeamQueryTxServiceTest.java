@@ -11,12 +11,10 @@ import com.dhoon.transfertracker.internal.team.query.service.impl.TeamQueryTxSer
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import com.dhoon.transfertracker.internal.post.domain.Post;
 import com.dhoon.transfertracker.internal.post.domain.PostJournalist;
 import com.dhoon.transfertracker.internal.post.domain.PostTeam;
 import com.dhoon.transfertracker.internal.post.repository.PostTeamRepository;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,15 +23,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Instant;
-import java.time.temporal.TemporalAmount;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TeamQueryTxServiceTest {
@@ -54,7 +48,7 @@ public class TeamQueryTxServiceTest {
     @DisplayName(value = "존재하는 팀 ID로 조회하면 팀 정보를 반환한다.")
     void getTeam_success() throws Exception {
         // given
-        Team team = Team.of("testTeam", 123L);
+        Team team = Team.createTeam("testTeam", 123L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
         when(teamRepository.findById(1L))
@@ -88,15 +82,15 @@ public class TeamQueryTxServiceTest {
     @DisplayName(value = "리그에 속한 팀들을 조회할 수 있다.")
     void getTeams_success() throws Exception {
         // given
-        Team teamA = Team.of("teamA", 123L);
-        Team teamB = Team.of("teamB", 124L);
-        Team teamC = Team.of("teamC", 125L);
+        Team teamA = Team.createTeam("teamA", 123L);
+        Team teamB = Team.createTeam("teamB", 124L);
+        Team teamC = Team.createTeam("teamC", 125L);
 
         teamA.assignTeamLeague(LeagueCode.EPL);
         teamB.assignTeamLeague(LeagueCode.EPL);
         teamC.assignTeamLeague(LeagueCode.LA_LIGA);
 
-        Team teamD = Team.of("teamD", 111L);
+        Team teamD = Team.createTeam("teamD", 111L);
 
         when(teamRepository.findAllByLeagueCodeIsNotNull())
                 .thenReturn(List.of(teamA, teamB, teamC));
@@ -131,9 +125,9 @@ public class TeamQueryTxServiceTest {
     @DisplayName(value = "특정 리그에 속한 팀들을 조회할 수 있다.")
     void getLeagueTeams_success() throws Exception {
         // given
-        Team teamA = Team.of("teamA", 123L);
-        Team teamB = Team.of("teamB", 124L);
-        Team teamC = Team.of("teamC", 125L);
+        Team teamA = Team.createTeam("teamA", 123L);
+        Team teamB = Team.createTeam("teamB", 124L);
+        Team teamC = Team.createTeam("teamC", 125L);
 
         teamA.assignTeamLeague(LeagueCode.EPL);
         teamB.assignTeamLeague(LeagueCode.EPL);
@@ -156,7 +150,7 @@ public class TeamQueryTxServiceTest {
     @DisplayName(value = "특정 리그에 속한 팀이 존재하지않으면 빈 리스트를 반환한다.")
     void getLeagueTeams_empty() throws Exception {
         // given
-        Team teamC = Team.of("teamC", 125L);
+        Team teamC = Team.createTeam("teamC", 125L);
         teamC.assignTeamLeague(LeagueCode.LA_LIGA);
 
         when(teamRepository.findAllByLeagueCode(LeagueCode.EPL))
@@ -183,7 +177,7 @@ public class TeamQueryTxServiceTest {
                 )
         );
 
-        Team team = Team.of("testTeam", 111L);
+        Team team = Team.createTeam("testTeam", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
         PostTeam teamTransferPost = PostTeam.postAssignTeam(

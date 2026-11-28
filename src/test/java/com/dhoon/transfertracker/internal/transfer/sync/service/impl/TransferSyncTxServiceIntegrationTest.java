@@ -11,7 +11,6 @@ import com.dhoon.transfertracker.internal.transfer.query.dto.response.PlayerTran
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -179,11 +178,11 @@ public class TransferSyncTxServiceIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 33L)
+                Team.createTeam("PSG", 33L)
         );
 
         LocalDate transferDate = LocalDate.of(2026, 7, 1);

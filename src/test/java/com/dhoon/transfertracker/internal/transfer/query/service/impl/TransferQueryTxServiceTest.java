@@ -11,7 +11,6 @@ import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.exception.NotFoundTransferException;
 import com.dhoon.transfertracker.internal.transfer.query.dto.response.*;
 import com.dhoon.transfertracker.internal.transfer.query.repository.TransferQueryRepository;
-import com.dhoon.transfertracker.internal.transfer.query.service.TransferService;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -62,9 +60,9 @@ public class TransferQueryTxServiceTest {
         given(playerRepository.findById(1L))
                 .willReturn(Optional.of(player));
 
-        Team t1 = Team.of("team-1", 222L);
-        Team t2 = Team.of("team-2", 333L);
-        Team t3 = Team.of("team-3", 444L);
+        Team t1 = Team.createTeam("team-1", 222L);
+        Team t2 = Team.createTeam("team-2", 333L);
+        Team t3 = Team.createTeam("team-3", 444L);
 
         Transfer transfer1 = Transfer.of(player, t1, t2, "55 M", LocalDate.parse("2026-07-01")); // t2 -> t1
         Transfer transfer2 = Transfer.of(player, t3, t1, "11 M", LocalDate.parse("2026-09-30")); // t1 -> t3
@@ -136,10 +134,10 @@ public class TransferQueryTxServiceTest {
         ReflectionTestUtils.setField(player, "id", 1L);
 
 
-        Team t1 = Team.of("team-1", 222L);
+        Team t1 = Team.createTeam("team-1", 222L);
         ReflectionTestUtils.setField(t1, "id", 55L);
 
-        Team t2 = Team.of("team-2", 333L);
+        Team t2 = Team.createTeam("team-2", 333L);
         ReflectionTestUtils.setField(t2, "id", 56L);
 
         Transfer transfer = Transfer.of(player, t1, t2, "55 M", LocalDate.parse("2026-07-01")); // t2 -> t1
@@ -183,9 +181,9 @@ public class TransferQueryTxServiceTest {
 
         Player p1 = Player.of("player-1", 111L);
 
-        Team t1 = Team.of("team-1", 333L);
-        Team t2 = Team.of("team-2", 444L);
-        Team t3 = Team.of("team-3", 555L);
+        Team t1 = Team.createTeam("team-1", 333L);
+        Team t2 = Team.createTeam("team-2", 444L);
+        Team t3 = Team.createTeam("team-3", 555L);
 
         Transfer transfer1 = Transfer.of(p1, t2, t1, "55M", LocalDate.parse("2026-07-01"));// t1 -> t2
         ReflectionTestUtils.setField(transfer1, "id", 1L);
@@ -251,14 +249,14 @@ public class TransferQueryTxServiceTest {
         Player son = Player.of("Son", 333L);
         Player messi = Player.of("Messi", 444L);
 
-        Team mu = Team.of("Manchester United", 33L);
+        Team mu = Team.createTeam("Manchester United", 33L);
         mu.assignTeamLeague(LeagueCode.EPL);
 
-        Team barca = Team.of("Barcelona", 444L);
+        Team barca = Team.createTeam("Barcelona", 444L);
         ReflectionTestUtils.setField(barca, "id", 44L);
         barca.assignTeamLeague(LeagueCode.LA_LIGA);
 
-        Team mct = Team.of("Manchester City", 55L);
+        Team mct = Team.createTeam("Manchester City", 55L);
         mct.assignTeamLeague(LeagueCode.EPL);
 
         Transfer t1 = Transfer.of(bruno, barca, mu, "1M", LocalDate.parse("2026-07-01"));
@@ -308,13 +306,13 @@ public class TransferQueryTxServiceTest {
 
         Player player = Player.of("testPlayer", 1211L);
 
-        Team team1 = Team.of("testTeam1", 444L);
+        Team team1 = Team.createTeam("testTeam1", 444L);
         ReflectionTestUtils.setField(team1, "id", 1L);
 
         given(teamRepository.findById(1L))
                 .willReturn(Optional.of(team1));
 
-        Team team2 = Team.of("testTeam2", 123L);
+        Team team2 = Team.createTeam("testTeam2", 123L);
 
         Transfer transfer1 = Transfer.of(player, team2, team1, "55M", LocalDate.parse("2026-07-01"));
         Transfer transfer2 = Transfer.of(player, team1, team2, "11M", LocalDate.parse("2028-11-30"));
@@ -352,7 +350,7 @@ public class TransferQueryTxServiceTest {
         String keyWord = "";
 
         // 1. Team 생성
-        Team team = Team.of("testTeam", 444L);
+        Team team = Team.createTeam("testTeam", 444L);
         ReflectionTestUtils.setField(team, "id", 1L);
         given(teamRepository.findById(1L))
                 .willReturn(Optional.of(team));

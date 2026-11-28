@@ -240,7 +240,7 @@ public class PostQueryServiceTest {
     @DisplayName(value = "특정 팀의 관련된 게시물들을 조회할 수 있다.")
     void getTeamPosts() throws Exception {
         // given
-        Team team = Team.of("teamA", 111L);
+        Team team = Team.createTeam("teamA", 111L);
         LocalDateTime postCreatedAt = LocalDateTime.parse("2026-11-20T11:12:00");
         ReflectionTestUtils.setField(team, "id", 1L);
 
@@ -296,7 +296,7 @@ public class PostQueryServiceTest {
     @DisplayName(value = "특정 팀의 게시물이 존재하지 않는경우, 빈 리스트를 반환한다.")
     void getTeamPosts_empty() throws Exception {
         // given
-        Team team = Team.of("teamA", 111L);
+        Team team = Team.createTeam("teamA", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
         given(teamRepository.findById(1L))
@@ -445,7 +445,7 @@ public class PostQueryServiceTest {
         given(playerRepository.findById(1L))
                 .willReturn(Optional.of(player));
 
-        Team team = Team.of("teamA", 33L);
+        Team team = Team.createTeam("teamA", 33L);
         TeamPlayer teamPlayer = TeamPlayer.of(team, player);
 
         given(teamPlayerRepository.existsByPlayerId(1L))

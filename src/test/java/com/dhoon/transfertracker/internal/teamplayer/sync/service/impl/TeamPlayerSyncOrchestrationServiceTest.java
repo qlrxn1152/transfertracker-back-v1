@@ -66,7 +66,7 @@ public class TeamPlayerSyncOrchestrationServiceTest {
         JsonNode messiData = playersData.get(0);
         JsonNode suarezData = playersData.get(1);
 
-        Team team = Team.of("Inter Miami", 222L);
+        Team team = Team.createTeam("Inter Miami", 222L);
         Player messi = Player.of("Messi", 111L);
         Player suarez = Player.of("Suarez", 333L);
 

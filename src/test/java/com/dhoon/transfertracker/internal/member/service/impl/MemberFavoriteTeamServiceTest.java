@@ -22,19 +22,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MemberFavoriteTeamServiceTest {
@@ -64,10 +60,10 @@ public class MemberFavoriteTeamServiceTest {
         given(memberRepository.findById(1L))
                 .willReturn(Optional.of(member));
 
-        Team t1 = Team.of("team-1", 100L);
+        Team t1 = Team.createTeam("team-1", 100L);
         ReflectionTestUtils.setField(t1, "id", 30L);
 
-        Team t2 = Team.of("team-2", 200L);
+        Team t2 = Team.createTeam("team-2", 200L);
         ReflectionTestUtils.setField(t2, "id", 40L);
 
         given(teamRepository.findById(30L))
@@ -157,10 +153,10 @@ public class MemberFavoriteTeamServiceTest {
         given(memberRepository.findById(1L))
                 .willReturn(Optional.of(member));
 
-        Team team = Team.of("testTeam", 100L);
+        Team team = Team.createTeam("testTeam", 100L);
         ReflectionTestUtils.setField(team, "id", 30L);
 
-        Team team2 = Team.of("testTeam2", 200L);
+        Team team2 = Team.createTeam("testTeam2", 200L);
         ReflectionTestUtils.setField(team2, "id", 40L);
 
         given(teamRepository.findById(30L))
@@ -217,7 +213,7 @@ public class MemberFavoriteTeamServiceTest {
                 .willReturn(Optional.of(member));
 
         // 팀 설정
-        Team t1 = Team.of("team-1", 100L);
+        Team t1 = Team.createTeam("team-1", 100L);
         ReflectionTestUtils.setField(t1, "id", 55L);
 
         given(teamRepository.findById(55L))
@@ -287,7 +283,7 @@ public class MemberFavoriteTeamServiceTest {
         given(memberRepository.findById(1L))
                 .willReturn(Optional.of(member));
 
-        Team team = Team.of("testTeam", 100L);
+        Team team = Team.createTeam("testTeam", 100L);
         ReflectionTestUtils.setField(team, "id", 55L);
         given(teamRepository.findById(55L))
                 .willReturn(Optional.of(team));

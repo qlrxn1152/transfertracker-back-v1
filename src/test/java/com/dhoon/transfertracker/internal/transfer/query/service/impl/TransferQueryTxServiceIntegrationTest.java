@@ -37,8 +37,6 @@ import org.testcontainers.mysql.MySQLContainer;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.BDDMockito.*;
 
 @DataJpaTest
 @Testcontainers
@@ -90,15 +88,15 @@ class TransferQueryTxServiceIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 55L)
+                Team.createTeam("PSG", 55L)
         );
 
         Team interMiami = teamRepository.save(
-                Team.of("Inter Miami", 66L)
+                Team.createTeam("Inter Miami", 66L)
         );
 
         transferRepository.save(
@@ -181,11 +179,11 @@ class TransferQueryTxServiceIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 55L)
+                Team.createTeam("PSG", 55L)
         );
 
         Transfer transfer = transferRepository.save(
@@ -249,15 +247,15 @@ class TransferQueryTxServiceIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 55L)
+                Team.createTeam("PSG", 55L)
         );
 
         Team arsenal = teamRepository.save(
-                Team.of("Arsenal", 66L)
+                Team.createTeam("Arsenal", 66L)
         );
 
         Transfer transferA = transferRepository.save(
@@ -368,15 +366,15 @@ class TransferQueryTxServiceIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 55L)
+                Team.createTeam("PSG", 55L)
         );
 
         Team arsenal = teamRepository.save(
-                Team.of("Arsenal", 66L)
+                Team.createTeam("Arsenal", 66L)
         );
 
 // Messi: Barcelona -> PSG
@@ -430,7 +428,7 @@ class TransferQueryTxServiceIntegrationTest {
     void getTeamTransfers_empty() {
         // given
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Long barcelonaId = barcelona.getId();

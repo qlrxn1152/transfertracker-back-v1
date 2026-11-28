@@ -7,7 +7,6 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.team.sync.dto.response.TeamSaveResponseDto;
 import com.dhoon.transfertracker.internal.team.sync.service.impl.TeamSyncTxService;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,7 +48,7 @@ public class TeamSyncTxServiceTest {
     @DisplayName(value = "해당 팀이 존재하는경우, 해당 팀을 조회 후 반환한다.")
     void getOrCreateTeam_success() throws Exception {
         // given
-        Team team = Team.of("testTeam", 123L);
+        Team team = Team.createTeam("testTeam", 123L);
 
         given(teamRepository.findByApiFootballId(123L))
                 .willReturn(Optional.of(team));
@@ -94,7 +93,7 @@ public class TeamSyncTxServiceTest {
     @DisplayName(value = "해당 팀이 존재하는경우, 특정 리그 소속으로 할당한다.")
     void getOrCreateTeamAndAssignLeague_success() throws Exception {
         // given
-        Team team = Team.of("testTeam", 123L);
+        Team team = Team.createTeam("testTeam", 123L);
         given(teamRepository.findByApiFootballId(123L))
                 .willReturn(Optional.of(team));
         ReflectionTestUtils.setField(team, "id", 1L);

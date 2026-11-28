@@ -1,6 +1,5 @@
 package com.dhoon.transfertracker.internal.team.domain;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +15,7 @@ public class TeamTest {
         Long apiFootballId = 1L;
 
         // when
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
         // then
         assertThat(team.getTeamName()).isEqualTo("teamName");
@@ -34,7 +33,7 @@ public class TeamTest {
         Long apiFootballId = 1L;
 
         // when
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
         // then
         assertThat(team.getTeamName()).isEqualTo("teamName");
@@ -52,7 +51,7 @@ public class TeamTest {
         Long apiFootballId = 1L;
 
         // when
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
         // then
         assertThat(team.getTeamName()).isEqualTo("team Name");
@@ -73,13 +72,13 @@ public class TeamTest {
         Long zeroApiFootballId = 0L;
 
         // when && then
-        assertThatThrownBy(() -> Team.of(teamName, nullApiFootballId))
+        assertThatThrownBy(() -> Team.createTeam(teamName, nullApiFootballId))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> Team.of(teamName, negativeApiFootballId))
+        assertThatThrownBy(() -> Team.createTeam(teamName, negativeApiFootballId))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> Team.of(teamName, zeroApiFootballId))
+        assertThatThrownBy(() -> Team.createTeam(teamName, zeroApiFootballId))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -95,16 +94,16 @@ public class TeamTest {
         Long apiFootballId = 1L;
 
         // when && then
-        assertThatThrownBy(() -> Team.of(nullTeamName, apiFootballId))
+        assertThatThrownBy(() -> Team.createTeam(nullTeamName, apiFootballId))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> Team.of(emptyTeamName, apiFootballId))
+        assertThatThrownBy(() -> Team.createTeam(emptyTeamName, apiFootballId))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> Team.of(emptyTeamName2, apiFootballId))
+        assertThatThrownBy(() -> Team.createTeam(emptyTeamName2, apiFootballId))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> Team.of(stringNullTeamName, apiFootballId))
+        assertThatThrownBy(() -> Team.createTeam(stringNullTeamName, apiFootballId))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -114,7 +113,7 @@ public class TeamTest {
         // given
         String teamName = "teamName";
         Long apiFootballId = 1L;
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
         String teamNameKo = "한국어 팀이름";
 
@@ -126,6 +125,7 @@ public class TeamTest {
         assertThat(team.getApiFootballId()).isEqualTo(1L);
 
         assertThat(team.getTeamNameKo()).isEqualTo("한국어 팀이름");
+        assertThat(team.getDisplayName()).isEqualTo("한국어 팀이름");
     }
 
     @Test
@@ -134,7 +134,7 @@ public class TeamTest {
         // given
         String teamName = "teamName";
         Long apiFootballId = 1L;
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
         String teamNameKo = "   한국어 팀이름  ";
 
@@ -146,6 +146,7 @@ public class TeamTest {
         assertThat(team.getApiFootballId()).isEqualTo(1L);
 
         assertThat(team.getTeamNameKo()).isEqualTo("한국어 팀이름");
+        assertThat(team.getDisplayName()).isEqualTo("한국어 팀이름");
     }
 
     @Test
@@ -154,7 +155,7 @@ public class TeamTest {
         // given
         String teamName = "teamName";
         Long apiFootballId = 1L;
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
         String teamNameKo = "한국어 팀이름";
 
@@ -175,11 +176,11 @@ public class TeamTest {
         // given
         String teamName = "teamName";
         Long apiFootballId = 1L;
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
         String nullTeamNameKo = null;
         String emptyTeamNameKo = "";
-        String stringNullTeamNameKo = null;
+        String stringNullTeamNameKo = "null";
 
         // when && then
         assertThatThrownBy(() -> team.assignKoTeamName(nullTeamNameKo))
@@ -198,7 +199,7 @@ public class TeamTest {
         // given
         String teamName = "teamName";
         Long apiFootballId = 1L;
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
         LeagueCode epl = LeagueCode.EPL;
 
@@ -211,17 +212,35 @@ public class TeamTest {
 
     @Test
     @DisplayName(value = "리그 코드값에 null 을 입력한경우 리그할당에 실패한다.")
-    void assignLeagueCode_null() throws Exception {
+    void assignLeagueCode_fail_null() throws Exception {
         // given
         String teamName = "teamName";
         Long apiFootballId = 1L;
-        Team team = Team.of(teamName, apiFootballId);
+        Team team = Team.createTeam(teamName, apiFootballId);
 
 
         // when && then
         assertThatThrownBy(() -> team.assignTeamLeague(null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    @DisplayName(value = "지원하지 않는 리그인경우, 리그할당에 실패한다.")
+    void assignLeagueCode_fail_notSupportLeague() throws Exception {
+        // given
+        String teamName = "teamName";
+        Long apiFootballId = 1L;
+        Team team = Team.createTeam(teamName, apiFootballId);
+
+
+        // when && then
+        assertThatThrownBy(() -> team.assignTeamLeague(LeagueCode.CHAMPIONS_LEAGUE))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> team.assignTeamLeague(LeagueCode.WORLD_CUP))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+
 
 
 

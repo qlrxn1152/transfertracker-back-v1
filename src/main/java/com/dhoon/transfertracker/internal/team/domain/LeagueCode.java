@@ -11,7 +11,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public enum LeagueCode {
 
-    // 국내 리그
+
     EPL(39L),
     LA_LIGA(140L),
     BUNDESLIGA(78L),
@@ -83,7 +83,6 @@ public enum LeagueCode {
     }
 
     public boolean isDomesticLeague() {
-
         return switch (this) {
             case EPL, LA_LIGA, BUNDESLIGA,
                  SERIE_A, LIGUE_1, K_LEAGUE -> true;

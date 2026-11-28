@@ -65,12 +65,14 @@ public class PostSaveTxService {
 
 
         assignResult.teamNames()
-                .forEach(teamName ->
-                        teamRepository.findByTeamName(teamName)
-                                .ifPresent(
-                                        team -> postTeamRepository.findByTeamIdAndPostId(team.getId(), post.getId())
-                                                .orElseGet(() -> postTeamRepository.save(PostTeam.postAssignTeam(team, post))))
-                );
+                        .forEach(teamName ->
+                                teamRepository.findAllByAnyDisplayName(teamName)
+                                    .forEach(team ->
+                                            postTeamRepository.findByTeamIdAndPostId(team.getId(), post.getId())
+                                                    .orElseGet(() -> postTeamRepository.save(PostTeam.postAssignTeam(team, post)))
+                                    )
+                        );
+
 
         assignResult.playerNames()
                 .forEach(playerName ->

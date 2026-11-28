@@ -7,7 +7,6 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import com.dhoon.transfertracker.internal.teamplayer.sync.dto.response.TeamPlayerSaveResponseDto;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,7 +65,7 @@ public class TeamPlayerSyncTxServiceTest {
         Player player = Player.of("Messi", 111L);
         ReflectionTestUtils.setField(player, "id", 1L);
 
-        Team team = Team.of("Inter Miami", 222L);
+        Team team = Team.createTeam("Inter Miami", 222L);
         ReflectionTestUtils.setField(team, "id", 2L);
 
         TeamPlayer teamPlayer = TeamPlayer.of(team, player);
@@ -116,7 +115,7 @@ public class TeamPlayerSyncTxServiceTest {
                 
                 """);
 
-        Team team = Team.of("Inter Miami", 222L);
+        Team team = Team.createTeam("Inter Miami", 222L);
         ReflectionTestUtils.setField(team, "id", 2L);
 
         given(teamRepository.findByApiFootballId(222L))
@@ -346,7 +345,7 @@ public class TeamPlayerSyncTxServiceTest {
         given(playerRepository.findByApiFootballId(111L))
                 .willReturn(Optional.of(player));
 
-        Team team = Team.of("Inter Miami", 222L);
+        Team team = Team.createTeam("Inter Miami", 222L);
         ReflectionTestUtils.setField(team, "id", 2L);
         given(teamRepository.findByApiFootballId(222L))
                 .willReturn(Optional.of(team));

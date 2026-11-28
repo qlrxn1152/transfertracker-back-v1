@@ -132,10 +132,10 @@ public class TransferSyncTxServiceTest {
         given(playerRepository.findByApiFootballId(111L))
                 .willReturn(Optional.of(messi));
 
-        Team barcelona = Team.of("Barcelona", 44L);
+        Team barcelona = Team.createTeam("Barcelona", 44L);
         ReflectionTestUtils.setField(barcelona, "id", 4L);
 
-        Team psg = Team.of("PSG", 33L);
+        Team psg = Team.createTeam("PSG", 33L);
         ReflectionTestUtils.setField(psg, "id", 3L);
 
         given(teamRepository.findByApiFootballId(44L))
@@ -190,10 +190,10 @@ public class TransferSyncTxServiceTest {
         given(playerRepository.findByApiFootballId(111L))
                 .willReturn(Optional.of(messi));
 
-        Team barcelona = Team.of("Barcelona", 44L);
+        Team barcelona = Team.createTeam("Barcelona", 44L);
         ReflectionTestUtils.setField(barcelona, "id", 4L);
 
-        Team psg = Team.of("PSG", 33L);
+        Team psg = Team.createTeam("PSG", 33L);
         ReflectionTestUtils.setField(psg, "id", 3L);
 
         // PSG -> BARCELONA ( MESSI )
@@ -257,7 +257,7 @@ public class TransferSyncTxServiceTest {
         Player messi = Player.of("Messi", 111L);
         ReflectionTestUtils.setField(messi, "id", 1L);
 
-        Team psg = Team.of("PSG", 33L);
+        Team psg = Team.createTeam("PSG", 33L);
         ReflectionTestUtils.setField(psg, "id", 3L);
 
         given(playerRepository.findByApiFootballId(111L))
@@ -327,7 +327,7 @@ public class TransferSyncTxServiceTest {
     @DisplayName("팀이 존재하고, 한국어 팀 이름이 존재할경우 한국어 팀 이름을 반환한다.")
     void getDisplayTeamName_success() {
         // given
-        Team team = Team.of("Barcelona", 44L);
+        Team team = Team.createTeam("Barcelona", 44L);
         team.assignKoTeamName("바르셀로나");
 
         given(teamRepository.findByApiFootballId(44L))
@@ -344,7 +344,7 @@ public class TransferSyncTxServiceTest {
     @DisplayName("팀이 존재하지만, 한국어 팀 이름이 존재하지 않을경우 영어(원문) 팀 이름을 반환한다.")
     void getDisplayTeamName_success_notAssignKoTeamName() {
         // given
-        Team team = Team.of("Barcelona", 44L);
+        Team team = Team.createTeam("Barcelona", 44L);
 
         given(teamRepository.findByApiFootballId(44L))
                 .willReturn(Optional.of(team));

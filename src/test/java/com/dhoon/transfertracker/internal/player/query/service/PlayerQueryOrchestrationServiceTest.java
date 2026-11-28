@@ -7,11 +7,9 @@ import com.dhoon.transfertracker.internal.player.query.dto.response.PlayerItemRe
 import com.dhoon.transfertracker.internal.player.query.dto.response.PlayersResponseDto;
 import com.dhoon.transfertracker.internal.player.query.service.impl.PlayerQueryOrchestrationService;
 import com.dhoon.transfertracker.internal.player.query.service.impl.PlayerQueryTxService;
-import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
-import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +21,6 @@ import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.BDDMockito.*;
 import static org.assertj.core.api.Assertions.*;
@@ -67,7 +64,7 @@ public class PlayerQueryOrchestrationServiceTest {
     @DisplayName("정상적인 선수 ID로 조회하면 선수 정보를 반환한다. [ 팀에 속한 선수 ]")
     void getPlayer_success_teamPlayer() {
         // given
-        Team team = Team.of("testTeam", 999L);
+        Team team = Team.createTeam("testTeam", 999L);
 
         Player player = Player.of("testPlayer", 111L);
         ReflectionTestUtils.setField(player, "id", 1L);
@@ -108,7 +105,7 @@ public class PlayerQueryOrchestrationServiceTest {
     @DisplayName("선수 목록 조회 시 검색 조건과 페이징 설정을 전달한다.")
     void getPlayers_success() {
         // given
-        Team team = Team.of("testTeam", 999L);
+        Team team = Team.createTeam("testTeam", 999L);
         team.assignTeamLeague(LeagueCode.LA_LIGA);
         ReflectionTestUtils.setField(team, "id", 10L);
 

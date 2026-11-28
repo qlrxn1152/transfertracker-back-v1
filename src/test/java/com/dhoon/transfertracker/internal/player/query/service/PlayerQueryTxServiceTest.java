@@ -9,13 +9,11 @@ import com.dhoon.transfertracker.internal.player.repository.PlayerRepository;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +47,7 @@ public class PlayerQueryTxServiceTest {
         Player player = Player.of("testPlayer", 123L);
         ReflectionTestUtils.setField(player, "id", 1L);
 
-        Team team = Team.of("testTeam", 444L);
+        Team team = Team.createTeam("testTeam", 444L);
         TeamPlayer teamPlayer = TeamPlayer.of(team, player);
 
         given(playerRepository.findById(1L))
@@ -115,7 +113,7 @@ public class PlayerQueryTxServiceTest {
     @DisplayName("선수 목록 조회 시 선수 정보와 페이지 이동 정보를 반환한다.")
     void getPlayers_success() {
         // given
-        Team team = Team.of("testTeam", 999L);
+        Team team = Team.createTeam("testTeam", 999L);
 
         Player p1 = Player.of("testPlayer-1", 111L);
         Player p2 = Player.of("testPlayer-2", 222L);
@@ -179,7 +177,7 @@ public class PlayerQueryTxServiceTest {
     @DisplayName("마지막 페이지 조회 시 이전 페이지는 존재하고 다음 페이지는 존재하지 않는다.")
     void getPlayers_lastPage() {
         // given
-        Team team = Team.of("testTeam", 999L);
+        Team team = Team.createTeam("testTeam", 999L);
 
         Player p1 = Player.of("testPlayer-1", 111L);
 

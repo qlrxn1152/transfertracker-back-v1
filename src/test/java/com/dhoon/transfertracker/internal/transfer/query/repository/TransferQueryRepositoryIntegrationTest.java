@@ -8,7 +8,6 @@ import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.transfer.domain.Transfer;
 import com.dhoon.transfertracker.internal.transfer.repository.TransferRepository;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
@@ -22,26 +21,20 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
-import org.springframework.test.context.transaction.TestTransaction;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.BDDMockito.*;
 
 @Slf4j
 @DataJpaTest
@@ -94,8 +87,8 @@ class TransferQueryRepositoryIntegrationTest {
     void findTransfers_success() {
         // given
         Player messi = Player.of("Messi", 111L);
-        Team barcelona = Team.of("Barcelona", 33L);
-        Team psg = Team.of("PSG", 44L);
+        Team barcelona = Team.createTeam("Barcelona", 33L);
+        Team psg = Team.createTeam("PSG", 44L);
         Transfer transfer = Transfer.of(messi, barcelona, psg, "Free", transferAt);
 
         playerRepository.save(messi);
@@ -136,15 +129,15 @@ class TransferQueryRepositoryIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 33L)
+                Team.createTeam("Barcelona", 33L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 44L)
+                Team.createTeam("PSG", 44L)
         );
 
         Team interMiami = teamRepository.save(
-                Team.of("Inter Miami", 55L)
+                Team.createTeam("Inter Miami", 55L)
         );
 
         Transfer transferA = transferRepository.save(
@@ -215,11 +208,11 @@ class TransferQueryRepositoryIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 33L)
+                Team.createTeam("Barcelona", 33L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 44L)
+                Team.createTeam("PSG", 44L)
         );
 
         // 날짜를 다르게 해서 UNIQUE 충돌 방지
@@ -280,15 +273,15 @@ class TransferQueryRepositoryIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 33L)
+                Team.createTeam("Barcelona", 33L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 44L)
+                Team.createTeam("PSG", 44L)
         );
 
         Team interMiami = teamRepository.save(
-                Team.of("Inter Miami", 55L)
+                Team.createTeam("Inter Miami", 55L)
         );
 
         // A: Barcelona가 입단팀
@@ -362,24 +355,24 @@ class TransferQueryRepositoryIntegrationTest {
 
         // EPL
         Team manCity = teamRepository.save(
-                Team.of("Manchester City", 33L)
+                Team.createTeam("Manchester City", 33L)
         );
 
         manCity.assignTeamLeague(LeagueCode.EPL);
 
         Team arsenal = teamRepository.save(
-                Team.of("Arsenal", 44L)
+                Team.createTeam("Arsenal", 44L)
         );
         arsenal.assignTeamLeague(LeagueCode.EPL);
 
         // LA_LIGA
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 55L)
+                Team.createTeam("Barcelona", 55L)
         );
         barcelona.assignTeamLeague(LeagueCode.LA_LIGA);
 
         Team realMadrid = teamRepository.save(
-                Team.of("Real Madrid", 66L)
+                Team.createTeam("Real Madrid", 66L)
         );
         realMadrid.assignTeamLeague(LeagueCode.LA_LIGA);
 
@@ -602,15 +595,15 @@ class TransferQueryRepositoryIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 55L)
+                Team.createTeam("PSG", 55L)
         );
 
         Team arsenal = teamRepository.save(
-                Team.of("Arsenal", 66L)
+                Team.createTeam("Arsenal", 66L)
         );
 
         Transfer messiTransfer = transferRepository.save(
@@ -714,15 +707,15 @@ class TransferQueryRepositoryIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 55L)
+                Team.createTeam("PSG", 55L)
         );
 
         Team arsenal = teamRepository.save(
-                Team.of("Arsenal", 66L)
+                Team.createTeam("Arsenal", 66L)
         );
 
         transferRepository.save(

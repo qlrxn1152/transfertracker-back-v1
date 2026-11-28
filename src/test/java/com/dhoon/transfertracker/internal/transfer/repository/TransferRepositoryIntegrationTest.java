@@ -68,11 +68,11 @@ class TransferRepositoryIntegrationTest {
         );
 
         Team barcelona = teamRepository.save(
-                Team.of("Barcelona", 44L)
+                Team.createTeam("Barcelona", 44L)
         );
 
         Team psg = teamRepository.save(
-                Team.of("PSG", 33L)
+                Team.createTeam("PSG", 33L)
         );
 
         LocalDate transferDate = LocalDate.of(2026, 7, 1);

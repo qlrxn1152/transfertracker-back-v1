@@ -32,7 +32,7 @@ public class TeamSyncTxService {
 
         return teamRepository.findByApiFootballId(teamApiId)
                 .orElseGet(() -> teamRepository.save(
-                        Team.of(
+                        Team.createTeam(
                                 teamData.get("name").asString(),
                                 teamData.get("id").asLong()
                         )

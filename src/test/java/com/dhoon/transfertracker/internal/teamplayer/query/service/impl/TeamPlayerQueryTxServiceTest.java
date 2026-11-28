@@ -7,15 +7,12 @@ import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
 import com.dhoon.transfertracker.internal.teamplayer.domain.TeamPlayer;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayerItemResponseDto;
 import com.dhoon.transfertracker.internal.teamplayer.query.dto.response.TeamPlayersResponseDto;
-import com.dhoon.transfertracker.internal.teamplayer.query.service.impl.TeamPlayerQueryTxService;
 import com.dhoon.transfertracker.internal.teamplayer.repository.TeamPlayerRepository;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -43,7 +40,7 @@ public class TeamPlayerQueryTxServiceTest {
     @DisplayName("팀에 소속된 선수 목록을 정상적으로 조회한다.")
     void getTeamPlayers_success() {
         // given
-        Team team = Team.of("testTeam", 111L);
+        Team team = Team.createTeam("testTeam", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
         given(teamRepository.findById(1L))
@@ -75,7 +72,7 @@ public class TeamPlayerQueryTxServiceTest {
     @DisplayName("팀에 소속된 선수가 존재하지 않는경우 빈 리스트를 반환한다.")
     void getTeamPlayers_empty() {
         // given
-        Team team = Team.of("testTeam", 111L);
+        Team team = Team.createTeam("testTeam", 111L);
         ReflectionTestUtils.setField(team, "id", 1L);
 
         given(teamRepository.findById(1L))

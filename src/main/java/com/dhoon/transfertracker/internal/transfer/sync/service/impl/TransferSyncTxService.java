@@ -125,16 +125,13 @@ public class TransferSyncTxService {
         String teamName = teamData.get("name").asString();
 
         return teamRepository.findByApiFootballId(teamApiId)
-                // API-Football occasionally changes a historical team's numeric ID
-                // while preserving its name. Reuse the existing team instead of
-                // failing on the unique team_name constraint.
-                .or(() -> teamRepository.findByAnyDisplayName(teamName))
                 .orElseGet(() -> teamRepository.save(
-                        Team.of(
+                        Team.createTeam(
                                 teamName,
                                 teamApiId
                         )
                 ));
+
     }
 
     @Transactional(readOnly = true)
