@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.team.sync.service.impl;
 
 import com.dhoon.transfertracker.external.football.client.ApiFootballHttpClient;
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
+import com.dhoon.transfertracker.internal.team.domain.TeamCollectionLeague;
 import com.dhoon.transfertracker.internal.team.sync.dto.record.TeamCollectionTarget;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,9 @@ public class TeamCollectionTargetService {
 
         LeagueCode domesticLeague =
                 resolveDomesticLeague(leagueApiId);
+        TeamCollectionLeague collectionLeague =
+                TeamCollectionLeague.fromApiFootballLeagueId(leagueApiId)
+                        .orElse(null);
 
         List<TeamCollectionTarget> targets =
                 new ArrayList<>();
@@ -58,6 +62,7 @@ public class TeamCollectionTargetService {
                             teamData.path("name").asText(),
                             teamData.path("national").asBoolean(),
                             domesticLeague,
+                            collectionLeague,
                             teamData
                     )
             );

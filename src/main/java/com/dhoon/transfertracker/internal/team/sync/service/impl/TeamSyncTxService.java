@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.team.sync.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
+import com.dhoon.transfertracker.internal.team.domain.TeamCollectionLeague;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.repository.TeamRepository;
@@ -58,7 +59,8 @@ public class TeamSyncTxService {
 
     public void syncCollectionTeam(
             JsonNode teamData,
-            LeagueCode domesticLeague
+            LeagueCode domesticLeague,
+            TeamCollectionLeague collectionLeague
     ) {
 
         Team team = getOrCreateTeam(teamData);
@@ -78,6 +80,10 @@ public class TeamSyncTxService {
                 && Boolean.FALSE.equals(national)) {
 
             team.assignTeamLeague(domesticLeague);
+        }
+
+        if (collectionLeague != null && Boolean.FALSE.equals(national)) {
+            team.assignCollectionLeague(collectionLeague);
         }
     }
 

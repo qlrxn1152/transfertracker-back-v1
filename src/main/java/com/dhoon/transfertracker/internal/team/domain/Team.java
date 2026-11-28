@@ -27,6 +27,10 @@ public class Team {
     @Column(name = "league_api_code")
     private LeagueCode leagueCode;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "collection_league_code")
+    private TeamCollectionLeague collectionLeagueCode;
+
     @Column(name = "team_name_ko")
     private String teamNameKo;
 
@@ -72,6 +76,14 @@ public class Team {
         }
 
         this.leagueCode = leagueCode;
+    }
+
+    public void assignCollectionLeague(TeamCollectionLeague collectionLeagueCode) {
+        if (collectionLeagueCode == null) {
+            throw new IllegalArgumentException("팀 수집 리그코드의 값은 null 일 수 없습니다.");
+        }
+
+        this.collectionLeagueCode = collectionLeagueCode;
     }
 
 

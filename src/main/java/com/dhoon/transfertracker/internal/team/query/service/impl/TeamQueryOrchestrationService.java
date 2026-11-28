@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
+import com.dhoon.transfertracker.internal.team.domain.TeamCollectionLeague;
 import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamDetailResponseDto;
 import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.query.dto.response.record.TeamsResponseDto;
@@ -34,8 +35,15 @@ public class TeamQueryOrchestrationService {
 
 
 
-    public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
+    public TeamsResponseDto getCollectionLeagueTeams(TeamCollectionLeague leagueCode) {
         validateLeagueCode(leagueCode);
+        return txService.getCollectionLeagueTeams(leagueCode);
+    }
+
+    public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
+        if (leagueCode == null || !leagueCode.isDomesticLeague()) {
+            throw new InvalidLeagueCodeValueException();
+        }
         return txService.getLeagueTeams(leagueCode);
     }
 
@@ -67,8 +75,8 @@ public class TeamQueryOrchestrationService {
         }
     }
 
-    private void validateLeagueCode(LeagueCode leagueCode) {
-        if ( leagueCode == null || !leagueCode.isDomesticLeague()) {
+    private void validateLeagueCode(TeamCollectionLeague leagueCode) {
+        if (leagueCode == null) {
             throw new InvalidLeagueCodeValueException();
         }
     }

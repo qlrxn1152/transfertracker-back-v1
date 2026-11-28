@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
+import com.dhoon.transfertracker.internal.team.domain.TeamCollectionLeague;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.exception.InvalidLeagueCodeValueException;
 import com.dhoon.transfertracker.internal.team.exception.InvalidTeamIdException;
@@ -43,7 +44,8 @@ public class TeamQueryTxService {
     }
 
 
-    // 주요리그의 팀들만 가지고옴
+    // 기존 전체 목록은 핵심 리그 호환성을 유지한다. 확장 수집 리그는
+    // getCollectionLeagueTeams에서 명시적으로 조회한다.
     public TeamsResponseDto getTeams() {
         List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCodeIsNotNull()
                 .stream()
@@ -54,6 +56,15 @@ public class TeamQueryTxService {
     }
 
 
+
+    public TeamsResponseDto getCollectionLeagueTeams(TeamCollectionLeague leagueCode) {
+        List<TeamItemResponseDto> teams = teamRepository.findAllByCollectionLeagueCode(leagueCode)
+                .stream()
+                .map(TeamItemResponseDto::of)
+                .toList();
+
+        return TeamsResponseDto.of(teams);
+    }
 
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
         List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCode(leagueCode)
