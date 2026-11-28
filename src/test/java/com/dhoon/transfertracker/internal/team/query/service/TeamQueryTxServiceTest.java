@@ -83,20 +83,6 @@ public class TeamQueryTxServiceTest {
         verify(teamRepository, times(1)).findById(999L);
     }
 
-    // teamId = null , 0 , -n 인경우 테스트.
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(longs = {0L, -1L})
-    @DisplayName(value = "teamId 의 값이 null, 0 , 음수인경우 팀 조회에 실패한다.")
-    void getTeam_invalidTeamId(Long teamId) throws Exception {
-
-        // when && then
-        assertThatThrownBy(() -> teamQueryTxService.getTeam(teamId))
-                .isInstanceOf(InvalidTeamIdException.class);
-
-        verifyNoInteractions(teamRepository);
-    }
-
 
     @Test
     @DisplayName(value = "리그에 속한 팀들을 조회할 수 있다.")
@@ -187,29 +173,6 @@ public class TeamQueryTxServiceTest {
         verify(teamRepository, times(1)).findAllByLeagueCode(LeagueCode.EPL);
     }
 
-    @ParameterizedTest
-    @EnumSource(
-            value = LeagueCode.class,
-            names = {
-                    "CHAMPIONS_LEAGUE",
-                    "EUROPA_LEAGUE",
-                    "CONFERENCE_LEAGUE",
-                    "FA_CUP",
-                    "EFL_CUP",
-                    "WORLD_CUP"
-            }
-    )
-    @DisplayName(value = "지원하지 않는 리그이거나, Null 을 입력한경우 예외가 발생한다.")
-    void getLeagueTeams_notSupportLeagues_AndNull(LeagueCode leagueCode) throws Exception {
-        // when
-        assertThatThrownBy(() -> teamQueryTxService.getLeagueTeams(leagueCode))
-                .isInstanceOf(InvalidLeagueCodeValueException.class);
-
-        verifyNoInteractions(teamRepository);
-    }
-
-
-
 
 
     @Test
@@ -283,25 +246,6 @@ public class TeamQueryTxServiceTest {
         verifyNoInteractions(postTeamRepository);
     }
 
-
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(longs = {0L, -2L})
-    @DisplayName("팀 ID가 null 또는 0 이하이면 상세 정보 조회에 실패한다.")
-    void getTeamInfo_invalidTeamId(Long teamId) {
-        // given
-        Pageable pageable = PageRequest.of(0, 20);
-
-        // when & then
-        assertThatThrownBy(() -> teamQueryTxService.getTeamInfo(teamId, pageable))
-                .isInstanceOf(InvalidTeamIdException.class);
-
-        verifyNoInteractions(
-                teamRepository,
-                teamPlayerRepository,
-                postTeamRepository
-        );
-    }
 
     @Test
     @DisplayName("Pageable이 null이면 팀 상세 정보 조회에 실패한다.")

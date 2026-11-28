@@ -26,9 +26,13 @@ public class TeamQueryOrchestrationService {
         return txService.getTeam(teamId);
     }
 
+    // 리그에 속해있는 모든팀들
     public TeamsResponseDto getTeams() {
         return txService.getTeams();
     }
+
+
+
 
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
         validateLeagueCode(leagueCode);
@@ -39,22 +43,21 @@ public class TeamQueryOrchestrationService {
 
     public TeamDetailResponseDto getTeamInfo(Long teamId, int page) {
         validateTeamId(teamId);
+        validatePage(page);
 
+        Pageable pageable = PageRequest.of(page, 20);
+
+        return txService.getTeamInfo(teamId, pageable);
+    }
+
+
+
+
+
+    private void validatePage(int page) {
         if (page < 0) {
             throw new IllegalArgumentException("페이지 값은 0보다 작을 수 없습니다.");
         }
-
-        // 가장 최근에 저장된 게시물을 20개 단위로.
-        Pageable pageable = PageRequest.of(
-                page,
-                20,
-                Sort.by(
-                        Sort.Order.desc("post.contentCreatedAt"),
-                        Sort.Order.desc("post.id")
-                )
-        );
-
-        return txService.getTeamInfo(teamId, pageable);
     }
 
 
@@ -65,7 +68,7 @@ public class TeamQueryOrchestrationService {
     }
 
     private void validateLeagueCode(LeagueCode leagueCode) {
-        if (leagueCode == null) {
+        if ( leagueCode == null || !leagueCode.isDomesticLeague()) {
             throw new InvalidLeagueCodeValueException();
         }
     }

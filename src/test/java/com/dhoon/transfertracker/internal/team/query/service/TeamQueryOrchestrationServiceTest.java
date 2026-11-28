@@ -22,6 +22,10 @@ import com.dhoon.transfertracker.internal.post.dto.response.PostsResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -74,31 +78,24 @@ public class TeamQueryOrchestrationServiceTest {
         verify(txService, times(1)).getTeam(1L);
     }
 
-    @Test
-    @DisplayName(value = "팀 ID 가 null 이거나, 0 이하인 경우, 예외가 발생한다.")
-    void getTeam_invalid_teamId() throws Exception {
-        // given
-        String teamName = "testTeam";
-        Long teamApiId = 111L;
-        Team team = Team.createTeam(teamName, teamApiId);
-        ReflectionTestUtils.setField(team, "id", 1L);
-
-        Long nullTeamId = null;
-        Long zeroTeamId = 0L;
-        Long negativeTeamId = -1L;
-
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(longs = {0L, -1L})
+    @DisplayName(value = "팀 Id 가 Null 이거나, 0 이하인경우 예외가 발생한다.")
+    void getTeam_invalidTeamId(Long teamId) throws Exception {
         // when && then
-        assertThatThrownBy(() -> orchestrationService.getTeam(nullTeamId))
-                .isInstanceOf(InvalidTeamIdException.class);
-
-        assertThatThrownBy(() -> orchestrationService.getTeam(zeroTeamId))
-                .isInstanceOf(InvalidTeamIdException.class);
-
-        assertThatThrownBy(() -> orchestrationService.getTeam(negativeTeamId))
+        assertThatThrownBy(() -> orchestrationService.getTeam(teamId))
                 .isInstanceOf(InvalidTeamIdException.class);
 
         verifyNoInteractions(txService);
     }
+
+
+
+
+
+
+
 
     @Test
     @DisplayName(value = "존재하는 리그에 속한 모든팀들을 조회할 수 있다.")
@@ -155,6 +152,10 @@ public class TeamQueryOrchestrationServiceTest {
 
         verify(txService, times(1)).getTeams();
     }
+
+
+
+
 
     @Test
     @DisplayName(value = "특정 리그에 존재하는 팀만 조회할 수 있다.")
@@ -226,6 +227,31 @@ public class TeamQueryOrchestrationServiceTest {
         verifyNoInteractions(txService);
     }
 
+    @ParameterizedTest
+    @EnumSource(
+            value = LeagueCode.class,
+            names = {
+                    "CHAMPIONS_LEAGUE",
+                    "EUROPA_LEAGUE",
+                    "CONFERENCE_LEAGUE",
+                    "FA_CUP",
+                    "EFL_CUP",
+                    "WORLD_CUP"
+            }
+    )
+    @DisplayName(value = "지원하지 않는 리그인경우, 예외가 발생한다.")
+    void getLeagueTeams_notSupportLeagues_AndNull(LeagueCode leagueCode) throws Exception {
+        // when
+        assertThatThrownBy(() -> orchestrationService.getLeagueTeams(leagueCode))
+                .isInstanceOf(InvalidLeagueCodeValueException.class);
+
+        verifyNoInteractions(txService);
+    }
+
+
+
+
+
     @Test
     @DisplayName(value = "존재하는 팀에대해서, 팀 정보들을 확인할 수 있다.")
     void getTeamInfo() throws Exception {
@@ -273,14 +299,7 @@ public class TeamQueryOrchestrationServiceTest {
 
         int page = 0;
 
-        PageRequest pageable = PageRequest.of(
-                page,
-                20,
-                Sort.by(
-                        Sort.Order.desc("post.contentCreatedAt"),
-                        Sort.Order.desc("post.id")
-                )
-        );
+        PageRequest pageable = PageRequest.of(page, 20);
 
         given(txService.getTeamInfo(1L, pageable))
                 .willReturn(expect);
@@ -310,22 +329,19 @@ public class TeamQueryOrchestrationServiceTest {
                 .containsExactly("post-101", "post-100");
     }
 
-    @Test
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(longs = {0L, -1L})
     @DisplayName(value = "teamId 의 값이 null 이거나, 0 이하인경우 팀 상세 조회시 예외가 발생한다.")
-    void getTeamInfo_invalid_teamId() throws Exception {
-        // given
-        Long nullTeamId = null;
-        Long zeroTeamId = 0L;
-        Long negativeTeamId = -1L;
-
+    void getTeamInfo_invalid_teamId(Long teamId) throws Exception {
         // when && then
-        assertThatThrownBy(() -> orchestrationService.getTeamInfo(nullTeamId, 0))
+        assertThatThrownBy(() -> orchestrationService.getTeamInfo(teamId, 0))
                 .isInstanceOf(InvalidTeamIdException.class);
 
-        assertThatThrownBy(() -> orchestrationService.getTeamInfo(zeroTeamId, 0))
+        assertThatThrownBy(() -> orchestrationService.getTeamInfo(teamId, 0))
                 .isInstanceOf(InvalidTeamIdException.class);
 
-        assertThatThrownBy(() -> orchestrationService.getTeamInfo(negativeTeamId, 0))
+        assertThatThrownBy(() -> orchestrationService.getTeamInfo(teamId, 0))
                 .isInstanceOf(InvalidTeamIdException.class);
     }
 

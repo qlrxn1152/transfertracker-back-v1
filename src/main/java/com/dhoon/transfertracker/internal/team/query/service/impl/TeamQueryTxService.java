@@ -38,10 +38,7 @@ public class TeamQueryTxService {
     private final PostTeamRepository postTeamRepository;
 
     public TeamItemResponseDto getTeam(Long teamId) {
-        validateTeamId(teamId);
-
         Team team = findTeamOrThrow(teamId);
-
         return TeamItemResponseDto.of(team);
     }
 
@@ -59,8 +56,6 @@ public class TeamQueryTxService {
 
 
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
-        validateLeagueCode(leagueCode);
-
         List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCode(leagueCode)
                 .stream()
                 .map(TeamItemResponseDto::of)
@@ -72,7 +67,6 @@ public class TeamQueryTxService {
 
 
     public TeamDetailResponseDto getTeamInfo(Long teamId, Pageable pageable) {
-        validateTeamId(teamId);
         validatePageable(pageable);
 
         TeamSummaryResponseDto teamDetail = getTeamDetail(teamId);
@@ -111,18 +105,6 @@ public class TeamQueryTxService {
 
     // ==========================
 
-
-    private void validateTeamId(Long teamId) {
-        if (teamId == null || teamId <= 0) {
-            throw new InvalidTeamIdException();
-        }
-    }
-
-    private void validateLeagueCode(LeagueCode leagueCode) {
-        if ( leagueCode == null || !leagueCode.isDomesticLeague()) {
-            throw new InvalidLeagueCodeValueException();
-        }
-    }
 
     private Team findTeamOrThrow(Long teamId) {
         return teamRepository.findById(teamId)
