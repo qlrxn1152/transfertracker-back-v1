@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
+import com.dhoon.transfertracker.internal.team.domain.TeamCollectionLeague;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfosResponseDto;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamsResponseDto;
@@ -33,6 +34,13 @@ public class TeamQueryOrchestrationService {
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
         validateLeagueCode(leagueCode);
         return txService.getLeagueTeams(leagueCode);
+    }
+
+    public TeamsResponseDto getCollectionLeagueTeams(TeamCollectionLeague leagueCode) {
+        if (leagueCode == null) {
+            throw new InvalidLeagueCodeValueException();
+        }
+        return txService.getCollectionLeagueTeams(leagueCode);
     }
 
 

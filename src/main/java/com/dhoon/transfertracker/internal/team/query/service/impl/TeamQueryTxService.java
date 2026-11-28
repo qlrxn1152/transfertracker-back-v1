@@ -1,6 +1,7 @@
 package com.dhoon.transfertracker.internal.team.query.service.impl;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
+import com.dhoon.transfertracker.internal.team.domain.TeamCollectionLeague;
 import com.dhoon.transfertracker.internal.team.domain.Team;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamItemResponseDto;
 import com.dhoon.transfertracker.internal.team.query.dto.response.TeamPageInfoForTeamResponseDto;
@@ -52,6 +53,15 @@ public class TeamQueryTxService {
 
     public TeamsResponseDto getLeagueTeams(LeagueCode leagueCode) {
         List<TeamItemResponseDto> teams = teamRepository.findAllByLeagueCode(leagueCode)
+                .stream()
+                .map(TeamItemResponseDto::of)
+                .toList();
+
+        return TeamsResponseDto.of(teams);
+    }
+
+    public TeamsResponseDto getCollectionLeagueTeams(TeamCollectionLeague leagueCode) {
+        List<TeamItemResponseDto> teams = teamRepository.findAllByCollectionLeagueCode(leagueCode)
                 .stream()
                 .map(TeamItemResponseDto::of)
                 .toList();

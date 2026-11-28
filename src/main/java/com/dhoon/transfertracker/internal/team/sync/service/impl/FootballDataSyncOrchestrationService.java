@@ -74,6 +74,18 @@ public class FootballDataSyncOrchestrationService {
         );
     }
 
+    public FootballDataSyncResponse syncLeagueTeams(Long leagueApiId) {
+        if (!getAllTargetLeagueIds().contains(leagueApiId)) {
+            throw new IllegalArgumentException("지원하지 않는 수집 대상 리그입니다.");
+        }
+
+        return syncFootballData(
+                Set.of(leagueApiId),
+                false,
+                false
+        );
+    }
+
     public FootballDataSyncResponse syncPlayers() {
 
         return syncFootballData(
@@ -287,7 +299,8 @@ public class FootballDataSyncOrchestrationService {
 
                 teamSyncTxService.syncCollectionTeam(
                         target.teamData(),
-                        target.domesticLeague()
+                        target.domesticLeague(),
+                        target.collectionLeague()
                 );
 
                 job.successTeamCount.incrementAndGet();
@@ -509,6 +522,12 @@ public class FootballDataSyncOrchestrationService {
 
         if (existing.domesticLeague() == null
                 && incoming.domesticLeague() != null) {
+
+            return incoming;
+        }
+
+        if (existing.collectionLeague() == null
+                && incoming.collectionLeague() != null) {
 
             return incoming;
         }

@@ -2,6 +2,7 @@ package com.dhoon.transfertracker.internal.team.repository;
 
 import com.dhoon.transfertracker.internal.team.domain.LeagueCode;
 import com.dhoon.transfertracker.internal.team.domain.Team;
+import com.dhoon.transfertracker.internal.team.domain.TeamCollectionLeague;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findAllByLeagueCode(LeagueCode leagueCode);
 
     List<Team> findAllByLeagueCodeIsNotNull();
+
+    List<Team> findAllByCollectionLeagueCode(TeamCollectionLeague collectionLeagueCode);
 
     @Query("""
             select t from Team t

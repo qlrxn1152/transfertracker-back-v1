@@ -3,6 +3,9 @@ package com.dhoon.transfertracker.internal.team.domain;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 @Getter
 @RequiredArgsConstructor
 public enum TeamCollectionLeague {
@@ -67,4 +70,10 @@ public enum TeamCollectionLeague {
     A_LEAGUE(188L);
 
     private final long apiFootballLeagueId;
+
+    public static Optional<TeamCollectionLeague> fromApiFootballLeagueId(Long leagueApiId) {
+        return Arrays.stream(values())
+                .filter(league -> league.getApiFootballLeagueId() == leagueApiId)
+                .findFirst();
+    }
 }

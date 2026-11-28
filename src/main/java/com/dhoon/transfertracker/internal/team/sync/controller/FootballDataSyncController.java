@@ -27,6 +27,14 @@ public class FootballDataSyncController {
         return footballDataSyncOrchestrationService.syncTeams();
     }
 
+    @PostMapping("/sync/teams/league/{leagueApiId}")
+    public FootballDataSyncResponse syncLeagueTeams(
+            @PathVariable Long leagueApiId
+    ) {
+        return footballDataSyncOrchestrationService
+                .syncLeagueTeams(leagueApiId);
+    }
+
     @PostMapping("/sync/players")
     public FootballDataSyncResponse syncPlayers() {
 
